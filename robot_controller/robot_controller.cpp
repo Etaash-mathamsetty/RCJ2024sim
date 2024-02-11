@@ -38,6 +38,86 @@ void printList(std::list<std::pair<int, int>> list)
     std::cout << std::endl;
 }
 
+void init_gui(SDL_Window *window, SDL_Renderer *renderer)
+{
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+
+  io.ConfigFlags = ImGuiConfigFlags_NavEnableKeyboard;
+
+  ImGui::StyleColorsDark();
+  ImPlot::CreateContext();
+
+  ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
+	ImGui_ImplSDLRenderer2_Init(renderer);
+}
+
+void init_frame(SDL_Renderer *renderer)
+{
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+  SDL_RenderClear(renderer);
+  ImGui_ImplSDLRenderer2_NewFrame();
+  ImGui_ImplSDL2_NewFrame();
+  ImGui::NewFrame();
+}
+
+void end_frame(SDL_Renderer *renderer)
+{
+  ImGui::End();
+  ImGui::Render();
+  ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
+  SDL_RenderPresent(renderer);
+}
+
+void draw_frame(SDL_Window *window, bool* plot_regions)
+{
+
+  int width, height;
+
+  SDL_GetWindowSize(window, &width, &height);
+
+  ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Always);
+  ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+  ImGui::Begin("window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+  ImGui::Text("Number of points: %ld", getCount());
+
+  if(ImGui::Button("Clear Point Cloud"))
+    clearPointCloud();
+
+  ImGui::Checkbox("Plot Regions", plot_regions);
+
+  ImPlot::SetNextMarkerStyle(ImPlotMarker_Asterisk, 1.5);
+  plotPoints(width, height, plot_regions);
+}
+
+void poll_events(bool &running)
+{
+  SDL_Event event;
+
+  while(SDL_PollEvent(&event))
+  {
+    ImGui_ImplSDL2_ProcessEvent(&event);
+    if(event.type == SDL_QUIT)
+    {
+      running = false;
+    }
+  }
+}
+
+void delete_gui(SDL_Window* window, SDL_Renderer *renderer)
+{
+  ImGui_ImplSDLRenderer2_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+  SDL_Quit();
+}
+
 // This is the main program of your controller.
 // It creates an instance of your Robot instance, launches its
 // function(s) and destroys it at the end of the execution.
@@ -67,19 +147,7 @@ int main(int argc, char **argv) {
   SDL_Renderer *renderer;
   SDL_CreateWindowAndRenderer(800, 600, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE, &window, &renderer);
 
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
-
-  io.ConfigFlags = ImGuiConfigFlags_NavEnableKeyboard;
-
-  ImGui::StyleColorsDark();
-  ImPlot::CreateContext();
-
-  ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-	ImGui_ImplSDLRenderer2_Init(renderer);
+  init_gui(window, renderer);
 
   bool running = true;
   bool plot_regions = true;
@@ -90,42 +158,11 @@ int main(int argc, char **argv) {
   // - perform simulation steps until Webots is stopping the controller
   while (rb->step() != -1 && running) {
 
-    {
-      SDL_Event event;
+    poll_events(running);
 
-      while(SDL_PollEvent(&event))
-      {
-        ImGui_ImplSDL2_ProcessEvent(&event);
-        if(event.type == SDL_QUIT)
-        {
-          running = false;
-        }
-      }
-    }
+    init_frame(renderer);
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-		SDL_RenderClear(renderer);
-		ImGui_ImplSDLRenderer2_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
-
-    int width, height;
-
-    SDL_GetWindowSize(window, &width, &height);
-
-    ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Always);
-    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-    ImGui::Begin("window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-
-    ImGui::Text("Number of points: %ld", getCount());
-
-    if(ImGui::Button("Clear Point Cloud"))
-      clearPointCloud();
-
-    ImGui::Checkbox("Plot Regions", &plot_regions);
-
-    ImPlot::SetNextMarkerStyle(ImPlotMarker_Asterisk, 1.5);
-    plotPoints(width, height, plot_regions);
+    draw_frame(window, &plot_regions);
 
     // rb->writeTileData();
 
@@ -178,18 +215,10 @@ int main(int argc, char **argv) {
 
     rb->update_lidar_cloud();
 
-    ImGui::End();
-		ImGui::Render();
-		ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
-		SDL_RenderPresent(renderer);
+    end_frame(renderer);
   }
 
-  ImGui_ImplSDLRenderer2_Shutdown();
-	ImGui_ImplSDL2_Shutdown();
-	ImGui::DestroyContext();
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
-  SDL_Quit();
+  delete_gui(window, renderer);
 
   // Enter here exit cleanup code.
   rb->endSimulation();
