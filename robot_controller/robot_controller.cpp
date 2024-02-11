@@ -117,10 +117,8 @@ int main(int argc, char **argv) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::Begin("window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-    ImGui::Text("Number of points: %d", getCount());
+    ImGui::Text("Number of points: %ld", getCount());
 
-    if(ImGui::Button("Reset Scale"))
-      ImPlot::SetNextAxesLimits(-1, -1, 1, 1, ImPlotCond_Once);
     if(ImGui::Button("Clear Point Cloud"))
       clearPointCloud();
 
