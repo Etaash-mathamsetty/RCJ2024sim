@@ -11,6 +11,8 @@
 
 #include "map.h"
 
+#define M_PI 3.141592653589793238462643383
+
 
 static RobotInstance* instance = NULL;
 
@@ -142,7 +144,7 @@ void RobotInstance::turnTo(double speed, DIR dir)
     if(dir == m_dir)
         return;
 
-    double angles[4] = { 0.0, -M_PI_2, M_PI, M_PI_2 };
+    double angles[4] = { 0.0, -M_PI, M_PI, M_PI };
 
     //std::cout << "turning to: " << angles[(int)dir] << std::endl;
 
@@ -157,7 +159,7 @@ int RobotInstance::getDirection()
     double yaw = m_imu->getRollPitchYaw()[2];
 
     //N E S W
-    double errors[4] = { yaw, yaw + M_PI_2, abs(yaw) - M_PI, yaw - M_PI_2 };
+    double errors[4] = { yaw, yaw + M_PI, abs(yaw) - M_PI, yaw - M_PI };
 
     int result = std::find_if(errors, errors + 4, [](double x) { return abs(x) < 0.1; }) - errors;
 

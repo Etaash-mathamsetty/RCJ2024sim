@@ -79,6 +79,7 @@ struct REGION {
 
 std::unordered_map<GPS_position, REGION, GPS_hash> regions;
 std::vector<std::pair<double, double>> vec_points;
+std::vector<std::pair<double, double>> cameraPoints;
 
 //theta is in radians
 void update_regions_map(GPS *gps, const float *lidar_image, float theta)
@@ -144,11 +145,11 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
     }
 }
 
-double clampAngle(double theta)
+float clampAngle(float theta)
 {
-    if(abs(theta) > PI)
+    if (abs(theta) > PI)
     {
-        while(abs(theta) > PI)
+        while (abs(theta) > PI)
         {
             theta -= copysign(2, theta) * PI;
         }
@@ -160,42 +161,40 @@ bool isBetween(double theta, double start, double end)
 {
     end -= start;
     theta -= start;
-    if(theta < 0)
+    if (theta < 0)
     {
         theta += 2 * PI;
     }
-    if(end < 0)
+    if (end < 0)
     {
         end += 2 * PI;
     }
     return theta <= end;
 }
 
-std::vector<std::pair<double, double>> cameraPoints;
-
-void update_camera_map(GPS *gps, const float *lidar_image, float theta, Camera* camera)
+void update_camera_map(GPS* gps, const float* lidar_image, float theta, Camera* camera)
 {
     cameraPoints.reserve(20000);
     double fov = camera->getFov(); //radians
 
-    double leftAngle = clampAngle(theta - PI / 2);
-    double rightAngle = clampAngle(theta + PI / 2);
+    double leftAngle = clampAngle(theta);
+    double rightAngle = clampAngle(theta + PI);
 
     //sweeping counterclockwise
-    pdd leftEndpoints = pdd(clampAngle(leftAngle + fov / 2),
-        clampAngle(leftAngle - fov / 2));
-    pdd rightEndpoints = pdd(clampAngle(rightAngle + fov / 2),
-        clampAngle(rightAngle - fov / 2));
+    pdd leftEndpoints = pdd(clampAngle(leftAngle - fov / 2),
+        clampAngle(leftAngle + fov / 2));
+    pdd rightEndpoints = pdd(clampAngle(rightAngle - fov / 2),
+        clampAngle(rightAngle + fov / 2));
 
     cameraPoints.reserve(20000);
 
-    for(int i = 0; i < 512; i++)
+    for (int i = 0; i < 512; i++)
     {
         const float dist = lidar_image[i];
-        if(std::isinf(dist))
+        if (std::isinf(dist))
             continue;
-        const float angle = clampAngle(i/512.0 * 2.0 * PI);
-        if(!isBetween(angle, leftEndpoints.f, leftEndpoints.s) &&
+        const float angle = clampAngle(i / 512.0 * 2.0 * PI);
+        if (!isBetween(angle, leftEndpoints.f, leftEndpoints.s) &&
             !isBetween(angle, rightEndpoints.f, rightEndpoints.s))
             continue;
         double pos[3];
@@ -207,31 +206,31 @@ void update_camera_map(GPS *gps, const float *lidar_image, float theta, Camera* 
         pos_rounded[0] = floor_to(pos[0], region_size);
         pos_rounded[1] = floor_to(pos[1], region_size);
         pos_rounded[2] = floor_to(pos[2], region_size);
-        double x = dist*sin(angle - theta) + (pos[0] - pos_rounded[0]);
-        double y = dist*cos(angle - theta) + (pos[2] - pos_rounded[2]);
+        double x = dist * sin(angle - theta) + (pos[0] - pos_rounded[0]);
+        double y = dist * cos(angle - theta) + (pos[2] - pos_rounded[2]);
 
         x = round_to(x);
         y = round_to(y);
 
-        while(x < 0)
+        while (x < 0)
         {
             x += region_size;
             pos_rounded[0] -= region_size;
         }
 
-        while(y < 0)
+        while (y < 0)
         {
             y += region_size;
             pos_rounded[2] -= region_size;
         }
 
-        while(y >= region_size)
+        while (y >= region_size)
         {
             y -= region_size;
             pos_rounded[2] += region_size;
         }
 
-        while(x >= region_size)
+        while (x >= region_size)
         {
             x -= region_size;
             pos_rounded[0] += region_size;
@@ -240,10 +239,10 @@ void update_camera_map(GPS *gps, const float *lidar_image, float theta, Camera* 
         x = round_to(x);
         y = round_to(y);
 
-        const auto coord = std::make_pair(x,y);
-        //std::cout << "x: " << x << " y: " << y << std::endl;
+        const auto coord = std::make_pair(x, y);
+        //cout << "x: " << x << " y: " << y << endl;
         const auto coord2 = std::make_pair(x + pos_rounded[0], y + pos_rounded[2]);
-        if(regions[GPS_position(pos_rounded)].points.count(coord) == 0)
+        if (regions[GPS_position(pos_rounded)].points.count(coord) == 0)
         {
             cameraPoints.push_back(coord2);
             regions[GPS_position(pos_rounded)].points[coord] = true;
