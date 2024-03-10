@@ -21,7 +21,7 @@ set(WEBOTS_HOME "/usr/local/webots")
 # Link with the Webots controller library.
 link_directories(${WEBOTS_HOME}/lib/controller ${OPENCV_LIBRARY_DIRS} ${SDL2_LIBRARY_DIRS})
 set (LIBRARIES m ${CMAKE_SHARED_LIBRARY_PREFIX}Controller${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_SHARED_LIBRARY_PREFIX}CppController${CMAKE_SHARED_LIBRARY_SUFFIX})
-include_directories(${WEBOTS_HOME}/include/controller/c ${WEBOTS_HOME}/include/controller/cpp ${OPENCV_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/imgui)
+include_directories(${WEBOTS_HOME}/include/controller/c ${WEBOTS_HOME}/include/controller/cpp ${OPENCV_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR})
 
 # Setup the target executable.
 add_executable(${PROJECT} ${SOURCES})
