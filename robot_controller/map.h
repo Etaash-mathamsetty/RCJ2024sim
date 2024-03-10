@@ -28,6 +28,8 @@ inline void hash_combine(std::size_t & s, const T & v)
 struct POINT_TYPE {
   bool wall : 4;
   bool camera : 4;
+
+  POINT_TYPE() : wall(false), camera(false) {}
 };
 
 struct REGION {

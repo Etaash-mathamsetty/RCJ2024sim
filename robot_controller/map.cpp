@@ -75,6 +75,7 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
     for(int i = 0; i < 512; i++)
     {
         const float dist = lidar_image[i];
+        if(std::isinf(dist))
             continue;
         const float angle = i/512.0 * 2.0 * M_PI;
         double pos[3];
