@@ -160,7 +160,6 @@ bool isBetween(double theta, double start, double end)
 
 void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float theta)
 {
-    cameraPoints.reserve(20000);
     double fov = camera->getFov(); //radians
 
     double leftAngle = clampAngle(theta);
@@ -251,9 +250,19 @@ ImPlotPoint getPointFromMap(int idx, void *_map)
     return ImPlotPoint(vec_points[idx].first, vec_points[idx].second);
 }
 
+ImPlotPoint getCameraPointFromMap(int idx, void *_map)
+{
+    return ImPlotPoint(cameraPoints[idx].first, cameraPoints[idx].second);
+}
+
 size_t getCount()
 {
     return vec_points.size();
+}
+
+size_t getCameraCount()
+{
+    return cameraPoints.size();
 }
 
 void clearPointCloud()
@@ -268,12 +277,13 @@ void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
     double pos[3];
     memcpy(pos, gps->getValues(), 3 * sizeof(double));
     pos[2] *= -1;
-    const size_t count = getCount();
 
     if(regions.size() > 0 && ImPlot::BeginPlot("point cloud", ImVec2(w-50, h-100)))
     {
         ImPlot::SetNextLineStyle(ImVec4(0,0.4,1.0,1));
-        ImPlot::PlotScatterG("", getPointFromMap, nullptr, count, ImPlotItemFlags_NoFit);
+        ImPlot::PlotScatterG("", getPointFromMap, nullptr, getCount(), ImPlotItemFlags_NoFit);
+        ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
+        ImPlot::PlotScatterG("", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
         if(plot_regions)
         for(const auto& r : regions)
         {
@@ -284,8 +294,8 @@ void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
         }
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
         ImPlot::PlotScatter("", pos, pos + 2, 1, ImPlotItemFlags_NoFit);
-        double xs[] = { pos[0], pos[0] + 0.01*sin(-theta) };
-        double ys[] = { pos[2], pos[2] + 0.01*cos(-theta) };
+        double xs[] = { pos[0], pos[0] + 0.1*sin(-theta) };
+        double ys[] = { pos[2], pos[2] + 0.1*cos(-theta) };
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
         ImPlot::PlotLine("", xs, ys, 2, ImPlotItemFlags_NoFit);
         ImPlot::EndPlot();
