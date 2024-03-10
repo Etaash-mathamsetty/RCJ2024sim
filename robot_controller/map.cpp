@@ -122,7 +122,7 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         const auto coord = std::make_pair(x,y);
         //std::cout << "x: " << x << " y: " << y << std::endl;
         const auto coord2 = std::make_pair(x + pos_rounded[0], y + pos_rounded[2]);
-        if(regions[GPS_position(pos_rounded)].points.count(coord) == 0 && !regions[GPS_position(pos_rounded)].points[coord].wall)
+        if(regions[GPS_position(pos_rounded)].points.count(coord) == 0 || !regions[GPS_position(pos_rounded)].points[coord].wall)
         {
             vec_points.push_back(coord2);
             regions[GPS_position(pos_rounded)].points[coord].wall = true;
@@ -227,7 +227,7 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
         const auto coord = std::make_pair(x, y);
         //cout << "x: " << x << " y: " << y << endl;
         const auto coord2 = std::make_pair(x + pos_rounded[0], y + pos_rounded[2]);
-        if (regions[GPS_position(pos_rounded)].points.count(coord) == 0 && !regions[GPS_position(pos_rounded)].points[coord].camera)
+        if (regions[GPS_position(pos_rounded)].points.count(coord) == 0 || !regions[GPS_position(pos_rounded)].points[coord].camera)
         {
             cameraPoints.push_back(coord2);
             regions[GPS_position(pos_rounded)].points[coord].camera = true;
@@ -259,6 +259,7 @@ void clearPointCloud()
 {
     regions.clear();
     vec_points.clear();
+    cameraPoints.clear();
 }
 
 void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
