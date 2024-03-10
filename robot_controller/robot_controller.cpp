@@ -72,7 +72,7 @@ void end_frame(SDL_Renderer *renderer)
   SDL_RenderPresent(renderer);
 }
 
-void draw_frame(SDL_Window *window, bool* plot_regions)
+void draw_frame(RobotInstance *rb, SDL_Window *window, bool* plot_regions)
 {
 
   int width, height;
@@ -91,7 +91,7 @@ void draw_frame(SDL_Window *window, bool* plot_regions)
   ImGui::Checkbox("Plot Regions", plot_regions);
 
   ImPlot::SetNextMarkerStyle(ImPlotMarker_Asterisk, 1.5);
-  plotPoints(width, height, plot_regions);
+  plotPoints(rb->getGPS(), rb->m_imu->getRollPitchYaw()[2], width, height, plot_regions);
 }
 
 void poll_events(bool &running)
@@ -116,6 +116,42 @@ void delete_gui(SDL_Window* window, SDL_Renderer *renderer)
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
   SDL_Quit();
+}
+
+bool is_blocked(const float *cloud, bool extra = false)
+{
+  float val = cloud[0];
+  float val2 = cloud[10];
+  float val3 = cloud[500];
+  float val4 = cloud[20];
+  float val5 = cloud[490];
+  float val6 = cloud[30];
+  float val7 = cloud[480];
+  float val8 = cloud[40];
+  float val9 = cloud[470];
+
+  const float thresh = 0.06 + 0.04 * extra;
+
+  if(val < thresh)
+    return true;
+  if(val2 < thresh)
+    return true;
+  if(val3 < thresh)
+    return true;
+  if(val4 < thresh)
+    return true;
+  if(val5 < thresh)
+    return true;
+  if(val6 < thresh)
+    return true;
+  if(val7 < thresh)
+    return true;
+  if(val8 < thresh)
+    return true;
+  if(val9 < thresh)
+    return true;
+
+  return false;
 }
 
 // This is the main program of your controller.
@@ -162,7 +198,7 @@ int main(int argc, char **argv) {
 
     init_frame(renderer);
 
-    draw_frame(window, &plot_regions);
+    draw_frame(rb, window, &plot_regions);
 
     // rb->writeTileData();
 
@@ -214,6 +250,128 @@ int main(int argc, char **argv) {
     //cout << instance.m_lidar->getRollPitchYaw()[2] << endl;
 
     rb->update_lidar_cloud();
+
+    const float *cloud = rb->m_lidar->getRangeImage() + 512;
+
+    const int horizontalResolution = rb->m_lidar->getHorizontalResolution();
+
+
+    const float *right = cloud + horizontalResolution/4;
+    const float *left = cloud + horizontalResolution * 3 / 4;
+    const float *front = cloud;
+
+    const double kp = -125.0;
+    const double target = 0.06;
+
+    //printf("left %lf right %lf\n", left, right);
+
+    if(is_blocked(cloud))
+    {
+      if(std::isfinite(*left))
+      {
+        //turn right
+        while(is_blocked(cloud, true) && rb->step() != -1)
+          rb->forward(1.0, -1.0);
+      }
+      else if(std::isfinite(*right))
+      {
+        while(is_blocked(cloud, true) && rb->step() != -1)
+          rb->forward(-1.0, 1.0);
+      }
+      else
+      {
+        //turn right
+        while(is_blocked(cloud, true) && rb->step() != -1)
+          rb->forward(1.0, -1.0);
+      }
+    }
+    else if(std::isfinite(*left) && *right > 0.12 /* || (right > 0.15 && left < target+0.2)*/)
+    {
+      const double cmp_theta = 10/512.0 * 2 * M_PI;
+
+      const float *cmp_left = left + 10;
+
+      bool failed = false;
+
+      //check few sensors for holes
+      for(int i = 11; i < 20; i++)
+      {
+        const float *check_left = left + i;
+        if(std::isinf(*check_left)) failed = true;
+      }
+
+      
+
+      double err;
+
+      if(std::isfinite(*cmp_left) && !failed)
+      {
+
+        double cmp_left_real_dist = cos(cmp_theta) * *cmp_left;
+
+        double diff = cmp_left_real_dist - *left;
+
+        err = diff;
+
+        err += (*left - target) / 10;
+        err *= kp;
+        rb->forward(1.0+err, 1.0-err);
+
+        printf("diff %lf\n", diff);
+      }
+
+      //double err = *left - target;
+
+    }
+    else if(std::isfinite(*right))
+    {
+      const double cmp_theta = 10/512.0 * 2 * M_PI;
+
+      const float *cmp_right = right - 10;
+
+      bool failed = false;
+
+      //check few sensors for holes
+      for(int i = 1; i < 11; i++)
+      {
+        const float *check_right = right - i;
+        if(std::isinf(*check_right)) failed = true;
+      }
+
+      double err;
+
+      if(std::isfinite(*cmp_right) && !failed)
+      {
+
+        double cmp_left_real_dist = cos(cmp_theta) * *cmp_right;
+
+        double diff = cmp_left_real_dist - *right;
+
+        err = diff;
+
+        err += (*right - target) / 10;
+        err *= kp;
+        rb->forward(1.0-err, 1.0+err);
+
+        printf("diff %lf\n", diff);
+      }
+    }
+    // else if(std::isfinite(right))
+    // {
+    //   double err = right - target;
+    //   err *= kp;
+    //   rb->forward(1.0-err, 1.0+err);
+    // }
+    else
+    {
+      rb->forward(1.0, 1.0);
+    }
+    // else
+    // {
+    //   double err = left - right;
+    //   err *= kp;
+    //   rb->forward(1.0 - err, 1.0 + err);
+    // }
 
     end_frame(renderer);
   }

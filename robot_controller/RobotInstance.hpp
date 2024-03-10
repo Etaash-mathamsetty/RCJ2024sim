@@ -14,6 +14,7 @@
 #include <optional>
 #include <algorithm>
 #include "helper.hpp"
+#include "map.h"
 #include <opencv2/opencv.hpp>
 
 struct TILE
@@ -130,6 +131,10 @@ public:
     void alignRobot();
 
     void update_lidar_cloud();
+
+    REGION* get_current_region();
+
+    webots::GPS *getGPS();
 
     webots::Lidar *m_lidar;
     webots::InertialUnit *m_imu;

@@ -11,8 +11,9 @@
 
 #include "map.h"
 
+#ifndef M_PI
 #define M_PI 3.141592653589793238462643383
-
+#endif
 
 static RobotInstance* instance = NULL;
 
@@ -577,4 +578,14 @@ void RobotInstance::destroyInstance()
 void RobotInstance::update_lidar_cloud()
 {
     update_regions_map(m_gps, m_lidar->getRangeImage() + 512, m_imu->getRollPitchYaw()[2]);
+}
+
+webots::GPS *RobotInstance::getGPS()
+{
+    return m_gps;
+}
+
+REGION* RobotInstance::get_current_region()
+{
+    return get_region(m_gps);
 }

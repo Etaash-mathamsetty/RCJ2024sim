@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <cmath>
+#include <optional>
 
 #include "map.h"
 
@@ -72,11 +73,6 @@ struct GPS_hash
     }
 };
 
-struct REGION {
-    //points
-    std::map<std::pair<double,double>, bool> points;
-};
-
 std::unordered_map<GPS_position, REGION, GPS_hash> regions;
 std::vector<std::pair<double, double>> vec_points;
 std::vector<std::pair<double, double>> cameraPoints;
@@ -89,7 +85,6 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
     for(int i = 0; i < 512; i++)
     {
         const float dist = lidar_image[i];
-        if(std::isinf(dist))
             continue;
         const float angle = i/512.0 * 2.0 * PI;
         double pos[3];
@@ -276,8 +271,11 @@ void clearPointCloud()
     vec_points.clear();
 }
 
-void plotPoints(int w, int h, bool plot_regions)
+void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
 {
+    double pos[3];
+    memcpy(pos, gps->getValues(), 3 * sizeof(double));
+    pos[2] *= -1;
     const size_t count = getCount();
 
     if(regions.size() > 0 && ImPlot::BeginPlot("point cloud", ImVec2(w-50, h-100)))
@@ -292,7 +290,31 @@ void plotPoints(int w, int h, bool plot_regions)
             double ys[] = {r.first.z, r.first.z, r.first.z, r.first.z+0.1};
             ImPlot::PlotLine("", xs, ys, 4);
         }
+        ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
+        ImPlot::PlotScatter("", pos, pos + 2, 1, ImPlotItemFlags_NoFit);
+        double xs[] = { pos[0], pos[0] + 0.01*sin(-theta) };
+        double ys[] = { pos[2], pos[2] + 0.01*cos(-theta) };
+        ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
+        ImPlot::PlotLine("", xs, ys, 2, ImPlotItemFlags_NoFit);
         ImPlot::EndPlot();
     }
 
+}
+
+REGION* get_region(webots::GPS *gps)
+{
+  double pos[3];
+  double pos_rounded[3];
+  memcpy(pos, gps->getValues(), 3 * sizeof(double));
+  pos[2] *= -1;
+  //force single floor for now
+  pos[1] = 0;
+  pos_rounded[0] = floor_to(pos[0], region_size);
+  pos_rounded[1] = floor_to(pos[1], region_size);
+  pos_rounded[2] = floor_to(pos[2], region_size);
+
+  if(regions.count(GPS_position(pos_rounded)))
+    return &regions[pos_rounded];
+
+  return nullptr;
 }
