@@ -6,10 +6,8 @@
 #include <iostream>
 #include <cmath>
 #include <optional>
-
 #include "map.h"
 
-#define PI 3.141592653589793238462643383
 #define pdd std::pair<double, double>
 #define f first
 #define s second
@@ -17,14 +15,6 @@
 using namespace webots;
 
 const double region_size = 0.1;
-
-//thanks stack overflow
-template <class T>
-inline void hash_combine(std::size_t & s, const T & v)
-{
-    std::hash<T> h;
-    s ^= h(v) + 0x9e3779b9 + (s<< 6) + (s>> 2);
-}
 
 inline bool nearly_equal(double a, double b, const double thresh = 0.02)
 {
@@ -85,8 +75,9 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
     for(int i = 0; i < 512; i++)
     {
         const float dist = lidar_image[i];
+        if(std::isinf(dist))
             continue;
-        const float angle = i/512.0 * 2.0 * PI;
+        const float angle = i/512.0 * 2.0 * M_PI;
         double pos[3];
         double pos_rounded[3];
         memcpy(pos, gps->getValues(), 3 * sizeof(double));
@@ -132,21 +123,21 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         const auto coord = std::make_pair(x,y);
         //std::cout << "x: " << x << " y: " << y << std::endl;
         const auto coord2 = std::make_pair(x + pos_rounded[0], y + pos_rounded[2]);
-        if(regions[GPS_position(pos_rounded)].points.count(coord) == 0)
+        if(regions[GPS_position(pos_rounded)].points.count(coord) == 0 || !regions[GPS_position(pos_rounded)].points[coord].wall)
         {
             vec_points.push_back(coord2);
-            regions[GPS_position(pos_rounded)].points[coord] = true;
+            regions[GPS_position(pos_rounded)].points[coord].wall = true;
         }
     }
 }
 
 float clampAngle(float theta)
 {
-    if (abs(theta) > PI)
+    if (abs(theta) > M_PI)
     {
-        while (abs(theta) > PI)
+        while (abs(theta) > M_PI)
         {
-            theta -= copysign(2, theta) * PI;
+            theta -= copysign(2, theta) * M_PI;
         }
     }
     return theta;
@@ -158,22 +149,21 @@ bool isBetween(double theta, double start, double end)
     theta -= start;
     if (theta < 0)
     {
-        theta += 2 * PI;
+        theta += 2 * M_PI;
     }
     if (end < 0)
     {
-        end += 2 * PI;
+        end += 2 * M_PI;
     }
     return theta <= end;
 }
 
-void update_camera_map(GPS* gps, const float* lidar_image, float theta, Camera* camera)
+void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float theta)
 {
-    cameraPoints.reserve(20000);
     double fov = camera->getFov(); //radians
 
     double leftAngle = clampAngle(theta);
-    double rightAngle = clampAngle(theta + PI);
+    double rightAngle = clampAngle(theta + M_PI);
 
     //sweeping counterclockwise
     pdd leftEndpoints = pdd(clampAngle(leftAngle - fov / 2),
@@ -188,7 +178,7 @@ void update_camera_map(GPS* gps, const float* lidar_image, float theta, Camera* 
         const float dist = lidar_image[i];
         if (std::isinf(dist))
             continue;
-        const float angle = clampAngle(i / 512.0 * 2.0 * PI);
+        const float angle = clampAngle(i / 512.0 * 2.0 * M_PI);
         if (!isBetween(angle, leftEndpoints.f, leftEndpoints.s) &&
             !isBetween(angle, rightEndpoints.f, rightEndpoints.s))
             continue;
@@ -237,20 +227,20 @@ void update_camera_map(GPS* gps, const float* lidar_image, float theta, Camera* 
         const auto coord = std::make_pair(x, y);
         //cout << "x: " << x << " y: " << y << endl;
         const auto coord2 = std::make_pair(x + pos_rounded[0], y + pos_rounded[2]);
-        if (regions[GPS_position(pos_rounded)].points.count(coord) == 0)
+        if (regions[GPS_position(pos_rounded)].points.count(coord) == 0 || !regions[GPS_position(pos_rounded)].points[coord].camera)
         {
             cameraPoints.push_back(coord2);
-            regions[GPS_position(pos_rounded)].points[coord] = true;
+            regions[GPS_position(pos_rounded)].points[coord].camera = true;
         }
     }
 }
 
-std::vector<std::pair<double, double>> getLidarPoints()
+std::vector<std::pair<double, double>>& getLidarPoints()
 {
     return vec_points;
 }
 
-std::vector<std::pair<double, double>> getCameraPoints()
+std::vector<std::pair<double, double>>& getCameraPoints()
 {
     return cameraPoints;
 }
@@ -260,15 +250,26 @@ ImPlotPoint getPointFromMap(int idx, void *_map)
     return ImPlotPoint(vec_points[idx].first, vec_points[idx].second);
 }
 
+ImPlotPoint getCameraPointFromMap(int idx, void *_map)
+{
+    return ImPlotPoint(cameraPoints[idx].first, cameraPoints[idx].second);
+}
+
 size_t getCount()
 {
     return vec_points.size();
+}
+
+size_t getCameraCount()
+{
+    return cameraPoints.size();
 }
 
 void clearPointCloud()
 {
     regions.clear();
     vec_points.clear();
+    cameraPoints.clear();
 }
 
 void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
@@ -276,12 +277,13 @@ void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
     double pos[3];
     memcpy(pos, gps->getValues(), 3 * sizeof(double));
     pos[2] *= -1;
-    const size_t count = getCount();
 
     if(regions.size() > 0 && ImPlot::BeginPlot("point cloud", ImVec2(w-50, h-100)))
     {
         ImPlot::SetNextLineStyle(ImVec4(0,0.4,1.0,1));
-        ImPlot::PlotScatterG("", getPointFromMap, nullptr, count, ImPlotItemFlags_NoFit);
+        ImPlot::PlotScatterG("", getPointFromMap, nullptr, getCount(), ImPlotItemFlags_NoFit);
+        ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
+        ImPlot::PlotScatterG("", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
         if(plot_regions)
         for(const auto& r : regions)
         {
@@ -292,8 +294,8 @@ void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
         }
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
         ImPlot::PlotScatter("", pos, pos + 2, 1, ImPlotItemFlags_NoFit);
-        double xs[] = { pos[0], pos[0] + 0.01*sin(-theta) };
-        double ys[] = { pos[2], pos[2] + 0.01*cos(-theta) };
+        double xs[] = { pos[0], pos[0] + 0.1*sin(-theta) };
+        double ys[] = { pos[2], pos[2] + 0.1*cos(-theta) };
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
         ImPlot::PlotLine("", xs, ys, 2, ImPlotItemFlags_NoFit);
         ImPlot::EndPlot();
