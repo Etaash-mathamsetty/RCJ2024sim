@@ -404,12 +404,13 @@ void RobotInstance::lookForLetter()
     {
         cv::Mat frameL(m_leftCamera->getHeight(), m_leftCamera->getWidth(), CV_8UC4, (void*)m_leftCamera->getImage());
         std::vector<std::vector<cv::Point>> contoursL = getContours(frameL);
+        double camCenterX = m_leftCamera->getHeight() / 2;
         for (int i = 0; i < contoursL.size(); i++)
         {
             boundRect = boundingRect(contoursL[i]);
             cv::Mat roi(frameL, boundRect);
-            double rectCenterX = boundRect.x + boundRect.width / 2.0;
-            double rectCenterY = boundRect.y + boundRect.height / 2.0;
+            double rectCenterX = boundRect.x + boundRect.width / 2; //in columns
+            double thetaFromStraight;
             if (boundRect.width > 20 && boundRect.height > 20 && boundRect.x != 0 && boundRect.width + boundRect.x < frameL.cols)
             {
                 if (determineLetter(roi, "l", m_gps->getValues()))
