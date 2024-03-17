@@ -159,6 +159,10 @@ private:
 
     void detectVictims(cv::Mat& img, bool left);
 
+    bool determineLetter(const cv::Mat& roi, std::string side, const double* position);
+
+    void lookForLetter();
+
     RobotInstance();
 
     ~RobotInstance();

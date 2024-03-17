@@ -179,7 +179,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks)
     //TODO: use PID
     while(pos <= ticks && step() != -1)
     {
-        detectVictims();
+        lookForLetter();
         if(blackDetected())
             break;
         forward(vel);
@@ -334,7 +334,107 @@ void RobotInstance::writeTileData()
 
         (*map)[m_index].print();
 
-        detectVictims();
+        lookForLetter();
+    }
+}
+
+std::vector<std::vector<cv::Point>> getContours(cv::Mat frame)
+{
+    cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+    cv::threshold(frame, frame, 80, 255, cv::THRESH_BINARY_INV);
+    std::vector<std::vector<cv::Point>> contours;
+    std::vector<cv::Vec4i> hierarchy;
+    findContours(frame, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    return contours;
+}
+
+int countContours(cv::Mat frame)
+{
+    return getContours(frame).size();
+}
+
+bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const double* position) //"l" or "r"
+{
+    const int rows = roi.rows;
+    const int cols = roi.cols;
+    if (!(rows >= 30 && rows <= 96 && cols >= 23 && cols <= 74))
+    {
+        return false;
+    }
+    const int firstThird = rows / 3;
+    const int secondThird = rows * 2 / 3;
+    cv::Mat topRoi(roi, cv::Rect(0, 0, cols, firstThird));
+    cv::Mat midRoi(roi, cv::Rect(0, firstThird, cols, firstThird));
+    cv::Mat bottomRoi(roi, cv::Rect(0, secondThird, cols, firstThird));
+    int top = countContours(topRoi);
+    int mid = countContours(midRoi);
+    int bottom = countContours(bottomRoi);
+    int xPos = (int)position[0] * 100;
+    int zPos = (int)position[2] * 100;
+    char message[9];
+    memcpy(&message[0], &xPos, 4);
+    memcpy(&message[4], &zPos, 4);
+    if (top == 2 && mid == 2 && bottom == 1)
+    {
+        message[8] = 'U';
+    }
+    else if (top == 2 && mid == 1 && bottom == 2)
+    {
+        message[8] = 'H';
+    }
+    else if (top == 1 && mid == 1 && bottom == 1)
+    {
+        message[8] = 'S';
+    }
+    else
+    {
+        return false;
+    }
+    std::cout << message[8] << " found" << std::endl;
+    m_emitter->send(message, 9);
+    return true;
+}
+
+void RobotInstance::lookForLetter()
+{
+    const int horizontalResolution = m_lidar->getHorizontalResolution();
+    const float* rangeImage = m_lidar->getRangeImage() + horizontalResolution * 2;
+    cv::Rect boundRect;
+    if (rangeImage[horizontalResolution * 3 / 4] < M_PER_TILE)
+    {
+        cv::Mat frameL(m_leftCamera->getHeight(), m_leftCamera->getWidth(), CV_8UC4, (void*)m_leftCamera->getImage());
+        std::vector<std::vector<cv::Point>> contoursL = getContours(frameL);
+        for (int i = 0; i < contoursL.size(); i++)
+        {
+            boundRect = boundingRect(contoursL[i]);
+            cv::Mat roi(frameL, boundRect);
+            double rectCenterX = boundRect.x + boundRect.width / 2.0;
+            double rectCenterY = boundRect.y + boundRect.height / 2.0;
+            if (boundRect.width > 20 && boundRect.height > 20 && boundRect.x != 0 && boundRect.width + boundRect.x < frameL.cols)
+            {
+                if (determineLetter(roi, "l", m_gps->getValues()))
+                {
+                    return;
+                }
+            }
+        }
+    }
+    if (rangeImage[horizontalResolution / 4] < M_PER_TILE)
+    {
+        cv::Mat frameR(m_rightCamera->getHeight(), m_rightCamera->getWidth(), CV_8UC4, (void*)m_rightCamera->getImage());
+        std::vector<std::vector<cv::Point>> contoursR = getContours(frameR);
+        for (int i = 0; i < contoursR.size(); i++)
+        {
+            boundRect = boundingRect(contoursR[i]);
+            cv::Mat roi(frameR, boundRect);
+            if (boundRect.width > 20 && boundRect.height > 20 && boundRect.x != 0 && boundRect.width + boundRect.x < frameR.cols)
+            {
+                if (determineLetter(roi, "r", m_gps->getValues()))
+                {
+                    return;
+                }
+            }
+        }
     }
 }
 
