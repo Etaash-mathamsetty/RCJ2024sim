@@ -182,6 +182,7 @@ int main(int argc, char **argv) {
   SDL_Window *window;
   SDL_Renderer *renderer;
   SDL_CreateWindowAndRenderer(800, 600, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE, &window, &renderer);
+  SDL_SetWindowTitle(window, "Simulation Debug Window");
 
   init_gui(window, renderer);
 
