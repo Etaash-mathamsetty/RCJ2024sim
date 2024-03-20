@@ -7,6 +7,7 @@
 #include <cmath>
 #include <optional>
 #include "map.h"
+#include "constants.h"
 
 #define pdd std::pair<double, double>
 #define f first
@@ -160,7 +161,7 @@ bool isBetween(double theta, double start, double end)
 
 void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float theta)
 {
-    double fov = camera->getFov(); //radians
+    double fov = CAMERA_FOV; //radians
 
     double leftAngle = clampAngle(theta);
     double rightAngle = clampAngle(theta + M_PI);
@@ -181,6 +182,8 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
         const float angle = clampAngle(i / 512.0 * 2.0 * M_PI);
         if (!isBetween(angle, leftEndpoints.f, leftEndpoints.s) &&
             !isBetween(angle, rightEndpoints.f, rightEndpoints.s))
+            continue;
+        if (dist > MAX_VIC_DETECTION_RANGE)
             continue;
         double pos[3];
         double pos_rounded[3];
@@ -272,28 +275,47 @@ void clearPointCloud()
     cameraPoints.clear();
 }
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+#endif
+
+
+
 void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
 {
     double pos[3];
     memcpy(pos, gps->getValues(), 3 * sizeof(double));
     pos[2] *= -1;
 
-    if(regions.size() > 0 && ImPlot::BeginPlot("point cloud", ImVec2(w-50, h-100)))
+    ImVec2 GraphSize = ImVec2(w-50, h-100);
+
+    if(regions.size() > 0 && ImPlot::BeginPlot("Debug View", GraphSize))
     {
+        ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal);
         ImPlot::SetNextLineStyle(ImVec4(0,0.4,1.0,1));
-        ImPlot::PlotScatterG("", getPointFromMap, nullptr, getCount(), ImPlotItemFlags_NoFit);
+        ImPlot::PlotScatterG("Lidar Points", getPointFromMap, nullptr, getCount(), ImPlotItemFlags_NoFit);
         ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
-        ImPlot::PlotScatterG("", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
+        ImPlot::SetNextMarkerStyle(ImPlotMarker_Plus);
+        ImPlot::PlotScatterG("Camera Points", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
         if(plot_regions)
-        for(const auto& r : regions)
-        {
-            ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0,0.5));
-            double xs[] = {r.first.x, r.first.x+0.1, r.first.x, r.first.x};
-            double ys[] = {r.first.z, r.first.z, r.first.z, r.first.z+0.1};
-            ImPlot::PlotLine("", xs, ys, 4);
-        }
+            for(const auto& r : regions)
+            {
+                ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0,0.5));
+                double xs[] = {r.first.x, r.first.x+0.1, r.first.x, r.first.x};
+                double ys[] = {r.first.z, r.first.z, r.first.z, r.first.z+0.1};
+                ImPlot::PlotLine("Regions", xs, ys, 4);
+            }
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
-        ImPlot::PlotScatter("", pos, pos + 2, 1, ImPlotItemFlags_NoFit);
+        ImPlot::PlotScatter("Robot", pos, pos + 2, 1, ImPlotItemFlags_NoFit);
+        {
+            double xs[] = { pos[0] + MAX_VIC_DETECTION_RANGE * sin(-theta + CAMERA_FOV), pos[0] - MAX_VIC_DETECTION_RANGE * sin(-theta - CAMERA_FOV),
+            pos[0] + MAX_VIC_DETECTION_RANGE * sin(-theta + M_PI + CAMERA_FOV), pos[0] - MAX_VIC_DETECTION_RANGE * sin(-theta + M_PI - CAMERA_FOV)};
+            double ys[] = { pos[2] + MAX_VIC_DETECTION_RANGE * cos(-theta + CAMERA_FOV), pos[2] -  MAX_VIC_DETECTION_RANGE * cos(-theta - CAMERA_FOV),
+            pos[2] + MAX_VIC_DETECTION_RANGE * cos(-theta + M_PI + CAMERA_FOV), pos[2] - MAX_VIC_DETECTION_RANGE * cos(-theta + M_PI - CAMERA_FOV)};
+            ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Diamond);
+            ImPlot::PlotScatter("Camera Detection Range", xs, ys, ARRAY_SIZE(xs), ImPlotItemFlags_NoFit);
+        }
         double xs[] = { pos[0], pos[0] + 0.1*sin(-theta) };
         double ys[] = { pos[2], pos[2] + 0.1*cos(-theta) };
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
