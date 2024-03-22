@@ -11,6 +11,7 @@ find_package(SDL2 REQUIRED)
 # Get C or C++ sources in the current directory (only).
 file(GLOB C_SOURCES *.c)
 file(GLOB CPP_SOURCES *.cpp imgui/*.cpp)
+set (CMAKE_CXX_STANDARD 17)
 set(SOURCES ${C_SOURCES} ${CPP_SOURCES})
 
 # Set the  Webots home path (change it according to your installation method)
