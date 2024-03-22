@@ -8,16 +8,20 @@ project(${PROJECT})
 find_package(OpenCV REQUIRED)
 find_package(SDL2 REQUIRED)
 
-# Get C or C++ sources in the current directory (only).
-file(GLOB C_SOURCES *.c)
-file(GLOB CPP_SOURCES *.cpp imgui/*.cpp)
-set (CMAKE_CXX_STANDARD 17)
-set(SOURCES ${C_SOURCES} ${CPP_SOURCES})
-
 # Set the  Webots home path (change it according to your installation method)
 if(NOT DEFINED WEBOTS_HOME)
   set(WEBOTS_HOME "/usr/local/webots")
 endif()
+
+# Get C or C++ sources in the current directory (only). Windows needs these cpp files compiled as well.
+file(GLOB C_SOURCES *.c)
+if(WIN32)
+  file(GLOB CPP_SOURCES *.cpp imgui/*.cpp ${WEBOTS_HOME}/resources/projects/default/controllers/cpp/*.cpp)
+else()
+  file(GLOB CPP_SOURCES *.cpp imgui/*.cpp)
+endif()
+set (CMAKE_CXX_STANDARD 17)
+set(SOURCES ${C_SOURCES} ${CPP_SOURCES})
 #set(WEBOTS_HOME "/snap/webots/current/usr/share/webots")
 
 # Link with the Webots controller library.
