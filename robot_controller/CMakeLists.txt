@@ -16,7 +16,7 @@ endif()
 # Get C or C++ sources in the current directory (only). Windows needs these cpp files compiled as well.
 file(GLOB C_SOURCES *.c)
 if(WIN32)
-  file(GLOB CPP_SOURCES *.cpp imgui/*.cpp ${WEBOTS_HOME}/resources/projects/default/controllers/cpp/*.cpp)
+  file(GLOB CPP_SOURCES *.cpp imgui/*.cpp ${WEBOTS_HOME}/src/controller/cpp/*.cpp)
 else()
   file(GLOB CPP_SOURCES *.cpp imgui/*.cpp)
 endif()
