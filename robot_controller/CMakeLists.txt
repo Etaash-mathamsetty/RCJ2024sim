@@ -26,8 +26,9 @@ set(SOURCES ${C_SOURCES} ${CPP_SOURCES})
 
 # Link with the Webots controller library.
 link_directories(${WEBOTS_HOME}/lib/controller ${OPENCV_LIBRARY_DIRS} ${SDL2_LIBRARY_DIRS})
+# you have to compile the webots c++ portion by yourself on windows
 if(WIN32)
-  set (LIBRARIES libController.lib libController.dll libCppController.dll)
+  set (LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}Controller${CMAKE_SHARED_LIBRARY_SUFFIX})
 else()
   set (LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}Controller${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_SHARED_LIBRARY_PREFIX}CppController${CMAKE_SHARED_LIBRARY_SUFFIX})
 endif()
