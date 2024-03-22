@@ -59,7 +59,8 @@ void init_gui(SDL_Window *window, SDL_Renderer *renderer)
 	ImGui_ImplSDLRenderer2_Init(renderer);
 
 #ifdef _WIN32
-  ImGui_ImplWin32_EnableDpiAwareness();
+  // ImGui_ImplWin32_EnableDpiAwareness();
+  // ImGui_ImplWin32_GetDpiScaleForHwnd(GetDesktopWindow());
 #endif
 }
 
