@@ -10,10 +10,8 @@
 #include <opencv2/ml/ml.hpp>
 
 #include "map.h"
-
-#ifndef M_PI
-#define M_PI 3.141592653589793238462643383
-#endif
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 static RobotInstance* instance = NULL;
 

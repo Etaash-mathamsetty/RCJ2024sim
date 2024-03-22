@@ -4,6 +4,7 @@
 #include <map>
 #include <unordered_map>
 #include <iostream>
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <optional>
 #include "map.h"
