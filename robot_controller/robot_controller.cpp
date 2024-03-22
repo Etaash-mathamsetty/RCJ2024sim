@@ -100,7 +100,7 @@ void draw_frame(RobotInstance *rb, SDL_Window *window, bool* plot_regions)
   ImGui::Checkbox("Plot Regions", plot_regions);
 
   ImPlot::SetNextMarkerStyle(ImPlotMarker_Asterisk, 1.5);
-  plotPoints(rb->getGPS(), rb->m_imu->getRollPitchYaw()[2], width, height, plot_regions);
+  plotPoints(rb->getGPS(), rb->m_imu->getRollPitchYaw()[2], width, height, *plot_regions);
 }
 
 void poll_events(bool &running)
