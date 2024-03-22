@@ -14,7 +14,9 @@ file(GLOB CPP_SOURCES *.cpp imgui/*.cpp)
 set(SOURCES ${C_SOURCES} ${CPP_SOURCES})
 
 # Set the  Webots home path (change it according to your installation method)
-set(WEBOTS_HOME "/usr/local/webots")
+if(NOT DEFINED WEBOTS_HOME)
+  set(WEBOTS_HOME "/usr/local/webots")
+endif()
 #set(WEBOTS_HOME "/snap/webots/current/usr/share/webots")
 
 # Link with the Webots controller library.
