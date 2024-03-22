@@ -24,6 +24,10 @@
 #include "imgui/imgui_impl_sdl2.h"
 #include "imgui/imgui_impl_sdlrenderer2.h"
 
+#ifdef _WIN32
+#include "win_imgui/imgui_impl_win32.h"
+#endif
+
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
 using namespace std;
@@ -53,6 +57,10 @@ void init_gui(SDL_Window *window, SDL_Renderer *renderer)
 
   ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
 	ImGui_ImplSDLRenderer2_Init(renderer);
+
+#ifdef _WIN32
+  ImGui_ImplWin32_EnableDpiAwareness();
+#endif
 }
 
 void init_frame(SDL_Renderer *renderer)
