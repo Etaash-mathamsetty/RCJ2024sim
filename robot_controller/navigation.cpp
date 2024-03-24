@@ -161,13 +161,15 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax)
         pii pindex = target;
         stack<pdd> route;
         int i = 0;
-        while (pindex != current)
+        while (i < 6 && pindex != current)
         {
             route.push(antiConvert(pindex));
             pindex = parent[pindex];
+            i++;
         }
         return route;
     }
+    cout << "Route not found" << endl;
     return stack<pdd>();
 }
 

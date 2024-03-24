@@ -66,13 +66,13 @@ struct GPS_hash
 };
 
 std::unordered_map<GPS_position, REGION, GPS_hash> regions;
-std::vector<std::pair<double, double>> vec_points;
-std::vector<std::pair<double, double>> cameraPoints;
+std::vector<std::pair<double, double>> vecLidarPoints;
+std::vector<std::pair<double, double>> vecCameraPoints;
 
 //theta is in radians
 void update_regions_map(GPS *gps, const float *lidar_image, float theta)
 {
-    vec_points.reserve(20000);
+    vecLidarPoints.reserve(20000);
 
     for(int i = 0; i < 512; i++)
     {
@@ -127,7 +127,7 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         const auto coord2 = std::make_pair(x + pos_rounded[0], y + pos_rounded[2]);
         if(regions[GPS_position(pos_rounded)].points.count(coord) == 0 || !regions[GPS_position(pos_rounded)].points[coord].wall)
         {
-            vec_points.push_back(coord2);
+            vecLidarPoints.push_back(coord2);
             regions[GPS_position(pos_rounded)].points[coord].wall = true;
         }
     }
@@ -164,8 +164,8 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
 {
     double fov = CAMERA_FOV; //radians
 
-    double leftAngle = clampAngle(theta);
-    double rightAngle = clampAngle(theta + M_PI);
+    double leftAngle = clampAngle(theta - M_PI / 2);
+    double rightAngle = clampAngle(theta + M_PI / 2);
 
     //sweeping counterclockwise
     pdd leftEndpoints = pdd(clampAngle(leftAngle - fov / 2),
@@ -173,7 +173,7 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
     pdd rightEndpoints = pdd(clampAngle(rightAngle - fov / 2),
         clampAngle(rightAngle + fov / 2));
 
-    cameraPoints.reserve(20000);
+    vecCameraPoints.reserve(20000);
 
     for (int i = 0; i < 512; i++)
     {
@@ -181,8 +181,8 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
         if (std::isinf(dist))
             continue;
         const float angle = clampAngle(i / 512.0 * 2.0 * M_PI);
-        if (!isBetween(angle, leftEndpoints.f, leftEndpoints.s) &&
-            !isBetween(angle, rightEndpoints.f, rightEndpoints.s))
+        if (!isBetween(angle - theta, leftEndpoints.f, leftEndpoints.s) &&
+            !isBetween(angle - theta, rightEndpoints.f, rightEndpoints.s))
             continue;
         if (dist > MAX_VIC_DETECTION_RANGE)
             continue;
@@ -233,7 +233,7 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
         const auto coord2 = std::make_pair(x + pos_rounded[0], y + pos_rounded[2]);
         if (regions[GPS_position(pos_rounded)].points.count(coord) == 0 || !regions[GPS_position(pos_rounded)].points[coord].camera)
         {
-            cameraPoints.push_back(coord2);
+            vecCameraPoints.push_back(coord2);
             regions[GPS_position(pos_rounded)].points[coord].camera = true;
         }
     }
@@ -241,39 +241,39 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
 
 std::vector<std::pair<double, double>>& getLidarPoints()
 {
-    return vec_points;
+    return vecLidarPoints;
 }
 
 std::vector<std::pair<double, double>>& getCameraPoints()
 {
-    return cameraPoints;
+    return vecCameraPoints;
 }
 
 ImPlotPoint getPointFromMap(int idx, void *_map)
 {
-    return ImPlotPoint(vec_points[idx].first, vec_points[idx].second);
+    return ImPlotPoint(vecLidarPoints[idx].first, vecLidarPoints[idx].second);
 }
 
 ImPlotPoint getCameraPointFromMap(int idx, void *_map)
 {
-    return ImPlotPoint(cameraPoints[idx].first, cameraPoints[idx].second);
+    return ImPlotPoint(vecCameraPoints[idx].first, vecCameraPoints[idx].second);
 }
 
 size_t getCount()
 {
-    return vec_points.size();
+    return vecLidarPoints.size();
 }
 
 size_t getCameraCount()
 {
-    return cameraPoints.size();
+    return vecCameraPoints.size();
 }
 
 void clearPointCloud()
 {
     regions.clear();
-    vec_points.clear();
-    cameraPoints.clear();
+    vecLidarPoints.clear();
+    vecCameraPoints.clear();
 }
 
 #ifndef ARRAY_SIZE
