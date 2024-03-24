@@ -55,9 +55,7 @@ public:
     static RobotInstance* getInstance();
     static void destroyInstance();
 
-    int step() {
-        return m_robot->step(m_timestep);
-    }
+    int step();
 
     void forward(double l_vel, double r_vel)
     {
@@ -132,6 +130,10 @@ public:
 
     void update_lidar_cloud();
 
+    void add_step_callback(const std::function<void()>& f) { 
+        m_callbacks.push_back(f); 
+    }
+
     REGION* get_current_region();
 
     webots::GPS *getGPS();
@@ -184,6 +186,8 @@ private:
     int m_floor;
     bool quitable;
     DIR m_dir;
+
+    std::vector<std::function<void()>> m_callbacks;
 
     std::unordered_map<int, std::pair<int, int>> start_tile_floor;
     std::unordered_map<int, std::unordered_map<std::pair<int, int>, TILE, pair_hash_combiner>> floors;

@@ -85,6 +85,8 @@ RobotInstance::RobotInstance()
 
     knn = cv::ml::KNearest::create();
     knn->load("knn.yml");
+
+    m_callbacks.push_back([this](){this->update_lidar_cloud();});
 }
 
 RobotInstance::~RobotInstance()
@@ -137,6 +139,19 @@ void RobotInstance::turnTo(double speed, double target_angle)
 
     stopMotors();
 }
+
+int RobotInstance::step() {
+    int ret = m_robot->step(m_timestep);
+    if(ret == -1)
+        return -1;
+
+    for(const auto& callback : m_callbacks) {
+        callback();
+    }
+
+    return ret;
+}
+
 
 void RobotInstance::turnTo(double speed, DIR dir)
 {

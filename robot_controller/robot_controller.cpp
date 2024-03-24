@@ -213,15 +213,21 @@ int main(int argc, char **argv) {
 
   rb->update_lidar_cloud();
 
+  rb->add_step_callback(
+    [&running, &renderer, &rb, &window, &plot_regions]()
+    {
+      poll_events(running);
+
+      init_frame(renderer);
+
+      draw_frame(rb, window, &plot_regions);
+
+      end_frame(renderer);
+    });
+
   // Main loop:
   // - perform simulation steps until Webots is stopping the controller
   while (rb->step() != -1 && running) {
-
-    poll_events(running);
-
-    init_frame(renderer);
-
-    draw_frame(rb, window, &plot_regions);
 
     // rb->writeTileData();
 
@@ -395,8 +401,6 @@ int main(int argc, char **argv) {
     //   err *= kp;
     //   rb->forward(1.0 - err, 1.0 + err);
     // }
-
-    end_frame(renderer);
   }
 
   delete_gui(window, renderer);
