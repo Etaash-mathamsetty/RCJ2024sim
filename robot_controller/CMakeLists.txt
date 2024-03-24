@@ -41,7 +41,7 @@ target_link_libraries(${PROJECT} ${LIBRARIES} ${SDL2_LIBRARIES} ${OpenCV_LIBS})
 # Copy the target executable at the right location. (can't be assed to fix this on windows)
 if(NOT WIN32)
   add_custom_command(TARGET ${PROJECT} POST_BUILD COMMAND ${CMAKE_COMMAND} -E
-  copy ${CMAKE_BINARY_DIR}/${PROJECT}.exe ${CMAKE_SOURCE_DIR}
+  copy ${CMAKE_BINARY_DIR}/${PROJECT} ${CMAKE_SOURCE_DIR}
 )
 endif()
 
