@@ -193,6 +193,19 @@ int main(int argc, char **argv) {
   SDL_CreateWindowAndRenderer(800, 600, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE, &window, &renderer);
   SDL_SetWindowTitle(window, "Simulation Debug Window");
 
+  int rw = 0, rh = 0;
+  SDL_GetRendererOutputSize(renderer, &rw, &rh);
+  if(rw != 800) {
+    float widthScale = (float)rw / (float) 800;
+    float heightScale = (float)rh / (float) 600;
+
+    if(widthScale != heightScale) {
+      fprintf(stderr, "WARNING: width scale != height scale\n");
+    }
+
+    SDL_RenderSetScale(renderer, widthScale, heightScale);
+  }
+
   init_gui(window, renderer);
 
   bool running = true;
