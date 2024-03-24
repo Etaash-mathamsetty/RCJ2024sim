@@ -7,8 +7,14 @@
 #include <map>
 #include <string>
 #include <climits>
+#include <webots/GPS.hpp>
+#include <webots/Lidar.hpp>
+#include <set>
+#include "map.h"
+#include "constants.h"
 
 using namespace std;
+using namespace webots;
 
 #define PI 2*acos(0)
 #define pdd pair<double, double>
@@ -190,6 +196,102 @@ bool isOnWall(pdd point)
         }
     }
     return false;
+}
+
+set<pair<int, pdd>> toVisit;
+set<pdd> visitedPoints;
+stack<pdd> bfsResult = {};
+
+pdd getCurrentPosition(GPS* gps)
+{
+    return pdd(r2d(gps->getValues()[0]), r2d(gps->getValues()[2]));
+}
+
+bool chooseMove(GPS* gps, Lidar* lidar, set<pair<int, pdd>> toVisit)
+{
+    int horizontalResolution = lidar->getHorizontalResolution();
+    const float* lidar_image = lidar->getRangeImage();
+    float sides[4] = {0.0f};
+
+    sides[0] = lidar_image[0];
+    sides[1] = lidar_image[horizontalResolution / 4]; //right
+    sides[3] = lidar_image[horizontalResolution / 2]; //back
+    sides[2] = lidar_image[((horizontalResolution * 3) / 4)]; //left
+
+    if (!bfsResult.empty())
+    {
+        pdd nextPoint = bfsResult.top();
+        bfsResult.pop();
+        movePlaceholder(directionToPlaceholder(getCurrentPosition(gps), nextPoint));
+    }
+    for (int i = 0; i <= 4; i++)
+    {
+        if (i == 4)
+        {
+            stack<pdd> bfsResult = pointBfs(getCurrentPosition(gps), (prev(toVisit.end()))->second, getMinMax(getLidarPoints()));
+            toVisit.erase(prev(toVisit.end()));
+        }
+        if (sides[i] >= M_PER_TILE)
+        {
+            if (i == 0)
+            {
+                if (!tileTo(currentRotation).visited && tileTo(currentRotation).type != hole)
+                {
+                    i = 10;
+                }
+            }
+            if (i == 3)
+            {
+                if (!tileTo(currentRotation + turn180).visited && tileTo(currentRotation + turn180).type != hole)
+                {
+                    turnLeft(turnSpeed, currentRotation + turn180);
+                    i = 10;
+                }
+            }
+            if (i == 2)
+            {
+                if (sides[2] <= sides[1] || sides[1] < mPerTile) //if left is shorter than right or wall at right
+                {
+                    if (!tileTo(currentRotation + leftTurn).visited && tileTo(currentRotation + leftTurn).type != hole)
+                    {
+                        turnLeft(turnSpeed, currentRotation + leftTurn);
+                        i = 10;
+                    }
+                }
+            }
+            if (i == 1)
+            {
+                if (sides[1] <= sides[2] || sides[2] < mPerTile) //if right is shorter than left or wall at left
+                {
+                    if (!tileTo(currentRotation + rightTurn).visited && tileTo(currentRotation + rightTurn).type != hole)
+                    {
+                        turnRight(turnSpeed, currentRotation + rightTurn);
+                        i = 10;
+                    }
+                }
+            }
+        }
+    }
+    if (allVisited())
+    {
+        if (field[y][x].num != 0)
+        {
+            bfs(0);
+        }
+        cout << "all finished!" << endl;
+        char msg = 'E';
+        emitter->send(&msg, 1);
+        return 1;
+    }
+    if (!skipMove)
+    {
+        //move(moveSpeed, 1.0);
+    }
+    else
+    {
+        skipMove = false;
+    }
+    return 0;
 }
 
 // int main()

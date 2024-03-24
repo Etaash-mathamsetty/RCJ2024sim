@@ -294,113 +294,115 @@ int main(int argc, char **argv) {
 
     //printf("left %lf right %lf\n", left, right);
 
-    if(is_blocked(cloud))
-    {
-      if(std::isfinite(*left))
-      {
-        //turn right
-        while(is_blocked(cloud, true) && rb->step() != -1)
-          rb->forward(1.0, -1.0);
-      }
-      else if(std::isfinite(*right))
-      {
-        while(is_blocked(cloud, true) && rb->step() != -1)
-          rb->forward(-1.0, 1.0);
-      }
-      else
-      {
-        //turn right
-        while(is_blocked(cloud, true) && rb->step() != -1)
-          rb->forward(1.0, -1.0);
-      }
-    }
-    else if(std::isfinite(*left) && *right > 0.12 /* || (right > 0.15 && left < target+0.2)*/)
-    {
-      const double cmp_theta = 10/512.0 * 2 * M_PI;
+    // if(is_blocked(cloud))
+    // {
+    //   if(std::isfinite(*left))
+    //   {
+    //     //turn right
+    //     while(is_blocked(cloud, true) && rb->step() != -1)
+    //       rb->forward(1.0, -1.0);
+    //   }
+    //   else if(std::isfinite(*right))
+    //   {
+    //     while(is_blocked(cloud, true) && rb->step() != -1)
+    //       rb->forward(-1.0, 1.0);
+    //   }
+    //   else
+    //   {
+    //     //turn right
+    //     while(is_blocked(cloud, true) && rb->step() != -1)
+    //       rb->forward(1.0, -1.0);
+    //   }
+    // }
+    // else if(std::isfinite(*left) && *right > 0.12 /* || (right > 0.15 && left < target+0.2)*/)
+    // {
+    //   const double cmp_theta = 10/512.0 * 2 * M_PI;
 
-      const float *cmp_left = left + 10;
+    //   const float *cmp_left = left + 10;
 
-      bool failed = false;
+    //   bool failed = false;
 
-      //check few sensors for holes
-      for(int i = 11; i < 20; i++)
-      {
-        const float *check_left = left + i;
-        if(std::isinf(*check_left)) failed = true;
-      }
+    //   //check few sensors for holes
+    //   for(int i = 11; i < 20; i++)
+    //   {
+    //     const float *check_left = left + i;
+    //     if(std::isinf(*check_left)) failed = true;
+    //   }
 
       
 
-      double err;
+    //   double err;
 
-      if(std::isfinite(*cmp_left) && !failed)
-      {
+    //   if(std::isfinite(*cmp_left) && !failed)
+    //   {
 
-        double cmp_left_real_dist = cos(cmp_theta) * *cmp_left;
+    //     double cmp_left_real_dist = cos(cmp_theta) * *cmp_left;
 
-        double diff = cmp_left_real_dist - *left;
+    //     double diff = cmp_left_real_dist - *left;
 
-        err = diff;
+    //     err = diff;
 
-        err += (*left - target) / 10;
-        err *= kp;
-        rb->forward(1.0+err, 1.0-err);
+    //     err += (*left - target) / 10;
+    //     err *= kp;
+    //     rb->forward(1.0+err, 1.0-err);
 
-        printf("diff %lf\n", diff);
-      }
+    //     printf("diff %lf\n", diff);
+    //   }
 
-      //double err = *left - target;
+    //   //double err = *left - target;
 
-    }
-    else if(std::isfinite(*right))
-    {
-      const double cmp_theta = 10/512.0 * 2 * M_PI;
-
-      const float *cmp_right = right - 10;
-
-      bool failed = false;
-
-      //check few sensors for holes
-      for(int i = 1; i < 11; i++)
-      {
-        const float *check_right = right - i;
-        if(std::isinf(*check_right)) failed = true;
-      }
-
-      double err;
-
-      if(std::isfinite(*cmp_right) && !failed)
-      {
-
-        double cmp_left_real_dist = cos(cmp_theta) * *cmp_right;
-
-        double diff = cmp_left_real_dist - *right;
-
-        err = diff;
-
-        err += (*right - target) / 10;
-        err *= kp;
-        rb->forward(1.0-err, 1.0+err);
-
-        printf("diff %lf\n", diff);
-      }
-    }
-    // else if(std::isfinite(right))
-    // {
-    //   double err = right - target;
-    //   err *= kp;
-    //   rb->forward(1.0-err, 1.0+err);
     // }
-    else
-    {
-      rb->forward(1.0, 1.0);
-    }
+    // else if(std::isfinite(*right))
+    // {
+    //   const double cmp_theta = 10/512.0 * 2 * M_PI;
+
+    //   const float *cmp_right = right - 10;
+
+    //   bool failed = false;
+
+    //   //check few sensors for holes
+    //   for(int i = 1; i < 11; i++)
+    //   {
+    //     const float *check_right = right - i;
+    //     if(std::isinf(*check_right)) failed = true;
+    //   }
+
+    //   double err;
+
+    //   if(std::isfinite(*cmp_right) && !failed)
+    //   {
+
+    //     double cmp_left_real_dist = cos(cmp_theta) * *cmp_right;
+
+    //     double diff = cmp_left_real_dist - *right;
+
+    //     err = diff;
+
+    //     err += (*right - target) / 10;
+    //     err *= kp;
+    //     rb->forward(1.0-err, 1.0+err);
+
+    //     printf("diff %lf\n", diff);
+    //   }
+    // }
+    // // else if(std::isfinite(right))
+    // // {
+    // //   double err = right - target;
+    // //   err *= kp;
+    // //   rb->forward(1.0-err, 1.0+err);
+    // // }
+    // else
+    // {
+    //   rb->forward(1.0, 1.0);
+    // }
     // else
     // {
     //   double err = left - right;
     //   err *= kp;
     //   rb->forward(1.0 - err, 1.0 + err);
     // }
+
+    
   }
 
   delete_gui(window, renderer);
