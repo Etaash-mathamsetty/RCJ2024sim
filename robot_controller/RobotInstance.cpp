@@ -4,10 +4,14 @@
 #include <string.h>
 #include <unordered_map>
 #include <optional>
+#include <stack>
 #include <list>
+#include <array>
 #include "helper.hpp"
 #include <opencv2/opencv.hpp>
 #include <opencv2/ml/ml.hpp>
+#include "navigation.h"
+
 
 #include "map.h"
 #define _USE_MATH_DEFINES
@@ -591,54 +595,9 @@ void RobotInstance::detectVictims(cv::Mat& img, bool left)
     //cv::waitKey(1);
 }
 
-std::list<std::pair<int, int>> RobotInstance::BFS()
+std::stack<pdd> RobotInstance::BFS(pdd current, pdd target)
 {
-    std::unordered_map<std::pair<int, int>, std::pair<int, int>, pair_hash_combiner> parent;
-	std::list<std::pair<int, int>> worker;
-	std::list<std::pair<int, int>> path;
-	std::pair<int, int> cur_index = m_index;
-	do
-	{
-		if(worker.size() > 0)
-			worker.pop_front();
-
-		auto quad = getNeighbors(cur_index);
-		for(int i = 0; i < 4; i++)
-		{
-			if(quad[i].has_value() && (parent.count(cur_index) == 0 || parent[cur_index] != *quad[i]) && parent.count(*quad[i]) == 0)
-			{
-				worker.push_back(*quad[i]);
-				parent[*quad[i]] = cur_index;
-			}
-		}
-
-		if(worker.size() == 0)
-		{
-			/* return to start */
-			std::cout << "finished with the maze!" << std::endl;
-			std::cout << "returning to starting..." << std::endl;
-			quitable = true;
-			(*map)[start_tile_floor[m_floor]].vis = false;
-			return BFS();
-		}
-
-		cur_index = worker.front();
-
-		// BFS is done
-		if(!(*map)[cur_index].vis)
-			break;
-
-	} while(worker.size() > 0);
-
-	//backtracking
-	path.push_front(cur_index);
-	do
-	{
-		path.push_front(parent[path.front()]);
-	} while(path.front() != m_index);
-	path.pop_front();
-
-	return path;
+    return pointBfs(current, target, getMinMax(getLidarPoints()));
 }
 
 bool RobotInstance::blackDetected()

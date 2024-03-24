@@ -6,9 +6,9 @@
 #include <webots/Emitter.hpp>
 #include <webots/Camera.hpp>
 #include <webots/GPS.hpp>
-#include <list>
+#include <stack>
 #include <array>
-#include "constants.h"
+#include "navigation.h"
 #include <cstdint>
 #include <unordered_map>
 #include <optional>
@@ -122,7 +122,7 @@ public:
 
     bool blackDetected();
 
-    std::list<std::pair<int, int>> BFS();
+    std::stack<pdd> BFS(pdd current, pdd target);
 
     void writeTileData();
 
