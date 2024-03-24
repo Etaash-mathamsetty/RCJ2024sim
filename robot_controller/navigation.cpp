@@ -54,6 +54,7 @@ pair<pdd, pdd> getMinMax(vector<pdd> list)
     }
     return { { minx,miny },{maxx,maxy} };
 }
+
 void getPlot(vector<double> datalist, pdd  pos, vector<pdd> *pList, double angle)
 {
     vector<pdd> &PLRef = *pList;
