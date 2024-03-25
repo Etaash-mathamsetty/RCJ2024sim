@@ -207,6 +207,10 @@ pdd getCurrentPosition(GPS* gps)
     return pdd(r2d(gps->getValues()[0]), r2d(gps->getValues()[2]));
 }
 
+void addVisitedPoint(GPS *gps) {
+    visitedPoints.insert(getCurrentPosition(gps));
+}
+
 bool chooseMove(GPS* gps, Lidar* lidar, set<pair<int, pdd>> toVisit)
 {
     int horizontalResolution = lidar->getHorizontalResolution();

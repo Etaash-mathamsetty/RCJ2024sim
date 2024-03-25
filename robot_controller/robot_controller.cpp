@@ -192,6 +192,8 @@ int main(int argc, char **argv) {
   SDL_Renderer *renderer;
   SDL_CreateWindowAndRenderer(800, 600, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE, &window, &renderer);
   SDL_SetWindowTitle(window, "Simulation Debug Window");
+  //do not vsync to prevent simulation from running slow
+  SDL_RenderSetVSync(renderer, SDL_FALSE);
 
   int rw = 0, rh = 0;
   SDL_GetRendererOutputSize(renderer, &rw, &rh);
@@ -401,8 +403,6 @@ int main(int argc, char **argv) {
     //   err *= kp;
     //   rb->forward(1.0 - err, 1.0 + err);
     // }
-
-    
   }
 
   delete_gui(window, renderer);

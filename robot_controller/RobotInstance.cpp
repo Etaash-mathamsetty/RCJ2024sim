@@ -90,7 +90,10 @@ RobotInstance::RobotInstance()
     knn = cv::ml::KNearest::create();
     knn->load("knn.yml");
 
-    m_callbacks.push_back([this](){this->update_lidar_cloud();});
+    add_step_callback([this](){
+        this->update_lidar_cloud();
+        addVisitedPoint(this->m_gps);
+    });
 }
 
 RobotInstance::~RobotInstance()
