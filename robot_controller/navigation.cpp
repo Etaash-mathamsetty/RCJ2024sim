@@ -23,7 +23,7 @@ using namespace webots;
 #define s second
 
 vector<pdd> points;
-double rad = 0.071 / 2;
+double radius = 0.071 / 2;
 
 pdd getXY(double angle, double distance)
 {
@@ -150,7 +150,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax)
 
             for (pii adjacent : adjacentNodes)
             {
-                if (!visited[adjacent] && isTraversable(antiConvert(adjacent), points, rad))
+                if (!visited[adjacent] && isTraversable(antiConvert(adjacent), points, radius))
                 {
                     q.push(adjacent);
                     parent[adjacent] = node;
@@ -190,7 +190,7 @@ bool isOnWall(pdd point)
     };
     for (pdd adjacent : adjacents)
     {
-        if (!isTraversable(adjacent, points, rad))
+        if (!isTraversable(adjacent, points, radius))
         {
             return true;
         }
@@ -202,13 +202,68 @@ set<pair<int, pdd>> toVisit;
 set<pdd> visitedPoints;
 stack<pdd> bfsResult = {};
 
+bool isVisited(pdd point)
+{
+    return visitedPoints.find(point) != visitedPoints.end();
+}
+
+void visit(pdd point)
+{
+    visitedPoints.insert(point);
+}
+
+pdd pointTo(pdd point, DIR dir)
+{
+    switch(dir)
+    {
+        case DIR::N: return pdd(point.first - 0.01, point.second);
+        case DIR::E: return pdd(point.first, point.second + 0.01);
+        case DIR::S: return pdd(point.first + 0.01, point.second);
+        case DIR::W: return pdd(point.first, point.second - 0.01); 
+    }
+}
+
+DIR leftTurn(DIR dir)
+{
+    switch(dir)
+    {
+        case DIR::N: return DIR::W;
+        case DIR::E: return DIR::N;
+        case DIR::S: return DIR::E;
+        case DIR::W: return DIR::S; 
+    }
+}
+
+DIR rightTurn(DIR dir)
+{
+    switch(dir)
+    {
+        case DIR::N: return DIR::E;
+        case DIR::E: return DIR::S;
+        case DIR::S: return DIR::W;
+        case DIR::W: return DIR::N; 
+    }
+}
+
+DIR turn180(DIR dir)
+{
+    switch(dir)
+    {
+        case DIR::N: return DIR::S;
+        case DIR::E: return DIR::W;
+        case DIR::S: return DIR::N;
+        case DIR::W: return DIR::E; 
+    }
+}
+
 pdd getCurrentPosition(GPS* gps)
 {
     return pdd(r2d(gps->getValues()[0]), r2d(gps->getValues()[2]));
 }
 
-bool chooseMove(GPS* gps, Lidar* lidar, set<pair<int, pdd>> toVisit)
+pdd chooseMove(GPS* gps, Lidar* lidar, DIR currentRotation)
 {
+    pdd currentPoint = getCurrentPosition(gps);
     int horizontalResolution = lidar->getHorizontalResolution();
     const float* lidar_image = lidar->getRangeImage();
     float sides[4] = {0.0f};
@@ -222,76 +277,58 @@ bool chooseMove(GPS* gps, Lidar* lidar, set<pair<int, pdd>> toVisit)
     {
         pdd nextPoint = bfsResult.top();
         bfsResult.pop();
-        movePlaceholder(directionToPlaceholder(getCurrentPosition(gps), nextPoint));
+        return nextPoint;
     }
     for (int i = 0; i <= 4; i++)
     {
         if (i == 4)
         {
-            stack<pdd> bfsResult = pointBfs(getCurrentPosition(gps), (prev(toVisit.end()))->second, getMinMax(getLidarPoints()));
+            stack<pdd> bfsResult = pointBfs(currentPoint, (prev(toVisit.end()))->second, getMinMax(getLidarPoints()));
             toVisit.erase(prev(toVisit.end()));
+            pdd nextPoint = bfsResult.top();
+            bfsResult.pop();
+            return nextPoint;
         }
-        if (sides[i] >= M_PER_TILE)
+        if (i == 0)
         {
-            if (i == 0)
+            if (!isVisited(pointTo(currentPoint, currentRotation))
+                && isTraversable(pointTo(currentPoint, currentRotation), getLidarPoints(), radius))
             {
-                if (!tileTo(currentRotation).visited && tileTo(currentRotation).type != hole)
-                {
-                    i = 10;
-                }
-            }
-            if (i == 3)
-            {
-                if (!tileTo(currentRotation + turn180).visited && tileTo(currentRotation + turn180).type != hole)
-                {
-                    turnLeft(turnSpeed, currentRotation + turn180);
-                    i = 10;
-                }
-            }
-            if (i == 2)
-            {
-                if (sides[2] <= sides[1] || sides[1] < mPerTile) //if left is shorter than right or wall at right
-                {
-                    if (!tileTo(currentRotation + leftTurn).visited && tileTo(currentRotation + leftTurn).type != hole)
-                    {
-                        turnLeft(turnSpeed, currentRotation + leftTurn);
-                        i = 10;
-                    }
-                }
-            }
-            if (i == 1)
-            {
-                if (sides[1] <= sides[2] || sides[2] < mPerTile) //if right is shorter than left or wall at left
-                {
-                    if (!tileTo(currentRotation + rightTurn).visited && tileTo(currentRotation + rightTurn).type != hole)
-                    {
-                        turnRight(turnSpeed, currentRotation + rightTurn);
-                        i = 10;
-                    }
-                }
+                return pointTo(currentPoint, currentRotation);
             }
         }
-    }
-    if (allVisited())
-    {
-        if (field[y][x].num != 0)
+        if (i == 3)
         {
-            bfs(0);
+            if (!isVisited(pointTo(currentPoint, turn180(currentRotation)))
+                && isTraversable(pointTo(currentPoint, turn180(currentRotation)), getLidarPoints(), radius))
+            {
+                return pointTo(currentPoint, turn180(currentRotation));
+            }
         }
-        cout << "all finished!" << endl;
-        char msg = 'E';
-        emitter->send(&msg, 1);
-        return 1;
+        if (i == 2)
+        {
+            if (sides[2] <= sides[1] || sides[1] < M_PER_TILE) //if left is shorter than right or wall at right
+            {
+                if (!isVisited(pointTo(currentPoint, leftTurn(currentRotation)))
+                    && isTraversable(pointTo(currentPoint, leftTurn(currentRotation)), getLidarPoints(), radius))
+                {
+                    return pointTo(currentPoint, leftTurn(currentRotation));
+                }
+            }
+        }
+        if (i == 1)
+        {
+            if (sides[1] <= sides[2] || sides[2] < M_PER_TILE) //if right is shorter than left or wall at left
+            {
+                if (!isVisited(pointTo(currentPoint, rightTurn(currentRotation)))
+                    && isTraversable(pointTo(currentPoint, rightTurn(currentRotation)), getLidarPoints(), radius))
+                {
+                    return pointTo(currentPoint, rightTurn(currentRotation));
+                }
+            }
+        }
     }
-    if (!skipMove)
-    {
-        //move(moveSpeed, 1.0);
-    }
-    else
-    {
-        skipMove = false;
-    }
-    return 0;
+    return currentPoint;
 }
 
 // int main()
