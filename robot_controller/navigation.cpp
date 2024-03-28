@@ -283,7 +283,7 @@ pdd chooseMove(GPS* gps, Lidar* lidar, DIR currentRotation)
     {
         if (i == 4)
         {
-            stack<pdd> bfsResult = pointBfs(currentPoint, (prev(toVisit.end()))->second, getMinMax(getLidarPoints()));
+            bfsResult = pointBfs(currentPoint, (prev(toVisit.end()))->second, getMinMax(getLidarPoints()));
             toVisit.erase(prev(toVisit.end()));
             pdd nextPoint = bfsResult.top();
             bfsResult.pop();
