@@ -190,8 +190,9 @@ int main(int argc, char **argv) {
 
   SDL_Window *window;
   SDL_Renderer *renderer;
-  SDL_CreateWindowAndRenderer(800, 600, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE, &window, &renderer);
-  SDL_SetWindowTitle(window, "Simulation Debug Window");
+  window = SDL_CreateWindow("Simulation Debug Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
+                    800, 600, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
   int rw = 0, rh = 0;
   SDL_GetRendererOutputSize(renderer, &rw, &rh);
@@ -401,8 +402,6 @@ int main(int argc, char **argv) {
     //   err *= kp;
     //   rb->forward(1.0 - err, 1.0 + err);
     // }
-
-    
   }
 
   delete_gui(window, renderer);

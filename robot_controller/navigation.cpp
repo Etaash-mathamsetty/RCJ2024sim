@@ -207,7 +207,7 @@ bool isVisited(pdd point)
     return visitedPoints.find(point) != visitedPoints.end();
 }
 
-void visit(pdd point)
+void addVisited(pdd point)
 {
     visitedPoints.insert(point);
 }
