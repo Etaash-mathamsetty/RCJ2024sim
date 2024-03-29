@@ -24,7 +24,6 @@ using namespace webots;
 #define s second
 
 vector<pdd> points;
-double radius = 0.071 / 2;
 
 pdd getXY(double angle, double distance)
 {
@@ -100,12 +99,12 @@ void printStack(stack<pdd> pts)
     }
 }
 
-bool isTraversable(pdd pos, vector<pdd> points, double robotRadius)
+bool isTraversable(pdd pos, vector<pdd> points)
 {
     bool traversable = 1;
     for (int i = 0; i < points.size(); i++)
     {
-        if (getDist(pos, points[i]) < robotRadius)
+        if (getDist(pos, points[i]) < (0.071 / 2.0))
             return 0;
     }
     return 1;
@@ -151,7 +150,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax)
 
             for (pii adjacent : adjacentNodes)
             {
-                if (!visited[adjacent] && isTraversable(antiConvert(adjacent), points, radius))
+                if (!visited[adjacent] && isTraversable(antiConvert(adjacent), points))
                 {
                     q.push(adjacent);
                     parent[adjacent] = node;
@@ -191,7 +190,7 @@ bool isOnWall(pdd point)
     };
     for (pdd adjacent : adjacents)
     {
-        if (!isTraversable(adjacent, points, radius))
+        if (!isTraversable(adjacent, points))
         {
             return true;
         }
@@ -302,7 +301,7 @@ pdd chooseMove(GPS* gps, Lidar* lidar, DIR currentRotation)
         if (i == 0)
         {
             if (!isVisited(pointTo(currentPoint, currentRotation))
-                && isTraversable(pointTo(currentPoint, currentRotation), getLidarPoints(), radius))
+                && isTraversable(pointTo(currentPoint, currentRotation), getLidarPoints()))
             {
                 return pointTo(currentPoint, currentRotation);
             }
@@ -310,7 +309,7 @@ pdd chooseMove(GPS* gps, Lidar* lidar, DIR currentRotation)
         if (i == 3)
         {
             if (!isVisited(pointTo(currentPoint, turn180(currentRotation)))
-                && isTraversable(pointTo(currentPoint, turn180(currentRotation)), getLidarPoints(), radius))
+                && isTraversable(pointTo(currentPoint, turn180(currentRotation)), getLidarPoints()))
             {
                 return pointTo(currentPoint, turn180(currentRotation));
             }
@@ -320,7 +319,7 @@ pdd chooseMove(GPS* gps, Lidar* lidar, DIR currentRotation)
             if (sides[2] <= sides[1] || sides[1] < M_PER_TILE) //if left is shorter than right or wall at right
             {
                 if (!isVisited(pointTo(currentPoint, leftTurn(currentRotation)))
-                    && isTraversable(pointTo(currentPoint, leftTurn(currentRotation)), getLidarPoints(), radius))
+                    && isTraversable(pointTo(currentPoint, leftTurn(currentRotation)), getLidarPoints()))
                 {
                     return pointTo(currentPoint, leftTurn(currentRotation));
                 }
@@ -331,7 +330,7 @@ pdd chooseMove(GPS* gps, Lidar* lidar, DIR currentRotation)
             if (sides[1] <= sides[2] || sides[2] < M_PER_TILE) //if right is shorter than left or wall at left
             {
                 if (!isVisited(pointTo(currentPoint, rightTurn(currentRotation)))
-                    && isTraversable(pointTo(currentPoint, rightTurn(currentRotation)), getLidarPoints(), radius))
+                    && isTraversable(pointTo(currentPoint, rightTurn(currentRotation)), getLidarPoints()))
                 {
                     return pointTo(currentPoint, rightTurn(currentRotation));
                 }
