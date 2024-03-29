@@ -7,9 +7,10 @@
 #include <map>
 #include <string>
 #include <climits>
+#include <set>
+#include <algorithm>
 #include <webots/GPS.hpp>
 #include <webots/Lidar.hpp>
-#include <set>
 #include "map.h"
 #include "constants.h"
 
@@ -198,7 +199,7 @@ bool isOnWall(pdd point)
     return false;
 }
 
-set<pair<int, pdd>> toVisit;
+deque<pdd> toVisit;
 set<pdd> visitedPoints;
 stack<pdd> bfsResult = {};
 
@@ -210,6 +211,16 @@ bool isVisited(pdd point)
 void addVisited(pdd point)
 {
     visitedPoints.insert(point);
+    auto it = find(toVisit.begin(), toVisit.end(), point);
+    if(it != toVisit.end())
+    {
+        toVisit.erase(it);
+    }
+}
+
+void addToVisit(pdd point)
+{
+    toVisit.push_back(point);
 }
 
 pdd pointTo(pdd point, DIR dir)
@@ -283,8 +294,7 @@ pdd chooseMove(GPS* gps, Lidar* lidar, DIR currentRotation)
     {
         if (i == 4)
         {
-            bfsResult = pointBfs(currentPoint, (prev(toVisit.end()))->second, getMinMax(getLidarPoints()));
-            toVisit.erase(prev(toVisit.end()));
+            bfsResult = pointBfs(currentPoint, toVisit.back(), getMinMax(getLidarPoints()));
             pdd nextPoint = bfsResult.top();
             bfsResult.pop();
             return nextPoint;
