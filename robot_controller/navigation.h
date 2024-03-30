@@ -7,12 +7,14 @@
 #ifndef _NAVIGATION_H_
 #define _NAVIGATION_H_
 
+#include "RobotInstance.hpp"
+
 bool onRoute(std::stack<pdd> pts, pdd point);
 bool isTraversable(pdd pos, std::vector<pdd> points);
 std::pair<pdd, pdd> getMinMax(std::vector<pdd> list);
 std::stack<pdd> pointBfs(pdd cur, pdd tar, std::pair<pdd, pdd> minMax);
-void addVisitedPoint(webots::GPS *gps);
+void addVisited(pdd pt);
 pdd getCurrentPosition(webots::GPS* gps);
-pdd chooseMove(webots::GPS* gps, webots::Lidar* lidar, DIR currentRotation);
+pdd chooseMove(RobotInstance *rb, double currentRotation);
 
 #endif

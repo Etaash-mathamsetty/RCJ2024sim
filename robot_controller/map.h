@@ -9,13 +9,16 @@
 #ifndef _MAP_H_
 #define _MAP_H_
 
-void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions=true);
+class RobotInstance;
+
+void plotPoints(RobotInstance *rb, int w, int h);
 void update_regions_map(webots::GPS *gps, const float *lidar_image, float theta=0);
 void update_camera_map(webots::GPS *gps, const float *lidar_image, webots::Camera *camera, float theta=0);
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
 size_t getCount();
 void clearPointCloud();
+double clampAngle(double theta);
 
 //thanks stack overflow
 template <class T>

@@ -8,6 +8,8 @@ project(${PROJECT})
 find_package(OpenCV REQUIRED)
 find_package(SDL2 REQUIRED)
 
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
 # Set the  Webots home path (change it according to your installation method)
 if(NOT DEFINED WEBOTS_HOME)
   set(WEBOTS_HOME "/usr/local/webots")
@@ -20,7 +22,7 @@ if(WIN32)
 else()
   file(GLOB CPP_SOURCES *.cpp imgui/*.cpp)
 endif()
-set (CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 set(SOURCES ${C_SOURCES} ${CPP_SOURCES})
 #set(WEBOTS_HOME "/snap/webots/current/usr/share/webots")
 
@@ -33,6 +35,12 @@ else()
   set (LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}Controller${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_SHARED_LIBRARY_PREFIX}CppController${CMAKE_SHARED_LIBRARY_SUFFIX})
 endif()
 include_directories(${WEBOTS_HOME}/include/controller/c ${WEBOTS_HOME}/include/controller/cpp ${OpenCV_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR})
+
+if(MSVC)
+  add_compile_options(/W4)
+else()
+  add_compile_options(-Wall -fno-stack-protector)
+endif()
 
 # Setup the target executable.
 add_executable(${PROJECT} ${SOURCES})

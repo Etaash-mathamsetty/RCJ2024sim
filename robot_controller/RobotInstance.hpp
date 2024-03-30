@@ -17,38 +17,10 @@
 #include "map.h"
 #include <opencv2/opencv.hpp>
 
-struct TILE
-{
-    bool N : 1;
-    bool S : 1;
-    bool E : 1;
-    bool W : 1;
-    bool bot : 1;
-    bool vis : 1;
-    bool checkpoint: 1;
-
-    TILE()
-    {
-        N = false;
-        S = false;
-        E = false;
-        W = false;
-        bot = false;
-        vis = false;
-        checkpoint = false;
-    }
-
-    void print()
-    {
-        std::cout << "N: " << N << " S: " << S << " E: " << E << " W: " << W << " bot: " << bot << " vis: " << vis << std::endl;
-    }
-
-private:
-    uint8_t filler : 1;
-};
-
 //FIXME left and right directions might be flipped (in lidar)
 
+#ifndef _ROBOTINSTANCE_H_
+#define _ROBOTINSTANCE_H_
 class RobotInstance
 {
 public:
@@ -78,6 +50,7 @@ public:
     void resetPosition()
     {
         m_lposoffset = m_lmpos->getValue();
+        m_rposoffset = m_rmpos->getValue();
     }
 
     void getPosition(double *lpos, double *rpos)
@@ -88,19 +61,9 @@ public:
             *rpos = m_rmpos->getValue() - m_rposoffset;
     }
 
-    bool getQuitable()
+    bool isFinished()
     {
-        return quitable;
-    }
-
-    std::pair<int, int> getIndex()
-    {
-        return m_index;
-    }
-
-    int getFloor()
-    {
-        return m_floor;
+        return m_isFinished;
     }
 
     void endSimulation()
@@ -120,8 +83,6 @@ public:
 
     bool blackDetected();
 
-    std::stack<pdd> BFS(pdd current, pdd target);
-
     void writeTileData();
 
     void detectVictims();
@@ -130,16 +91,35 @@ public:
 
     void update_lidar_cloud();
 
-    void add_step_callback(const std::function<void()>& f) { 
-        m_callbacks.push_back(f); 
+    void add_step_callback(const std::function<void()>& f) {
+        m_callbacks.push_back(f);
     }
+
+    pdd getTargetPos() { return m_targetPos; }
+
+    void run_callbacks();
+
+    pdd getCurrentGPSPosition()
+    {
+        return pdd(r2d(m_gps->getValues()[0]), -r2d(m_gps->getValues()[2]));
+    }
+
+    void setDisableGUI(bool disable)
+    {
+        m_disabledGUI = disable;
+    }
+
+    bool getDisableGUI(){ return m_disabledGUI; }
+
+    void moveToNextPos();
 
     REGION* get_current_region();
 
-    webots::GPS *getGPS();
+    webots::GPS *getGPS() { return m_gps; }
 
-    webots::Lidar *m_lidar;
-    webots::InertialUnit *m_imu;
+    webots::Lidar *getLidar() { return m_lidar; }
+
+    webots::InertialUnit *getIMU() { return m_imu; }
 private:
 
     //DOES NOT AFFECT POSITION SENSOR
@@ -159,8 +139,6 @@ private:
 
     void turnTo(double speed, double target_angle);
 
-    void detectVictims(cv::Mat& img, bool left);
-
     bool determineLetter(const cv::Mat& roi, std::string side, const double* position);
 
     void lookForLetter();
@@ -168,6 +146,8 @@ private:
     RobotInstance();
 
     ~RobotInstance();
+
+    pdd calcNextPos();
 
     webots::Robot *m_robot;
     webots::Motor *m_lm;
@@ -182,18 +162,16 @@ private:
     double m_lposoffset;
     double m_rposoffset;
     int m_timestep;
-    std::pair<int, int> m_index;
-    int m_floor;
-    bool quitable;
+    bool m_isFinished;
     DIR m_dir;
 
+    pdd m_targetPos;
+
+    bool m_disabledGUI;
+
+    webots::Lidar *m_lidar;
+    webots::InertialUnit *m_imu;
+
     std::vector<std::function<void()>> m_callbacks;
-
-    std::unordered_map<int, std::pair<int, int>> start_tile_floor;
-    std::unordered_map<int, std::unordered_map<std::pair<int, int>, TILE, pair_hash_combiner>> floors;
-
-    // TILE **floors;
-    std::unordered_map<std::pair<int, int>, TILE, pair_hash_combiner>* map;
-
-    cv::Ptr<cv::ml::KNearest> knn;
 };
+#endif

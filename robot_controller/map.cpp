@@ -9,6 +9,7 @@
 #include <optional>
 #include "map.h"
 #include "constants.h"
+#include "RobotInstance.hpp"
 
 #define pdd std::pair<double, double>
 #define f first
@@ -133,7 +134,7 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
     }
 }
 
-float clampAngle(float theta)
+double clampAngle(double theta)
 {
     if (abs(theta) > M_PI)
     {
@@ -282,8 +283,10 @@ void clearPointCloud()
 
 
 
-void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
+void plotPoints(RobotInstance *rb, int w, int h)
 {
+    webots::GPS *gps = rb->getGPS();
+    double theta = rb->getIMU()->getRollPitchYaw()[2];
     double pos[3];
     memcpy(pos, gps->getValues(), 3 * sizeof(double));
     pos[2] *= -1;
@@ -298,14 +301,13 @@ void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
         ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
         ImPlot::SetNextMarkerStyle(ImPlotMarker_Plus);
         ImPlot::PlotScatterG("Camera Points", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
-        if(plot_regions)
-            for(const auto& r : regions)
-            {
-                ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0,0.5));
-                double xs[] = {r.first.x, r.first.x+0.1, r.first.x, r.first.x};
-                double ys[] = {r.first.z, r.first.z, r.first.z, r.first.z+0.1};
-                ImPlot::PlotLine("Regions", xs, ys, 4);
-            }
+        for(const auto& r : regions)
+        {
+            ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0,0.5));
+            double xs[] = {r.first.x, r.first.x+0.1, r.first.x, r.first.x};
+            double ys[] = {r.first.z, r.first.z, r.first.z, r.first.z+0.1};
+            ImPlot::PlotLine("Regions", xs, ys, 4);
+        }
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
         ImPlot::PlotScatter("Robot", pos, pos + 2, 1, ImPlotItemFlags_NoFit);
         {
@@ -317,10 +319,19 @@ void plotPoints(webots::GPS *gps, float theta, int w, int h, bool plot_regions)
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Diamond);
             ImPlot::PlotScatter("Camera Detection Range", xs, ys, ARRAY_SIZE(xs), ImPlotItemFlags_NoFit);
         }
-        double xs[] = { pos[0], pos[0] + 0.1*sin(-theta) };
-        double ys[] = { pos[2], pos[2] + 0.1*cos(-theta) };
-        ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
-        ImPlot::PlotLine("", xs, ys, 2, ImPlotItemFlags_NoFit);
+        {
+            double xs[] = { pos[0], pos[0] + 0.1*sin(-theta) };
+            double ys[] = { pos[2], pos[2] + 0.1*cos(-theta) };
+            ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
+            ImPlot::PlotLine("Robot", xs, ys, 2, ImPlotItemFlags_NoFit);
+        }
+        {
+            double xs[] = { rb->getCurrentGPSPosition().first, rb->getTargetPos().first };
+            double ys[] = { rb->getCurrentGPSPosition().second, rb->getTargetPos().second };
+
+            ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0.8,1));
+            ImPlot::PlotLine("Path", xs, ys, 2, ImPlotItemFlags_NoFit);
+        }
         ImPlot::EndPlot();
     }
 

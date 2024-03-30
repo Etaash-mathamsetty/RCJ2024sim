@@ -13,13 +13,11 @@
 #include <webots/Lidar.hpp>
 #include "map.h"
 #include "constants.h"
+#include "RobotInstance.hpp"
 
 using namespace std;
 using namespace webots;
 
-#define PI 2*acos(0)
-#define pdd pair<double, double>
-#define pii pair<int, int>
 #define f first
 #define s second
 
@@ -68,15 +66,10 @@ void getPlot(vector<double> datalist, pdd  pos, vector<pdd> *pList, double angle
     {
         if (datalist[i] != -1)
         {
-            pdd coords = getXY(2 * PI * i / 512 + angle, datalist[i]);
+            pdd coords = getXY(2 * M_PI * i / 512 + angle, datalist[i]);
             PLRef.push_back({ coords.f + pos.f, coords.s - pos.s });
         }
     }
-}
-
-double r2d(double decimal)
-{
-    return (double)((int)(decimal * 100)) / 100;
 }
 
 bool onRoute(stack<pdd> pts, pdd point)
@@ -143,10 +136,14 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax)
         if (node != target)
         {
             //north: +y, east: +x, south: -y, west: -x; 
-            pii adjacentNodes[4] = { pii(node.f, node.s + 1),
+            pii adjacentNodes[8] = { pii(node.f, node.s + 1),
                 pii(node.f + 1, node.s),
                 pii(node.f, node.s - 1),
-                pii(node.f - 1, node.s) };
+                pii(node.f - 1, node.s),
+                pii(node.f - 1, node.s - 1),
+                pii(node.f - 1, node.s + 1),
+                pii(node.f + 1, node.s - 1),
+                pii(node.f + 1, node.s + 1) };
 
             for (pii adjacent : adjacentNodes)
             {
@@ -222,66 +219,31 @@ void addToVisit(pdd point)
     toVisit.push_back(point);
 }
 
-pdd pointTo(pdd point, DIR dir)
+pdd pointTo(pdd point, double dir)
 {
-    switch(dir)
-    {
-        case DIR::N: return pdd(point.first - 0.01, point.second);
-        case DIR::E: return pdd(point.first, point.second + 0.01);
-        case DIR::S: return pdd(point.first + 0.01, point.second);
-        case DIR::W: return pdd(point.first, point.second - 0.01); 
-    }
+    dir = clampAngle(dir);
+    return pdd(point.f + 0.01 * sin(dir), point.s + 0.01 * cos(dir));
 }
 
-DIR leftTurn(DIR dir)
+pdd chooseMove(RobotInstance *rb, double rotation)
 {
-    switch(dir)
-    {
-        case DIR::N: return DIR::W;
-        case DIR::E: return DIR::N;
-        case DIR::S: return DIR::E;
-        case DIR::W: return DIR::S; 
-    }
-}
-
-DIR rightTurn(DIR dir)
-{
-    switch(dir)
-    {
-        case DIR::N: return DIR::E;
-        case DIR::E: return DIR::S;
-        case DIR::S: return DIR::W;
-        case DIR::W: return DIR::N; 
-    }
-}
-
-DIR turn180(DIR dir)
-{
-    switch(dir)
-    {
-        case DIR::N: return DIR::S;
-        case DIR::E: return DIR::W;
-        case DIR::S: return DIR::N;
-        case DIR::W: return DIR::E; 
-    }
-}
-
-pdd getCurrentPosition(GPS* gps)
-{
-    return pdd(r2d(gps->getValues()[0]), r2d(gps->getValues()[2]));
-}
-
-pdd chooseMove(GPS* gps, Lidar* lidar, DIR currentRotation)
-{
-    pdd currentPoint = getCurrentPosition(gps);
+    GPS *gps = rb->getGPS();
+    Lidar *lidar = rb->getLidar();
+    pdd currentPoint = rb->getCurrentGPSPosition();
     int horizontalResolution = lidar->getHorizontalResolution();
     const float* lidar_image = lidar->getRangeImage();
-    float sides[4] = {0.0f};
+    float sides[8] = {0.0f};
+    // webots rotation is flipped sin(-t) = x and cos(-t) = y
+    rotation *= -1;
 
     sides[0] = lidar_image[0];
-    sides[1] = lidar_image[horizontalResolution / 4]; //right
-    sides[3] = lidar_image[horizontalResolution / 2]; //back
-    sides[2] = lidar_image[((horizontalResolution * 3) / 4)]; //left
+    sides[1] = lidar_image[horizontalResolution / 8];
+    sides[2] = lidar_image[horizontalResolution / 4];
+    sides[3] = lidar_image[horizontalResolution * 3 / 8];
+    sides[4] = lidar_image[horizontalResolution / 2];
+    sides[5] = lidar_image[horizontalResolution * 5 / 8];
+    sides[6] = lidar_image[horizontalResolution * 3 / 4];
+    sides[7] = lidar_image[horizontalResolution * 7 / 8];
 
     if (!bfsResult.empty())
     {
@@ -289,9 +251,9 @@ pdd chooseMove(GPS* gps, Lidar* lidar, DIR currentRotation)
         bfsResult.pop();
         return nextPoint;
     }
-    for (int i = 0; i <= 4; i++)
+    for (int i = 0; i <= 2; i++)
     {
-        if (i == 4)
+        if (i == 2)
         {
             bfsResult = pointBfs(currentPoint, toVisit.back(), getMinMax(getLidarPoints()));
             pdd nextPoint = bfsResult.top();
@@ -300,40 +262,45 @@ pdd chooseMove(GPS* gps, Lidar* lidar, DIR currentRotation)
         }
         if (i == 0)
         {
-            if (!isVisited(pointTo(currentPoint, currentRotation))
-                && isTraversable(pointTo(currentPoint, currentRotation), getLidarPoints()))
+            if (!isVisited(pointTo(currentPoint, rotation))
+                && isTraversable(pointTo(currentPoint, rotation), getLidarPoints()))
             {
-                return pointTo(currentPoint, currentRotation);
-            }
-        }
-        if (i == 3)
-        {
-            if (!isVisited(pointTo(currentPoint, turn180(currentRotation)))
-                && isTraversable(pointTo(currentPoint, turn180(currentRotation)), getLidarPoints()))
-            {
-                return pointTo(currentPoint, turn180(currentRotation));
-            }
-        }
-        if (i == 2)
-        {
-            if (sides[2] <= sides[1] || sides[1] < M_PER_TILE) //if left is shorter than right or wall at right
-            {
-                if (!isVisited(pointTo(currentPoint, leftTurn(currentRotation)))
-                    && isTraversable(pointTo(currentPoint, leftTurn(currentRotation)), getLidarPoints()))
-                {
-                    return pointTo(currentPoint, leftTurn(currentRotation));
-                }
+                return pointTo(currentPoint, rotation);
             }
         }
         if (i == 1)
         {
-            if (sides[1] <= sides[2] || sides[2] < M_PER_TILE) //if right is shorter than left or wall at left
+            double minDist = 10000000;
+            int minIdx = 0;
+            pdd nextPoint = currentPoint;;
+            for(int i = 1; i <= 7; i++)
             {
-                if (!isVisited(pointTo(currentPoint, rightTurn(currentRotation)))
-                    && isTraversable(pointTo(currentPoint, rightTurn(currentRotation)), getLidarPoints()))
+                if(sides[i] < minDist)
                 {
-                    return pointTo(currentPoint, rightTurn(currentRotation));
+                    minDist = sides[i];
+                    minIdx = i;
+                    pdd ret;
+                    switch(minIdx)
+                    {
+                        case 1: ret = pointTo(currentPoint, rotation + M_PI / 4); break;
+                        case 2: ret = pointTo(currentPoint, rotation + M_PI / 2); break;
+                        case 3: ret = pointTo(currentPoint, rotation + M_PI * 3 / 4); break;
+                        case 4: ret = pointTo(currentPoint, rotation + M_PI); break;
+                        case 5: ret = pointTo(currentPoint, rotation - M_PI * 3 / 4); break;
+                        case 6: ret = pointTo(currentPoint, rotation - M_PI / 2); break;
+                        case 7: ret = pointTo(currentPoint, rotation - M_PI / 4); break;
+                        case 0: ret = currentPoint;
+                    }
+                    if (!isVisited(ret)
+                        && isTraversable(ret, getLidarPoints()))
+                    {
+                        nextPoint = ret;
+                    }
                 }
+            }
+            if(nextPoint != currentPoint)
+            {
+                return nextPoint;
             }
         }
     }

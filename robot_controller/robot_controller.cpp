@@ -81,9 +81,8 @@ void end_frame(SDL_Renderer *renderer)
   SDL_RenderPresent(renderer);
 }
 
-void draw_frame(RobotInstance *rb, SDL_Window *window, bool* plot_regions)
+void draw_frame(RobotInstance *rb, SDL_Window *window)
 {
-
   int width, height;
 
   SDL_GetWindowSize(window, &width, &height);
@@ -97,10 +96,8 @@ void draw_frame(RobotInstance *rb, SDL_Window *window, bool* plot_regions)
   if(ImGui::Button("Clear Point Cloud"))
     clearPointCloud();
 
-  ImGui::Checkbox("Plot Regions", plot_regions);
-
   ImPlot::SetNextMarkerStyle(ImPlotMarker_Asterisk, 1.5);
-  plotPoints(rb->getGPS(), rb->m_imu->getRollPitchYaw()[2], width, height, *plot_regions);
+  plotPoints(rb, width, height);
 }
 
 void poll_events(bool &running)
@@ -177,58 +174,59 @@ int main(int argc, char **argv) {
   //std::cout << std::filesystem::current_path() << std::endl;
 
   RobotInstance* rb = RobotInstance::getInstance();
+  bool running = true;
 
-  const int horizontalResolution = rb->m_lidar->getHorizontalResolution();
-  const int numberOfLayers = rb->m_lidar->getNumberOfLayers();
+  const int horizontalResolution = rb->getLidar()->getHorizontalResolution();
+  const int numberOfLayers = rb->getLidar()->getNumberOfLayers();
 
   std::cout << horizontalResolution << std::endl;
   std::cout << numberOfLayers << std::endl;
 
-  int start_floor = rb->getFloor();
-  std::pair<int, int> start_index = rb->getIndex();
-
-
   SDL_Window *window;
   SDL_Renderer *renderer;
-  window = SDL_CreateWindow("Simulation Debug Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
-                    800, 600, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-  int rw = 0, rh = 0;
-  SDL_GetRendererOutputSize(renderer, &rw, &rh);
-  if(rw != 800) {
-    float widthScale = (float)rw / (float) 800;
-    float heightScale = (float)rh / (float) 600;
+  if(!rb->getDisableGUI())
+  {
+    window = SDL_CreateWindow("Simulation Debug Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
+                      800, 600, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    if(widthScale != heightScale) {
-      fprintf(stderr, "WARNING: width scale != height scale\n");
+    int rw = 0, rh = 0;
+    SDL_GetRendererOutputSize(renderer, &rw, &rh);
+    if(rw != 800) {
+      float widthScale = (float)rw / (float) 800;
+      float heightScale = (float)rh / (float) 600;
+
+      if(widthScale != heightScale) {
+        fprintf(stderr, "WARNING: width scale != height scale\n");
+      }
+
+      SDL_RenderSetScale(renderer, widthScale, heightScale);
     }
 
-    SDL_RenderSetScale(renderer, widthScale, heightScale);
+    init_gui(window, renderer);
+
+    rb->add_step_callback(
+    [&running, &renderer, &rb, &window]()
+    {
+      if(!rb->getDisableGUI())
+      {
+        poll_events(running);
+
+        init_frame(renderer);
+
+        draw_frame(rb, window);
+
+        end_frame(renderer);
+      }
+    });
   }
-
-  init_gui(window, renderer);
-
-  bool running = true;
-  bool plot_regions = true;
 
   rb->update_lidar_cloud();
 
-  rb->add_step_callback(
-    [&running, &renderer, &rb, &window, &plot_regions]()
-    {
-      poll_events(running);
-
-      init_frame(renderer);
-
-      draw_frame(rb, window, &plot_regions);
-
-      end_frame(renderer);
-    });
-
   // Main loop:
   // - perform simulation steps until Webots is stopping the controller
-  while (rb->step() != -1 && running) {
+  while (rb->step() != -1 && running && !rb->isFinished()) {
 
     // rb->writeTileData();
 
@@ -278,21 +276,6 @@ int main(int argc, char **argv) {
 
     // rb->detectVictims();
     //cout << instance.m_lidar->getRollPitchYaw()[2] << endl;
-
-    rb->update_lidar_cloud();
-
-    const float *cloud = rb->m_lidar->getRangeImage() + 512;
-
-    const int horizontalResolution = rb->m_lidar->getHorizontalResolution();
-
-
-    const float *right = cloud + horizontalResolution/4;
-    const float *left = cloud + horizontalResolution * 3 / 4;
-    const float *front = cloud;
-
-    const double kp = -125.0;
-    const double target = 0.06;
-
     //printf("left %lf right %lf\n", left, right);
 
     // if(is_blocked(cloud))
@@ -329,8 +312,6 @@ int main(int argc, char **argv) {
     //     const float *check_left = left + i;
     //     if(std::isinf(*check_left)) failed = true;
     //   }
-
-      
 
     //   double err;
 
@@ -402,9 +383,13 @@ int main(int argc, char **argv) {
     //   err *= kp;
     //   rb->forward(1.0 - err, 1.0 + err);
     // }
+
+    rb->moveToNextPos();
+
   }
 
-  delete_gui(window, renderer);
+  if(!rb->getDisableGUI())
+    delete_gui(window, renderer);
 
   // Enter here exit cleanup code.
   rb->endSimulation();

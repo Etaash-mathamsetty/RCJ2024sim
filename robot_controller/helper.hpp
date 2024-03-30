@@ -13,4 +13,6 @@ struct pair_hash_combiner
     }
 };
 
+double r2d(double decimal);
+
 #endif
