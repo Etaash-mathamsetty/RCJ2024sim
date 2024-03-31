@@ -104,14 +104,16 @@ public:
         return pdd(r2d(m_gps->getValues()[0]), -r2d(m_gps->getValues()[2]));
     }
 
+    void moveToNextPos();
+
+    void updateVisited();
+
     void setDisableGUI(bool disable)
     {
         m_disabledGUI = disable;
     }
 
     bool getDisableGUI(){ return m_disabledGUI; }
-
-    void moveToNextPos();
 
     REGION* get_current_region();
 

@@ -378,7 +378,27 @@ void RobotInstance::moveToNextPos()
             case 1: turnTo(3, M_PI * 3 / 4); forwardTicks(3, sqrt(0.01*0.01*2)); break;
         }
     }
+}
 
+void RobotInstance::updateVisited()
+{
+    pdd cur = getCurrentGPSPosition();
+    addVisited(cur);
+    pdd adjacents[8] = { pdd(cur.first, cur.second + 0.01),
+        pdd(cur.first + 0.01, cur.second),
+        pdd(cur.first, cur.second - 0.01),
+        pdd(cur.first - 0.01, cur.second),
+        pdd(cur.first - 0.01, cur.second - 0.01),
+        pdd(cur.first - 0.01, cur.second + 0.01),
+        pdd(cur.first + 0.01, cur.second - 0.01),
+        pdd(cur.first + 0.01, cur.second + 0.01) };
+    for(pdd adjacent : adjacents)
+    {
+        if(isTraversable(adjacent, getLidarPoints()))
+        {
+            addToVisit(adjacent);
+        }
+    }
 }
 
 bool RobotInstance::blackDetected()
