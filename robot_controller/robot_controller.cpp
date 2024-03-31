@@ -383,7 +383,6 @@ int main(int argc, char **argv) {
         //     err *= kp;
         //     rb->forward(1.0 - err, 1.0 + err);
         // }
-        rb->updateVisited();
         rb->moveToNextPos();
 
     }

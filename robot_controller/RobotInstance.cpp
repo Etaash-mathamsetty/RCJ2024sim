@@ -81,7 +81,7 @@ RobotInstance::RobotInstance()
     add_step_callback([this](){
         //navigation update
         this->update_lidar_cloud();
-        addVisited(this->getCurrentGPSPosition());
+        this->updateVisited();
         this->m_targetPos = this->calcNextPos();
 
     });
@@ -349,7 +349,7 @@ pdd RobotInstance::calcNextPos()
 
 void RobotInstance::moveToNextPos()
 {
-    pdd nextPos = calcNextPos();
+    pdd nextPos = getTargetPos();
     int xdiff = 100 * r2d(nextPos.first - getCurrentGPSPosition().first);
     int ydiff = 100 * r2d(nextPos.second - getCurrentGPSPosition().second);
     if(xdiff < 0)
