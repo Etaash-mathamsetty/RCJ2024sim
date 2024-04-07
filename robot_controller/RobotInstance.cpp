@@ -186,17 +186,19 @@ bool RobotInstance::alignmentNeeded()
 
 bool RobotInstance::forwardTicks(double vel, double ticks)
 {
-    resetPosition();
-    double pos = 0.0;
+    pdd start = getCurrentGPSPosition();
     //TODO: use PID
-    while(pos <= ticks && step() != -1)
+    double traveled = 0;
+    while(traveled <= ticks && step() != -1)
     {
         lookForLetter();
         if(blackDetected())
+        {
             break;
+        }
         forward(vel);
-        getPosition(&pos, NULL);
-        //std::cout << pos << std::endl;
+        pdd cur = getCurrentGPSPosition();
+        traveled = hypot(cur.first - start.first, cur.second - start.second);
     }
 
     stopMotors();
@@ -205,19 +207,17 @@ bool RobotInstance::forwardTicks(double vel, double ticks)
     {
         std::cout << "black detected" << std::endl;
 
-        while(pos >= 0.0 && step() != -1)
+        while(traveled >= 0.0 && step() != -1)
         {
             forward(-vel);
-            getPosition(&pos, NULL);
+            pdd cur = getCurrentGPSPosition();
+            traveled = hypot(cur.first - start.first, cur.second - start.second);
         }
 
         stopMotors();
-        resetPosition();
 
         return false;
     }
-
-    resetPosition();
 
     return true;
 }
@@ -352,30 +352,30 @@ void RobotInstance::moveToNextPos()
     pdd nextPos = getTargetPos();
     int xdiff = 100 * r2d(nextPos.first - getCurrentGPSPosition().first);
     int ydiff = 100 * r2d(nextPos.second - getCurrentGPSPosition().second);
-    if(xdiff < 0)
+    if(xdiff > 0)
     {
         switch(ydiff)
         {
-            case -1: turnTo(3, -M_PI / 4); forwardTicks(3, sqrt(0.01*0.01*2)); break;
+            case 1: turnTo(3, -M_PI / 4); forwardTicks(3, hypot(0.01, 0.01)); break;
             case 0: turnTo(3, -M_PI / 2); forwardTicks(3, 0.01); break;
-            case 1: turnTo(3, -M_PI * 3 / 4); forwardTicks(3, sqrt(0.01*0.01*2)); break;
+            case -1: turnTo(3, -M_PI * 3 / 4); forwardTicks(3, hypot(0.01, 0.01)); break;
         }
     }
     else if(xdiff == 0)
     {
         switch(ydiff)
         {
-            case -1: turnTo(3, 0); forwardTicks(3, 0.01); break;
-            case 1: turnTo(3, M_PI); forwardTicks(3, 0.01); break;
+            case 1: turnTo(3, 0); forwardTicks(3, 0.01); break;
+            case -1: turnTo(3, M_PI); forwardTicks(3, 0.01); break;
         }
     }
     else
     {
         switch(ydiff)
         {
-            case -1: turnTo(3, M_PI / 4); forwardTicks(3, sqrt(0.01*0.01*2)); break;
+            case 1: turnTo(3, M_PI / 4); forwardTicks(3, hypot(0.01, 0.01)); break;
             case 0: turnTo(3, M_PI / 2); forwardTicks(3, 0.01); break;
-            case 1: turnTo(3, M_PI * 3 / 4); forwardTicks(3, sqrt(0.01*0.01*2)); break;
+            case -1: turnTo(3, M_PI * 3 / 4); forwardTicks(3, hypot(0.01, 0.01)); break;
         }
     }
 }
@@ -394,7 +394,7 @@ void RobotInstance::updateVisited()
         pdd(cur.first + 0.01, cur.second + 0.01) };
     for(pdd adjacent : adjacents)
     {
-        if(isTraversable(adjacent, getLidarPoints()))
+        if(isTraversable(adjacent, getLidarPoints()) && !isVisited(adjacent))
         {
             addToVisit(adjacent);
         }
@@ -405,7 +405,7 @@ bool RobotInstance::blackDetected()
 {
     const uint8_t* colors = m_color->getImage();
 
-    std::cout << "R: " << (int)colors[0] << " G: " << (int)colors[1] << " B: " << (int)colors[2] << std::endl;
+    // std::cout << "R: " << (int)colors[0] << " G: " << (int)colors[1] << " B: " << (int)colors[2] << std::endl;
 
     if(colors[0] <= 55 && colors[1] <= 55 && colors[2] <= 55)
         return true;
