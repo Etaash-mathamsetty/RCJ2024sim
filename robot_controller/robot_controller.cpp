@@ -73,15 +73,20 @@ void init_frame(SDL_Renderer *renderer)
     ImGui::NewFrame();
 }
 
+SDL_Texture *t;
+SDL_Texture *t2;
+
 void end_frame(SDL_Renderer *renderer)
 {
-    ImGui::End();
     ImGui::Render();
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
     SDL_RenderPresent(renderer);
+
+    SDL_DestroyTexture(t);
+    SDL_DestroyTexture(t2);
 }
 
-void draw_frame(RobotInstance *rb, SDL_Window *window)
+void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
 {
     int width, height;
 
@@ -89,15 +94,43 @@ void draw_frame(RobotInstance *rb, SDL_Window *window)
 
     ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Always);
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-    ImGui::Begin("window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+    if(ImGui::Begin("window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+    {
+        if(ImGui::BeginTabBar("tabs", ImGuiTabBarFlags_Reorderable))
+        {
+            if(ImGui::BeginTabItem("Lidar Debug", nullptr))
+            {
+                ImGui::Text("Number of points: %ld", getCount());
 
-    ImGui::Text("Number of points: %ld", getCount());
+                if(ImGui::Button("Clear Point Cloud"))
+                    clearPointCloud();
 
-    if(ImGui::Button("Clear Point Cloud"))
-        clearPointCloud();
+                ImPlot::SetNextMarkerStyle(ImPlotMarker_Asterisk, 1.5);
+                plotPoints(rb, width, height);
 
-    ImPlot::SetNextMarkerStyle(ImPlotMarker_Asterisk, 1.5);
-    plotPoints(rb, width, height);
+                ImGui::EndTabItem();
+            }
+
+            if(ImGui::BeginTabItem("Sensor Debug"))
+            {
+                cv::Mat m = rb->getLeftCameraMat();
+                cv::Mat m2 = rb->getRightCameraMat();
+                t = getTextureFromMat(r, m, SDL_PIXELFORMAT_RGB888);
+                t2 = getTextureFromMat(r, m2, SDL_PIXELFORMAT_RGB888);
+
+                ImGui::Text("Left Camera: ");
+                ImGui::Image((void*)t, ImVec2(512,512));
+
+                ImGui::Text("Right Camera: ");
+                ImGui::Image((void*)t2, ImVec2(512,512));
+
+                ImGui::EndTabItem();
+            }
+
+            ImGui::EndTabBar();
+        }
+        ImGui::End();
+    }
 }
 
 void poll_events(bool &running)
@@ -215,7 +248,7 @@ int main(int argc, char **argv) {
 
                 init_frame(renderer);
 
-                draw_frame(rb, window);
+                draw_frame(rb, renderer, window);
 
                 end_frame(renderer);
             }

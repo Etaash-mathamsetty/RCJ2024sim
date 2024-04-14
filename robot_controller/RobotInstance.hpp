@@ -87,6 +87,10 @@ public:
 
     void detectVictims();
 
+    cv::Mat getLeftCameraMat();
+
+    cv::Mat getRightCameraMat();
+
     void alignRobot();
 
     void update_lidar_cloud();

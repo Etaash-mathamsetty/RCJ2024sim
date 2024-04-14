@@ -27,6 +27,16 @@ inline cv::Mat getCv2Mat(webots::Camera *cam)
     return frame;
 }
 
+cv::Mat RobotInstance::getLeftCameraMat()
+{
+    return getCv2Mat(m_leftCamera);
+}
+
+cv::Mat RobotInstance::getRightCameraMat()
+{
+    return getCv2Mat(m_rightCamera);
+}
+
 RobotInstance::RobotInstance()
 {
     m_robot = new webots::Robot();

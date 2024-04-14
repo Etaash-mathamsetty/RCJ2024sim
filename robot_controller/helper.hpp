@@ -1,6 +1,10 @@
 #include <iostream>
 #include <list>
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_render.h>
+#include <opencv2/opencv.hpp>
+
 #ifndef _HELPER_HPP_
 #define _HELPER_HPP_
 
@@ -14,5 +18,6 @@ struct pair_hash_combiner
 };
 
 double r2d(double decimal);
+SDL_Texture *getTextureFromMat(SDL_Renderer *r, const cv::Mat& mat, SDL_PixelFormatEnum f);
 
 #endif
