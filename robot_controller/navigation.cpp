@@ -222,7 +222,7 @@ void addToVisit(pdd point)
 pdd pointTo(pdd point, double dir)
 {
     dir = clampAngle(dir);
-    return pdd(point.f + 0.01 * sin(dir), point.s + 0.01 * cos(dir));
+    return pdd(r2d(point.f + 0.01 * sin(dir)), r2d(point.s + 0.01 * cos(dir)));
 }
 
 pdd chooseMove(RobotInstance *rb, double rotation)
@@ -245,29 +245,47 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     sides[6] = lidar_image[horizontalResolution * 3 / 4];
     sides[7] = lidar_image[horizontalResolution * 7 / 8];
 
-    if (!bfsResult.empty())
+    if (!toVisit.empty() && !bfsResult.empty())
     {
         pdd nextPoint = bfsResult.top();
         if(currentPoint == nextPoint)
         {
             bfsResult.pop();
+            if(bfsResult.empty())
+            {
+                return currentPoint;
+            }
             nextPoint = bfsResult.top();
         }
-        cout << currentPoint.first << " " << currentPoint.second << ">" << nextPoint.first << " " << nextPoint.second << endl;
+        else if(!isTraversable(nextPoint, getLidarPoints()))
+        {
+            bfsResult = pointBfs(currentPoint, toVisit.back(), getMinMax(getLidarPoints()));
+            nextPoint = bfsResult.top();
+            if(!toVisit.empty() && !isTraversable(nextPoint, getLidarPoints()))
+            {
+                toVisit.pop_back();
+                bfsResult = {};
+                return currentPoint;
+            }
+        }
+        // cout << currentPoint.first << " " << currentPoint.second << ">" << nextPoint.first << " " << nextPoint.second << endl;
         return nextPoint;
     }
     for (int i = 0; i <= 2; i++)
     {
-        if (i == 2)
+        if (i == 2 && !toVisit.empty())
         {
             bfsResult = pointBfs(currentPoint, toVisit.back(), getMinMax(getLidarPoints()));
             pdd nextPoint = bfsResult.top();
             if(currentPoint == nextPoint)
             {
                 bfsResult.pop();
+                if(bfsResult.empty())
+                {
+                    return currentPoint;
+                }
                 nextPoint = bfsResult.top();
             }
-            cout << 2 << endl;
             return nextPoint;
         }
         if (i == 0)
@@ -275,7 +293,6 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             if (!isVisited(pointTo(currentPoint, rotation))
                 && isTraversable(pointTo(currentPoint, rotation), getLidarPoints()))
             {
-                cout << 0 << endl;
                 return pointTo(currentPoint, rotation);
             }
         }
@@ -311,7 +328,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             }
             if(nextPoint != currentPoint)
             {
-                cout << 1 << endl;
+                cout << nextPoint.first << " " << nextPoint.second << endl;
                 return nextPoint;
             }
         }

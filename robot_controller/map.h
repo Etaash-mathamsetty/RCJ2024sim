@@ -16,6 +16,7 @@ void update_regions_map(webots::GPS *gps, const float *lidar_image, float theta=
 void update_camera_map(webots::GPS *gps, const float *lidar_image, webots::Camera *camera, float theta=0);
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
+void addLidarPoint(std::pair<double, double> point);
 size_t getCount();
 void clearPointCloud();
 double clampAngle(double theta);

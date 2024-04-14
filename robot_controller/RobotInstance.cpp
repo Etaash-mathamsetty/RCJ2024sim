@@ -184,7 +184,7 @@ bool RobotInstance::alignmentNeeded()
     return getDirection() == -1;
 }
 
-bool RobotInstance::forwardTicks(double vel, double ticks)
+bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 {
     pdd start = getCurrentGPSPosition();
     //TODO: use PID
@@ -206,13 +206,17 @@ bool RobotInstance::forwardTicks(double vel, double ticks)
     if(blackDetected())
     {
         std::cout << "black detected" << std::endl;
+        pdd cur = getCurrentGPSPosition();
+        addLidarPoint(cur);
+        addVisited(target);
 
-        while(traveled >= 0.0 && step() != -1)
+        while(traveled >= 0.003 && step() != -1)
         {
-            forward(-vel);
-            pdd cur = getCurrentGPSPosition();
+            forward(-vel * 0.5);
+            cur = getCurrentGPSPosition();
             traveled = hypot(cur.first - start.first, cur.second - start.second);
         }
+
 
         stopMotors();
 
@@ -351,31 +355,35 @@ void RobotInstance::moveToNextPos()
 {
     pdd nextPos = getTargetPos();
     int xdiff = 100 * r2d(nextPos.first - getCurrentGPSPosition().first);
-    int ydiff = 100 * r2d(nextPos.second - getCurrentGPSPosition().second);
+    int zdiff = 100 * r2d(nextPos.second - getCurrentGPSPosition().second);
+    if(zdiff != 0)
+    {
+        zdiff = copysign(1, zdiff);
+    }
     if(xdiff > 0)
     {
-        switch(ydiff)
+        switch(zdiff)
         {
-            case 1: turnTo(3, -M_PI / 4); forwardTicks(3, hypot(0.01, 0.01)); break;
-            case 0: turnTo(3, -M_PI / 2); forwardTicks(3, 0.01); break;
-            case -1: turnTo(3, -M_PI * 3 / 4); forwardTicks(3, hypot(0.01, 0.01)); break;
+            case 1: turnTo(3, -M_PI / 4); forwardTicks(3, hypot(0.01, 0.01), nextPos); break;
+            case 0: turnTo(3, -M_PI / 2); forwardTicks(3, 0.01, nextPos); break;
+            case -1: turnTo(3, -M_PI * 3 / 4); forwardTicks(3, hypot(0.01, 0.01), nextPos); break;
         }
     }
     else if(xdiff == 0)
     {
-        switch(ydiff)
+        switch(zdiff)
         {
-            case 1: turnTo(3, 0); forwardTicks(3, 0.01); break;
-            case -1: turnTo(3, M_PI); forwardTicks(3, 0.01); break;
+            case 1: turnTo(3, M_PI); forwardTicks(3, 0.01, nextPos); break;
+            case -1: turnTo(3, 0); forwardTicks(3, 0.01, nextPos); break;
         }
     }
     else
     {
-        switch(ydiff)
+        switch(zdiff)
         {
-            case 1: turnTo(3, M_PI / 4); forwardTicks(3, hypot(0.01, 0.01)); break;
-            case 0: turnTo(3, M_PI / 2); forwardTicks(3, 0.01); break;
-            case -1: turnTo(3, M_PI * 3 / 4); forwardTicks(3, hypot(0.01, 0.01)); break;
+            case 1: turnTo(3, M_PI / 4); forwardTicks(3, hypot(0.01, 0.01), nextPos); break;
+            case 0: turnTo(3, M_PI / 2); forwardTicks(3, 0.01, nextPos); break;
+            case -1: turnTo(3, M_PI * 3 / 4); forwardTicks(3, hypot(0.01, 0.01), nextPos); break;
         }
     }
 }

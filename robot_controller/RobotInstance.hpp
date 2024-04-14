@@ -71,7 +71,7 @@ public:
         m_emitter->send((const void*)"E", 1);
     }
 
-    bool forwardTicks(double vel, double ticks);
+    bool forwardTicks(double vel, double ticks, pdd target);
 
     int getDirection();
 

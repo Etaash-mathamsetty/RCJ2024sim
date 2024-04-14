@@ -250,6 +250,11 @@ std::vector<std::pair<double, double>>& getCameraPoints()
     return vecCameraPoints;
 }
 
+void addLidarPoint(pdd point)
+{
+    vecLidarPoints.push_back(point);
+}
+
 ImPlotPoint getPointFromMap(int idx, void *_map)
 {
     return ImPlotPoint(vecLidarPoints[idx].first, vecLidarPoints[idx].second);
