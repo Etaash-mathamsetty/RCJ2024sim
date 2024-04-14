@@ -49,7 +49,7 @@ pair<pdd, pdd> getMinMax(vector<pdd> list)
     double maxx = -10000;
     double miny = 10000;
     double maxy = -10000;
-    for (int i = 0; i < list.size(); i++)
+    for (size_t i = 0; i < list.size(); i++)
     {
         if (list[i].f < minx) minx = list[i].f;
         if (list[i].s < miny) miny = list[i].s;
@@ -62,7 +62,7 @@ pair<pdd, pdd> getMinMax(vector<pdd> list)
 void getPlot(vector<double> datalist, pdd  pos, vector<pdd> *pList, double angle)
 {
     vector<pdd> &PLRef = *pList;
-    for (int i = 0; i < datalist.size(); i++)
+    for (size_t i = 0; i < datalist.size(); i++)
     {
         if (datalist[i] != -1)
         {
@@ -94,8 +94,7 @@ void printStack(stack<pdd> pts)
 
 bool isTraversable(pdd pos, vector<pdd> points)
 {
-    bool traversable = 1;
-    for (int i = 0; i < points.size(); i++)
+    for (size_t i = 0; i < points.size(); i++)
     {
         if (getDist(pos, points[i]) < (0.071 / 2.0))
             return 0;

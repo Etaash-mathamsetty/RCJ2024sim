@@ -293,7 +293,7 @@ void RobotInstance::lookForLetter()
         cv::Mat frameL(m_leftCamera->getHeight(), m_leftCamera->getWidth(), CV_8UC4, (void*)m_leftCamera->getImage());
         std::vector<std::vector<cv::Point>> contoursL = getContours(frameL);
         double camCenterX = m_leftCamera->getHeight() / 2;
-        for (int i = 0; i < contoursL.size(); i++)
+        for (size_t i = 0; i < contoursL.size(); i++)
         {
             boundRect = boundingRect(contoursL[i]);
             cv::Mat roi(frameL, boundRect);
@@ -312,7 +312,7 @@ void RobotInstance::lookForLetter()
     {
         cv::Mat frameR(m_rightCamera->getHeight(), m_rightCamera->getWidth(), CV_8UC4, (void*)m_rightCamera->getImage());
         std::vector<std::vector<cv::Point>> contoursR = getContours(frameR);
-        for (int i = 0; i < contoursR.size(); i++)
+        for (size_t i = 0; i < contoursR.size(); i++)
         {
             boundRect = boundingRect(contoursR[i]);
             cv::Mat roi(frameR, boundRect);
