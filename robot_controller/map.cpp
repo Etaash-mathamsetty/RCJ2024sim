@@ -77,7 +77,7 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
 
     for(int i = 0; i < 512; i++)
     {
-        const float dist = lidar_image[i];
+        float dist = lidar_image[i];
         if(std::isinf(dist))
             continue;
         const float angle = i/512.0 * 2.0 * M_PI;
@@ -93,8 +93,8 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         double x = dist*sin(angle - theta) + (pos[0] - pos_rounded[0]);
         double y = dist*cos(angle - theta) + (pos[2] - pos_rounded[2]);
 
-        x = round_to(x);
-        y = round_to(y);
+        x = floor_to(x);
+        y = floor_to(y);
 
         while(x < 0)
         {
@@ -119,9 +119,6 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
             x -= region_size;
             pos_rounded[0] += region_size;
         }
-
-        x = round_to(x);
-        y = round_to(y);
 
         const auto coord = std::make_pair(x,y);
         //std::cout << "x: " << x << " y: " << y << std::endl;
@@ -178,7 +175,7 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
 
     for (int i = 0; i < 512; i++)
     {
-        const float dist = lidar_image[i];
+        float dist = lidar_image[i];
         if (std::isinf(dist))
             continue;
         const float angle = clampAngle(i / 512.0 * 2.0 * M_PI);
@@ -199,8 +196,8 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
         double x = dist * sin(angle - theta) + (pos[0] - pos_rounded[0]);
         double y = dist * cos(angle - theta) + (pos[2] - pos_rounded[2]);
 
-        x = round_to(x);
-        y = round_to(y);
+        x = floor_to(x);
+        y = floor_to(y);
 
         while (x < 0)
         {
@@ -225,9 +222,6 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
             x -= region_size;
             pos_rounded[0] += region_size;
         }
-
-        x = round_to(x);
-        y = round_to(y);
 
         const auto coord = std::make_pair(x, y);
         //cout << "x: " << x << " y: " << y << endl;
