@@ -98,6 +98,7 @@ RobotInstance::RobotInstance()
 
     m_isFinished = false;
     m_disabledGUI = false;
+    m_stopMovement = false;
 }
 
 RobotInstance::~RobotInstance()
@@ -442,6 +443,11 @@ bool RobotInstance::blackDetected()
         return true;
 
     return false;
+}
+
+const uint8_t* RobotInstance::getColor()
+{
+    return m_color->getImage();
 }
 
 void RobotInstance::alignRobot()

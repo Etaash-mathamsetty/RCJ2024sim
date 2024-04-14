@@ -31,6 +31,12 @@ public:
 
     void forward(double l_vel, double r_vel)
     {
+        if(m_stopMovement)
+        {
+            m_lm->setVelocity(0.0);
+            m_rm->setVelocity(0.0);
+            return;
+        }
         l_vel = std::clamp(l_vel, -MAX_VELOCITY, MAX_VELOCITY);
         r_vel = std::clamp(r_vel, -MAX_VELOCITY, MAX_VELOCITY);
         m_lm->setVelocity(l_vel);
@@ -90,6 +96,10 @@ public:
     cv::Mat getLeftCameraMat();
 
     cv::Mat getRightCameraMat();
+
+    const uint8_t* getColor();
+
+    bool& getStopMovement() { return m_stopMovement; };
 
     void alignRobot();
 
@@ -165,18 +175,19 @@ private:
     webots::Camera *m_rightCamera;
     webots::Camera *m_leftCamera;
     webots::GPS *m_gps;
+    webots::Lidar *m_lidar;
+    webots::InertialUnit *m_imu;
+
     double m_lposoffset;
     double m_rposoffset;
     int m_timestep;
     bool m_isFinished;
+    bool m_stopMovement;
     DIR m_dir;
 
     pdd m_targetPos;
 
     bool m_disabledGUI;
-
-    webots::Lidar *m_lidar;
-    webots::InertialUnit *m_imu;
 
     std::vector<std::function<void()>> m_callbacks;
 };

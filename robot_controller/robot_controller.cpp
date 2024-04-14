@@ -119,10 +119,22 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 t2 = getTextureFromMat(r, m2, SDL_PIXELFORMAT_RGB888);
 
                 ImGui::Text("Left Camera: ");
-                ImGui::Image((void*)t, ImVec2(512,512));
+                ImGui::Image((void*)t, ImVec2(256,256));
 
                 ImGui::Text("Right Camera: ");
-                ImGui::Image((void*)t2, ImVec2(512,512));
+                ImGui::Image((void*)t2, ImVec2(256,256));
+
+                float color[3] = {rb->getColor()[0] / 255.0f, rb->getColor()[1] / 255.0f, rb->getColor()[2] / 255.0f};
+
+                ImGui::Text("Color Sensor: ");
+                ImGui::ColorEdit3("", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoInputs);
+
+                ImGui::EndTabItem();
+            }
+
+            if(ImGui::BeginTabItem("Debug Controls"))
+            {
+                ImGui::Checkbox("Stop Movement", &rb->getStopMovement());
 
                 ImGui::EndTabItem();
             }
