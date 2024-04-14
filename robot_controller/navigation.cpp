@@ -33,6 +33,11 @@ double getDist(pdd  pt1, pdd pt2)
     return (sqrt((pt1.f - pt2.f)* (pt1.f - pt2.f) + (pt1.s - pt2.s)* (pt1.s - pt2.s)));
 }
 
+double getDist2(pdd pt1, pdd pt2)
+{
+    return pow(pt2.f - pt1.f, 2) + pow(pt2.s - pt1.s, 2);
+}
+
 bool compPts(pdd pt1, pdd pt2, double thresh)
 {
     return (abs(pt1.f - pt2.f) < thresh && abs(pt1.s - pt2.s) < thresh);
@@ -103,6 +108,32 @@ bool isTraversable(pdd pos, vector<pdd> points)
     return 1;
 }
 
+double minDist(pdd a, pdd b, pdd p)
+{
+    double l2 = getDist2(a, b);
+    if(l2 == 0)
+    {
+        return getDist(a, p);
+    }
+    double dot = (p.f - a.f) * (b.f - a.f) + (p.s - a.s) * (b.s - a.s);
+    double t = max(0.0, min(1.0, dot / l2));
+    double projx = a.f + t * (b.f - a.f);
+    double projy = a.s + t * (b.s - a.s);
+    return getDist(p, pdd(projx, projy));
+}
+
+bool canSee(pdd cur, pdd tar, vector<pdd> points)
+{
+    for(pdd point : points)
+    {
+        if(minDist(cur, tar, point) < 0.03)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 pii convert(pdd point)
 {
     return pii((int)round(point.f / 0.01), (int)round(point.s / 0.01));
@@ -136,14 +167,23 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax)
         if (node != target)
         {
             //north: +y, east: +x, south: -y, west: -x; 
-            pii adjacentNodes[8] = { pii(node.f, node.s + 1),
+            // pii adjacentNodes[8] = {
+            //     pii(node.f, node.s + 1),
+            //     pii(node.f + 1, node.s),
+            //     pii(node.f, node.s - 1),
+            //     pii(node.f - 1, node.s),
+            //     pii(node.f - 1, node.s - 1),
+            //     pii(node.f - 1, node.s + 1),
+            //     pii(node.f + 1, node.s - 1),
+            //     pii(node.f + 1, node.s + 1)
+            // };
+
+            pii adjacentNodes[4] = {
+                pii(node.f, node.s + 1),
                 pii(node.f + 1, node.s),
                 pii(node.f, node.s - 1),
-                pii(node.f - 1, node.s),
-                pii(node.f - 1, node.s - 1),
-                pii(node.f - 1, node.s + 1),
-                pii(node.f + 1, node.s - 1),
-                pii(node.f + 1, node.s + 1) };
+                pii(node.f - 1, node.s)
+            };
 
             for (pii adjacent : adjacentNodes)
             {
@@ -219,10 +259,27 @@ void addToVisit(pdd point)
     toVisit.push_back(point);
 }
 
+bool isInToVisit(pdd point)
+{
+    auto it = find(toVisit.begin(), toVisit.end(), point);
+    return it != toVisit.end();
+}
+
 pdd pointTo(pdd point, double dir)
 {
     dir = clampAngle(dir);
     return pdd(r2d(point.f + 0.01 * sin(dir)), r2d(point.s + 0.01 * cos(dir)));
+}
+
+void printToVisit()
+{
+    auto it = toVisit.begin();
+    while(it != toVisit.end())
+    {
+        cout << it->first << " " << it->second << endl;
+        it++;
+    }
+    cout << endl;
 }
 
 pdd chooseMove(RobotInstance *rb, double rotation)
@@ -245,32 +302,36 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     sides[6] = lidar_image[horizontalResolution * 3 / 4];
     sides[7] = lidar_image[horizontalResolution * 7 / 8];
 
-    if (!toVisit.empty() && !bfsResult.empty())
+    if(!toVisit.empty() && isVisited(toVisit.back()))
     {
-        pdd nextPoint = bfsResult.top();
-        if(currentPoint == nextPoint)
-        {
-            bfsResult.pop();
-            if(bfsResult.empty())
-            {
-                return currentPoint;
-            }
-            nextPoint = bfsResult.top();
-        }
-        else if(!isTraversable(nextPoint, getLidarPoints()))
-        {
-            bfsResult = pointBfs(currentPoint, toVisit.back(), getMinMax(getLidarPoints()));
-            nextPoint = bfsResult.top();
-            if(!toVisit.empty() && !isTraversable(nextPoint, getLidarPoints()))
-            {
-                toVisit.pop_back();
-                bfsResult = {};
-                return currentPoint;
-            }
-        }
-        // cout << currentPoint.first << " " << currentPoint.second << ">" << nextPoint.first << " " << nextPoint.second << endl;
-        return nextPoint;
+        toVisit.pop_back();
     }
+    // if (!toVisit.empty() && !bfsResult.empty())
+    // {
+    //     pdd nextPoint = bfsResult.top();
+    //     if(currentPoint == nextPoint)
+    //     {
+    //         bfsResult.pop();
+    //         if(bfsResult.empty())
+    //         {
+    //             return currentPoint;
+    //         }
+    //         nextPoint = bfsResult.top();
+    //     }
+    //     else if(!isTraversable(nextPoint, getLidarPoints()))
+    //     {
+    //         bfsResult = pointBfs(currentPoint, toVisit.back(), getMinMax(getLidarPoints()));
+    //         nextPoint = bfsResult.top();
+    //         if(!toVisit.empty() && !isTraversable(nextPoint, getLidarPoints()))
+    //         {
+    //             toVisit.pop_back();
+    //             bfsResult = {};
+    //             return currentPoint;
+    //         }
+    //     }
+    //     // cout << currentPoint.first << " " << currentPoint.second << ">" << nextPoint.first << " " << nextPoint.second << endl;
+    //     return nextPoint;
+    // }
     for (int i = 0; i <= 2; i++)
     {
         if (i == 2 && !toVisit.empty())
@@ -333,7 +394,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             }
         }
     }
-    cout << "no move found";
+    // cout << "no move found" << endl;
     return currentPoint;
 }
 

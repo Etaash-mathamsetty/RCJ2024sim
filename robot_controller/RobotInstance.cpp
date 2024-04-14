@@ -391,21 +391,34 @@ void RobotInstance::moveToNextPos()
 void RobotInstance::updateVisited()
 {
     pdd cur = getCurrentGPSPosition();
-    addVisited(cur);
-    pdd adjacents[8] = { pdd(cur.first, cur.second + 0.01),
-        pdd(cur.first + 0.01, cur.second),
-        pdd(cur.first, cur.second - 0.01),
-        pdd(cur.first - 0.01, cur.second),
-        pdd(cur.first - 0.01, cur.second - 0.01),
-        pdd(cur.first - 0.01, cur.second + 0.01),
-        pdd(cur.first + 0.01, cur.second - 0.01),
-        pdd(cur.first + 0.01, cur.second + 0.01) };
-    for(pdd adjacent : adjacents)
+    if(!isVisited(cur))
     {
-        if(isTraversable(adjacent, getLidarPoints()) && !isVisited(adjacent))
+        addVisited(cur);
+
+        double x = cur.first - 0.1, y = cur.second - 0.1;
+        for(; x <= cur.first + 0.1; x += 0.01)
         {
-            addToVisit(adjacent);
+            for(; y <= cur.second + 0.1; y += 0.01)
+            {
+                pdd point = pdd(x, y);
+                if(point == pointTo(cur, m_imu->getRollPitchYaw()[2]))
+                {
+                    continue;
+                }
+                if(!isVisited(point) && canSee(cur, point, getLidarPoints()))
+                {
+                    if(getDist(cur, point) <= 0.05)
+                    {
+                        addVisited(point);
+                    }
+                    else if(!isInToVisit(point))
+                    {
+                        addToVisit(point);
+                    }
+                }
+            }
         }
+
     }
 }
 
