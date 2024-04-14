@@ -384,7 +384,6 @@ int main(int argc, char **argv) {
         //     rb->forward(1.0 - err, 1.0 + err);
         // }
         rb->moveToNextPos();
-        rb->updateVisited();
     }
 
     if(!rb->getDisableGUI())
