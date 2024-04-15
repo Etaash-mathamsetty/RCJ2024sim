@@ -136,6 +136,9 @@ public:
     webots::Lidar *getLidar() { return m_lidar; }
 
     webots::InertialUnit *getIMU() { return m_imu; }
+
+    std::vector<SDL_Texture*>& getTextures() { return m_tex; }
+
 private:
 
     //DOES NOT AFFECT POSITION SENSOR
@@ -190,5 +193,6 @@ private:
     bool m_disabledGUI;
 
     std::vector<std::function<void()>> m_callbacks;
+    std::vector<SDL_Texture*> m_tex;
 };
 #endif

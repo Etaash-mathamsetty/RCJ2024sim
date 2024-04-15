@@ -73,17 +73,17 @@ void init_frame(SDL_Renderer *renderer)
     ImGui::NewFrame();
 }
 
-SDL_Texture *t;
-SDL_Texture *t2;
-
-void end_frame(SDL_Renderer *renderer)
+void end_frame(RobotInstance *rb, SDL_Renderer *renderer)
 {
     ImGui::Render();
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
     SDL_RenderPresent(renderer);
 
-    SDL_DestroyTexture(t);
-    SDL_DestroyTexture(t2);
+    for(auto it = rb->getTextures().rbegin(); it != rb->getTextures().rend(); it++)
+    {
+        SDL_DestroyTexture(*it);
+        rb->getTextures().erase(it.base());
+    }
 }
 
 void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
@@ -115,14 +115,14 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             {
                 cv::Mat m = rb->getLeftCameraMat();
                 cv::Mat m2 = rb->getRightCameraMat();
-                t = getTextureFromMat(r, m, SDL_PIXELFORMAT_RGB888);
-                t2 = getTextureFromMat(r, m2, SDL_PIXELFORMAT_RGB888);
+                rb->getTextures().push_back(getTextureFromMat(r, m, SDL_PIXELFORMAT_RGB888));
+                rb->getTextures().push_back(getTextureFromMat(r, m2, SDL_PIXELFORMAT_RGB888));
 
-                ImGui::Text("Left Camera: ");
-                ImGui::Image((void*)t, ImVec2(256,256));
-
-                ImGui::Text("Right Camera: ");
-                ImGui::Image((void*)t2, ImVec2(256,256));
+                for(size_t i = 0; i < rb->getTextures().size(); i++)
+                {
+                    ImGui::Text("Mat %ld:", i);
+                    ImGui::Image((void*)rb->getTextures()[i], ImVec2(256, 256));
+                }
 
                 float color[3] = {rb->getColor()[0] / 255.0f, rb->getColor()[1] / 255.0f, rb->getColor()[2] / 255.0f};
 
@@ -262,7 +262,7 @@ int main(int argc, char **argv) {
 
                 draw_frame(rb, renderer, window);
 
-                end_frame(renderer);
+                end_frame(rb, renderer);
             }
         });
     }
