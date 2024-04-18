@@ -253,6 +253,11 @@ void addVisited(pdd point)
     }
 }
 
+const set<pdd>& getVisited()
+{
+    return visitedPoints;
+}
+
 void addToVisit(pdd point)
 {
     toVisit.push_back(point);

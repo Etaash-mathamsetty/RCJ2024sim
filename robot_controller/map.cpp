@@ -259,6 +259,13 @@ ImPlotPoint getCameraPointFromMap(int idx, void *_map)
     return ImPlotPoint(vecCameraPoints[idx].first, vecCameraPoints[idx].second);
 }
 
+ImPlotPoint getVisitedPlotPt(int idx, void *param)
+{
+    auto it = getVisited().begin();
+    std::advance(it, idx);
+    return ImPlotPoint(it->first, it->second);
+}
+
 size_t getCount()
 {
     return vecLidarPoints.size();
@@ -330,6 +337,9 @@ void plotPoints(RobotInstance *rb, int w, int h)
 
             ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0.8,1));
             ImPlot::PlotLine("Path", xs, ys, 2, ImPlotItemFlags_NoFit);
+        }
+        {
+            ImPlot::PlotScatterG("Visited", getVisitedPlotPt, nullptr, getVisited().size(), ImPlotItemFlags_NoFit);
         }
         ImPlot::EndPlot();
     }

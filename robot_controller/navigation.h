@@ -21,5 +21,6 @@ void addVisited(pdd pt);
 void addToVisit(pdd point);
 bool isInToVisit(pdd point);
 pdd chooseMove(RobotInstance *rb, double currentRotation);
+const std::set<pdd>& getVisited();
 
 #endif
