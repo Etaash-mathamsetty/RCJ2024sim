@@ -139,6 +139,8 @@ public:
 
     std::vector<SDL_Texture*>& getTextures() { return m_tex; }
 
+    void addTexture(cv::Mat, SDL_PixelFormatEnum);
+
 private:
 
     //DOES NOT AFFECT POSITION SENSOR
@@ -167,6 +169,10 @@ private:
     ~RobotInstance();
 
     pdd calcNextPos();
+
+    std::vector<std::vector<cv::Point>> getContours(cv::Mat);
+
+    int countContours(cv::Mat);
 
     webots::Robot *m_robot;
     webots::Motor *m_lm;

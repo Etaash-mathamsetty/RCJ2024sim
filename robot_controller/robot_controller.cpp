@@ -115,8 +115,6 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             {
                 cv::Mat m = rb->getLeftCameraMat();
                 cv::Mat m2 = rb->getRightCameraMat();
-                rb->getTextures().push_back(getTextureFromMat(r, m, SDL_PIXELFORMAT_RGB888));
-                rb->getTextures().push_back(getTextureFromMat(r, m2, SDL_PIXELFORMAT_RGB888));
 
                 for(size_t i = 0; i < rb->getTextures().size(); i++)
                 {
@@ -227,9 +225,6 @@ int main(int argc, char **argv) {
     std::cout << horizontalResolution << std::endl;
     std::cout << numberOfLayers << std::endl;
 
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-
     if(!rb->getDisableGUI())
     {
         window = SDL_CreateWindow("Simulation Debug Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
@@ -252,7 +247,7 @@ int main(int argc, char **argv) {
         init_gui(window, renderer);
 
         rb->add_step_callback(
-        [&running, &renderer, &rb, &window]()
+        [&running, &rb]()
         {
             if(!rb->getDisableGUI())
             {

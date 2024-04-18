@@ -17,6 +17,9 @@ struct pair_hash_combiner
     }
 };
 
+inline SDL_Window *window;
+inline SDL_Renderer *renderer;
+
 double r2d(double decimal);
 SDL_Texture *getTextureFromMat(SDL_Renderer *r, const cv::Mat& mat, SDL_PixelFormatEnum f);
 
