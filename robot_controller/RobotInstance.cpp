@@ -421,10 +421,12 @@ void RobotInstance::updateVisited()
     {
         addVisited(cur);
 
-        double x = cur.first - 0.1, y = cur.second - 0.1;
-        for(; x <= cur.first + 0.1; x += 0.01)
+        const double diameter = 0.08;
+
+        double x = cur.first - diameter/2, y = cur.second - diameter/2;
+        for(; x <= cur.first + diameter/2; x += 0.01)
         {
-            for(; y <= cur.second + 0.1; y += 0.01)
+            for(; y <= cur.second + diameter/2; y += 0.01)
             {
                 pdd point = pdd(x, y);
                 if(point == pointTo(cur, m_imu->getRollPitchYaw()[2]))
@@ -433,13 +435,9 @@ void RobotInstance::updateVisited()
                 }
                 if(!isVisited(point) && canSee(cur, point, getLidarPoints()))
                 {
-                    if(getDist(cur, point) <= 0.05)
+                    if(getDist(cur, point) <= 0.05 || !isInToVisit(point))
                     {
                         addVisited(point);
-                    }
-                    else if(!isInToVisit(point))
-                    {
-                        addToVisit(point);
                     }
                 }
             }

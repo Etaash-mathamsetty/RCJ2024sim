@@ -121,9 +121,9 @@ double minDist(pdd a, pdd b, pdd p)
     return getDist(p, pdd(projx, projy));
 }
 
-bool canSee(pdd cur, pdd tar, vector<pdd> points)
+bool canSee(pdd cur, pdd tar, const vector<pdd>& points)
 {
-    for(pdd point : points)
+    for(const pdd& point : points)
     {
         if(minDist(cur, tar, point) < 0.03)
         {
