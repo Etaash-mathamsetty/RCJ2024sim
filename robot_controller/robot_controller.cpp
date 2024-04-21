@@ -82,7 +82,7 @@ void end_frame(RobotInstance *rb, SDL_Renderer *renderer)
     for(auto it = rb->getTextures().rbegin(); it != rb->getTextures().rend(); it++)
     {
         SDL_DestroyTexture(*it);
-        rb->getTextures().erase(it.base());
+        // rb->getTextures().erase(it.base());
     }
 }
 

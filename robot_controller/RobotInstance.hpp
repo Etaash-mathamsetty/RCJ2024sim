@@ -195,6 +195,7 @@ private:
     DIR m_dir;
 
     pdd m_targetPos;
+    pdd m_lastPos;
 
     bool m_disabledGUI;
 

@@ -106,7 +106,7 @@ RobotInstance::~RobotInstance()
     delete m_robot;
 }
 
-const double turn_kp = 0.5;
+const double turn_kp = 0.75;
 
 // turns shortest way to the direction
 void RobotInstance::turnTo(double speed, double target_angle)
@@ -142,9 +142,9 @@ void RobotInstance::turnTo(double speed, double target_angle)
 
         //small boost
         if(calc_speed < 0)
-            calc_speed -= std::max(0.1, 2.0 * abs(error));
+            calc_speed -= std::max(0.2, 3.0 * abs(error));
         else
-            calc_speed += std::max(0.1, 2.0 * abs(error));
+            calc_speed += std::max(0.2, 3.0 * abs(error));
 
         forward(-calc_speed, calc_speed);
         lookForLetter();
@@ -399,8 +399,8 @@ void RobotInstance::moveToNextPos()
     {
         switch(zdiff)
         {
-            case 1: turnTo(3, M_PI); forwardTicks(3, 0.01, nextPos); break;
-            case -1: turnTo(3, 0); forwardTicks(3, 0.01, nextPos); break;
+            case 1: turnTo(3, 0); forwardTicks(3, 0.01, nextPos); break;
+            case -1: turnTo(3, M_PI); forwardTicks(3, 0.01, nextPos); break;
         }
     }
     else
@@ -416,34 +416,40 @@ void RobotInstance::moveToNextPos()
 
 void RobotInstance::updateVisited()
 {
-    pdd cur = getCurrentGPSPosition();
+    pdd cur = r2d(getCurrentGPSPosition());
     if(!isVisited(cur))
     {
         addVisited(cur);
+    }
+    if(cur != m_lastPos)
+    {
+        const double radius = 0.07;
 
-        const double diameter = 0.08;
-
-        double x = cur.first - diameter/2, y = cur.second - diameter/2;
-        for(; x <= cur.first + diameter/2; x += 0.01)
+        double x = cur.first - radius, y = cur.second - radius;
+        for(; x <= cur.first + radius; x += 0.008)
         {
-            for(; y <= cur.second + diameter/2; y += 0.01)
+            for(y = cur.second - radius; y <= cur.second + radius; y += 0.008)
             {
-                pdd point = pdd(x, y);
+                pdd point = r2d(pdd(x, y));
                 if(point == pointTo(cur, m_imu->getRollPitchYaw()[2]))
                 {
                     continue;
                 }
                 if(!isVisited(point) && canSee(cur, point, getLidarPoints()))
                 {
-                    if(getDist(cur, point) <= 0.05 || !isInToVisit(point))
+                    if(getDist(cur, point) <= 0.05)
                     {
                         addVisited(point);
+                    }
+                    else if(!isInToVisit(point))
+                    {
+                        addToVisit(point);
                     }
                 }
             }
         }
-
     }
+    m_lastPos = r2d(getCurrentGPSPosition());
 }
 
 bool RobotInstance::blackDetected()

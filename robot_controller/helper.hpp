@@ -21,6 +21,9 @@ inline SDL_Window *window;
 inline SDL_Renderer *renderer;
 
 double r2d(double decimal);
+pdd r2d(pdd point);
+void printPoint(pdd point);
+bool areEqual(pdd a, pdd b);
 SDL_Texture *getTextureFromMat(SDL_Renderer *r, const cv::Mat& mat, SDL_PixelFormatEnum f);
 
 #endif
