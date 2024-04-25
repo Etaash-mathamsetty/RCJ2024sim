@@ -4,3 +4,5 @@ robot_controller/build/*
 .vscode
 */imgui.ini
 .cache/*
+.idea
+robot_controller/cmake-build-*
