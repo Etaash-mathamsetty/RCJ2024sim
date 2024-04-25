@@ -92,8 +92,6 @@ RobotInstance::RobotInstance()
         //navigation update
         this->update_lidar_cloud();
         this->updateVisited();
-        this->m_targetPos = this->calcNextPos();
-
     });
 
     m_isFinished = false;
@@ -163,6 +161,10 @@ int RobotInstance::step() {
     return ret;
 }
 
+void RobotInstance::updateTargetPos()
+{
+    this->m_targetPos = this->calcNextPos();
+}
 
 void RobotInstance::turnTo(double speed, DIR dir)
 {

@@ -307,6 +307,10 @@ void plotPoints(RobotInstance *rb, int w, int h)
         ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
         ImPlot::SetNextMarkerStyle(ImPlotMarker_Plus);
         ImPlot::PlotScatterG("Camera Points", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
+        {
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Cross, 4);
+            ImPlot::PlotScatterG("Visited", getVisitedPlotPt, nullptr, getVisited().size(), ImPlotItemFlags_NoFit);
+        }
         for(const auto& r : regions)
         {
             ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0,0.5));
@@ -337,9 +341,6 @@ void plotPoints(RobotInstance *rb, int w, int h)
 
             ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0.8,1));
             ImPlot::PlotLine("Path", xs, ys, 2, ImPlotItemFlags_NoFit);
-        }
-        {
-            ImPlot::PlotScatterG("Visited", getVisitedPlotPt, nullptr, getVisited().size(), ImPlotItemFlags_NoFit);
         }
         ImPlot::EndPlot();
     }

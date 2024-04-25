@@ -118,6 +118,7 @@ public:
         return pdd(r2d(m_gps->getValues()[0]), -r2d(m_gps->getValues()[2]));
     }
 
+    void updateTargetPos();
     void moveToNextPos();
 
     void updateVisited();

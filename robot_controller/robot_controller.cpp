@@ -117,7 +117,7 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
 
                 for(const auto& pair : rb->getTextures())
                 {
-                    ImGui::Text(pair.first.c_str());
+                    ImGui::Text("%s", pair.first.c_str());
                     ImGui::Image((void*)pair.second, ImVec2(256, 256));
                 }
 
@@ -132,6 +132,11 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             if(ImGui::BeginTabItem("Debug Controls"))
             {
                 ImGui::Checkbox("Stop Movement", &rb->getStopMovement());
+
+                if(ImGui::Button("Exit"))
+                {
+                    exit(0);
+                }
 
                 ImGui::EndTabItem();
             }
@@ -422,6 +427,7 @@ int main(int argc, char **argv) {
         //     err *= kp;
         //     rb->forward(1.0 - err, 1.0 + err);
         // }
+        rb->updateTargetPos();
         rb->moveToNextPos();
     }
 

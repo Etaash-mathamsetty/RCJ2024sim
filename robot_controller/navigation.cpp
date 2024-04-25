@@ -97,14 +97,14 @@ void printStack(stack<pdd> pts)
     }
 }
 
-bool isTraversable(pdd pos, vector<pdd> points)
+bool isTraversable(pdd pos, const vector<pdd>& points)
 {
     for (size_t i = 0; i < points.size(); i++)
     {
-        if (getDist(pos, points[i]) < (0.1 / 2.0))
-            return 0;
+        if (getDist(pos, points[i]) < 0.55)
+            return false;
     }
-    return 1;
+    return true;
 }
 
 double minDist(pdd a, pdd b, pdd p)
