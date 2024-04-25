@@ -298,7 +298,6 @@ void printToVisit()
 
 pdd chooseMove(RobotInstance *rb, double rotation)
 {
-    GPS *gps = rb->getGPS();
     Lidar *lidar = rb->getLidar();
     pdd currentPoint = r2d(rb->getCurrentGPSPosition());
     int horizontalResolution = lidar->getHorizontalResolution();

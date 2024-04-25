@@ -238,7 +238,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     return true;
 }
 
-std::vector<std::vector<cv::Point>> RobotInstance::getContours(cv::Mat frame)
+std::vector<std::vector<cv::Point>> RobotInstance::getContours(std::string name, cv::Mat frame)
 {
     cv::Mat frame2;
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
@@ -248,14 +248,25 @@ std::vector<std::vector<cv::Point>> RobotInstance::getContours(cv::Mat frame)
     cv::findContours(frame2, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
     cv::Mat frame3(frame);
     cv::drawContours(frame3, contours, -1, cv::Scalar(255, 0, 0));
-    addTexture(frame3, SDL_PIXELFORMAT_RGB888);
+    addTexture(name, frame3, SDL_PIXELFORMAT_RGB888);
     return contours;
 }
 
-void RobotInstance::addTexture(cv::Mat m, SDL_PixelFormatEnum f)
+std::vector<std::vector<cv::Point>> RobotInstance::getContours(cv::Mat frame)
+{
+    cv::Mat frame2;
+    cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
+    cv::threshold(frame2, frame2, 80, 255, cv::THRESH_BINARY_INV);
+    std::vector<std::vector<cv::Point>> contours;
+    std::vector<cv::Vec4i> hierarchy;
+    cv::findContours(frame2, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    return contours;
+}
+
+void RobotInstance::addTexture(std::string name, cv::Mat m, SDL_PixelFormatEnum f)
 {
     if(!m_disabledGUI)
-        m_tex.push_back(getTextureFromMat(renderer, m, f));
+        m_tex[name] = getTextureFromMat(renderer, m, f);
 }
 
 int RobotInstance::countContours(cv::Mat frame)
@@ -312,10 +323,10 @@ void RobotInstance::lookForLetter()
     cv::Rect boundRect;
     cv::Mat frameL = getCv2Mat(m_leftCamera);
     cv::Mat frameR = getCv2Mat(m_rightCamera);
-    addTexture(frameL, SDL_PIXELFORMAT_RGB888);
-    addTexture(frameR, SDL_PIXELFORMAT_RGB888);
-    std::vector<std::vector<cv::Point>> contoursL = getContours(frameL);
-    std::vector<std::vector<cv::Point>> contoursR = getContours(frameR);
+    addTexture("Left Camera", frameL, SDL_PIXELFORMAT_RGB888);
+    addTexture("Right Camera", frameR, SDL_PIXELFORMAT_RGB888);
+    std::vector<std::vector<cv::Point>> contoursL = getContours("Left Contours", frameL);
+    std::vector<std::vector<cv::Point>> contoursR = getContours("Right Contours", frameR);
     if (rangeImage[horizontalResolution * 3 / 4] < MAX_VIC_DETECTION_RANGE)
     {
         double camCenterX = m_leftCamera->getHeight() / 2;
@@ -323,7 +334,7 @@ void RobotInstance::lookForLetter()
         {
             boundRect = boundingRect(contoursL[i]);
             cv::Mat roi(frameL, boundRect);
-            addTexture(roi, SDL_PIXELFORMAT_RGB888);
+            addTexture("Left ROI", roi, SDL_PIXELFORMAT_RGB888);
             double rectCenterX = boundRect.x + boundRect.width / 2; //in columns
             double thetaFromStraight;
             if (boundRect.width > 20 && boundRect.height > 20 && boundRect.x != 0 && boundRect.width + boundRect.x < frameL.cols)
@@ -341,7 +352,7 @@ void RobotInstance::lookForLetter()
         {
             boundRect = boundingRect(contoursR[i]);
             cv::Mat roi(frameR, boundRect);
-            addTexture(roi, SDL_PIXELFORMAT_RGB888);
+            addTexture("Right ROI", roi, SDL_PIXELFORMAT_RGB888);
             if (boundRect.width > 20 && boundRect.height > 20 && boundRect.x != 0 && boundRect.width + boundRect.x < frameR.cols)
             {
                 if (determineLetter(roi, "r", m_gps->getValues()))
@@ -355,9 +366,6 @@ void RobotInstance::lookForLetter()
 
 void RobotInstance::detectVictims()
 {
-    cv::Mat frame = getCv2Mat(m_rightCamera);
-    cv::Mat frame2 = getCv2Mat(m_leftCamera);
-
     try
     {
         lookForLetter();

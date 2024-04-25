@@ -137,9 +137,9 @@ public:
 
     webots::InertialUnit *getIMU() { return m_imu; }
 
-    std::vector<SDL_Texture*>& getTextures() { return m_tex; }
+    std::map<std::string, SDL_Texture*>& getTextures() { return m_tex; }
 
-    void addTexture(cv::Mat, SDL_PixelFormatEnum);
+    void addTexture(std::string name, cv::Mat, SDL_PixelFormatEnum);
 
 private:
 
@@ -170,6 +170,7 @@ private:
 
     pdd calcNextPos();
 
+    std::vector<std::vector<cv::Point>> getContours(std::string, cv::Mat);
     std::vector<std::vector<cv::Point>> getContours(cv::Mat);
 
     int countContours(cv::Mat);
@@ -200,6 +201,6 @@ private:
     bool m_disabledGUI;
 
     std::vector<std::function<void()>> m_callbacks;
-    std::vector<SDL_Texture*> m_tex;
+    std::map<std::string, SDL_Texture*> m_tex;
 };
 #endif

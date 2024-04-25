@@ -79,10 +79,9 @@ void end_frame(RobotInstance *rb, SDL_Renderer *renderer)
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
     SDL_RenderPresent(renderer);
 
-    for(auto it = rb->getTextures().rbegin(); it != rb->getTextures().rend(); it++)
+    for(const auto& pair : rb->getTextures())
     {
-        SDL_DestroyTexture(*it);
-        // rb->getTextures().erase(it.base());
+        SDL_DestroyTexture(pair.second);
     }
 }
 
@@ -116,10 +115,10 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 cv::Mat m = rb->getLeftCameraMat();
                 cv::Mat m2 = rb->getRightCameraMat();
 
-                for(size_t i = 0; i < rb->getTextures().size(); i++)
+                for(const auto& pair : rb->getTextures())
                 {
-                    ImGui::Text("Mat %ld:", i);
-                    ImGui::Image((void*)rb->getTextures()[i], ImVec2(256, 256));
+                    ImGui::Text(pair.first.c_str());
+                    ImGui::Image((void*)pair.second, ImVec2(256, 256));
                 }
 
                 float color[3] = {rb->getColor()[0] / 255.0f, rb->getColor()[1] / 255.0f, rb->getColor()[2] / 255.0f};
