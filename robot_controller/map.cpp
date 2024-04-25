@@ -303,6 +303,7 @@ void plotPoints(RobotInstance *rb, int w, int h)
     {
         ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal);
         ImPlot::SetNextLineStyle(ImVec4(0,0.4,1.0,1));
+        ImPlot::SetNextMarkerStyle(ImPlotMarker_Asterisk, 3);
         ImPlot::PlotScatterG("Lidar Points", getPointFromMap, nullptr, getCount(), ImPlotItemFlags_NoFit);
         ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
         ImPlot::SetNextMarkerStyle(ImPlotMarker_Plus);

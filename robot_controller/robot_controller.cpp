@@ -103,8 +103,7 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
 
                 if(ImGui::Button("Clear Point Cloud"))
                     clearPointCloud();
-
-                ImPlot::SetNextMarkerStyle(ImPlotMarker_Asterisk, 1.5);
+                
                 plotPoints(rb, width, height);
 
                 ImGui::EndTabItem();
