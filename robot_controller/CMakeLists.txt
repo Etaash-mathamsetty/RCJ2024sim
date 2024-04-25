@@ -9,6 +9,7 @@ find_package(OpenCV REQUIRED)
 find_package(SDL2 REQUIRED)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set the  Webots home path (change it according to your installation method)
 if(NOT DEFINED WEBOTS_HOME)
