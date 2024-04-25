@@ -48,7 +48,7 @@ bool compPts(pdd pt1, pdd pt2)
     return (abs(pt1.f - pt2.f) < 0.005 && abs(pt1.s - pt2.s) < 0.005);
 }
 
-pair<pdd, pdd> getMinMax(vector<pdd> list)
+pair<pdd, pdd> getMinMax(const vector<pdd>& list)
 {
     double minx = 10000;
     double maxx = -10000;
