@@ -354,17 +354,20 @@ pdd chooseMove(RobotInstance *rb, double rotation)
         if (i == 2 && !toVisit.empty())
         {
             bfsResult = pointBfs(currentPoint, toVisit.back(), getMinMax(getLidarPoints()));
-            pdd nextPoint = r2d(bfsResult.top());
-            if(currentPoint == nextPoint)
+            if(!bfsResult.empty())
             {
-                bfsResult.pop();
-                if(bfsResult.empty())
+                pdd nextPoint = r2d(bfsResult.top());
+                if(currentPoint == nextPoint)
                 {
-                    return currentPoint;
+                    bfsResult.pop();
+                    if(bfsResult.empty())
+                    {
+                        return currentPoint;
+                    }
+                    nextPoint = r2d(bfsResult.top());
                 }
-                nextPoint = r2d(bfsResult.top());
+                return nextPoint;
             }
-            return nextPoint;
         }
         if (i == 0)
         {
