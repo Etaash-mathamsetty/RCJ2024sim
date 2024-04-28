@@ -388,9 +388,8 @@ void RobotInstance::detectVictims()
 
 pdd RobotInstance::calcNextPos()
 {
-    pdd ret = chooseMove(this, m_imu->getRollPitchYaw()[2]);
-    ret.first = r2d(ret.first);
-    ret.second = r2d(ret.second);
+    pdd ret = r2d(chooseMove(this, m_imu->getRollPitchYaw()[2]));
+    std::cout << "traversable: " << isTraversable(ret, getLidarPoints()) << std::endl;
     return ret;
 }
 

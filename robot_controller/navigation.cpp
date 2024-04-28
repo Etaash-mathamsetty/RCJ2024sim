@@ -21,8 +21,6 @@ using namespace webots;
 #define f first
 #define s second
 
-vector<pdd> points;
-
 pdd getXY(double angle, double distance)
 {
     return { distance * sin(angle), distance * cos(angle) };
@@ -101,7 +99,7 @@ bool isTraversable(pdd pos, const vector<pdd>& points)
 {
     for (size_t i = 0; i < points.size(); i++)
     {
-        if (getDist(pos, points[i]) < 0.55)
+        if (getDist(pos, points[i]) < 0.05)
             return false;
     }
     return true;
@@ -154,7 +152,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax)
     q.push(current);
     parent[current] = make_pair(INT_MAX, INT_MAX);
     bool targetFound = false;
-    while (/*robot->step(timeStep)*/1 != -1 && !q.empty())
+    while (!q.empty())
     {
         pii node = q.front();
         q.pop();
@@ -186,7 +184,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax)
 
             for (pii adjacent : adjacentNodes)
             {
-                if (!visited[adjacent] && isTraversable(antiConvert(adjacent), points))
+                if (!visited[adjacent] && isTraversable(antiConvert(adjacent), getLidarPoints()))
                 {
                     q.push(adjacent);
                     parent[adjacent] = node;
@@ -226,7 +224,7 @@ bool isOnWall(pdd point)
     };
     for (pdd adjacent : adjacents)
     {
-        if (!isTraversable(adjacent, points))
+        if (!isTraversable(adjacent, getLidarPoints()))
         {
             return true;
         }
@@ -334,15 +332,18 @@ pdd chooseMove(RobotInstance *rb, double rotation)
         else if(!isTraversable(nextPoint, getLidarPoints()) && !toVisit.empty())
         {
             bfsResult = pointBfs(currentPoint, toVisit.back(), getMinMax(getLidarPoints()));
-            nextPoint = r2d(bfsResult.top());
-            if(!toVisit.empty() && !isTraversable(nextPoint, getLidarPoints()))
+            if(!bfsResult.empty())
             {
-                toVisit.pop_back();
-                while(!bfsResult.empty())
+                nextPoint = r2d(bfsResult.top());
+                if(!toVisit.empty() && !isTraversable(nextPoint, getLidarPoints()))
                 {
-                    bfsResult.pop();
+                    toVisit.pop_back();
+                    while(!bfsResult.empty())
+                    {
+                        bfsResult.pop();
+                    }
+                    return currentPoint;
                 }
-                return currentPoint;
             }
         }
         // cout << currentPoint.first << " " << currentPoint.second << ">" << nextPoint.first << " " << nextPoint.second << endl;
@@ -367,12 +368,14 @@ pdd chooseMove(RobotInstance *rb, double rotation)
         }
         if (i == 0)
         {
-            if ((!isVisited(pointTo(currentPoint, rotation))
-                    || (isVisited(pointTo(currentPoint, rotation, 0.07))
+            pdd target = r2d(pointTo(currentPoint, rotation));
+            if ((!isVisited(target)
+                    || (!isVisited(pointTo(currentPoint, rotation, 0.07))
                         && canSee(currentPoint, pointTo(currentPoint, rotation, 0.07), getLidarPoints())))
-                && isTraversable(pointTo(currentPoint, rotation), getLidarPoints()))
+                && isTraversable(target, getLidarPoints()))
             {
-                return pointTo(currentPoint, rotation);
+                std::cout << "(" << target.first << ", " << target.second << ")" << std::endl;
+                return target;
             }
         }
         if (i == 1)
@@ -398,6 +401,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                         case 7: ret = pointTo(currentPoint, rotation - M_PI / 4); break;
                         case 0: ret = currentPoint;
                     }
+                    ret = r2d(ret);
                     if (!isVisited(ret)
                         && isTraversable(ret, getLidarPoints()))
                     {

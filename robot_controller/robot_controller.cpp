@@ -226,7 +226,13 @@ int main(int argc, char **argv) {
     RobotInstance* rb = RobotInstance::getInstance();
     bool running = true;
 
-    std::cout << "ImGui version: " << ImGui::GetVersion() << std::endl;
+    std::cout << "ImGui Version: " << ImGui::GetVersion() << std::endl;
+    {
+        SDL_version v;
+        SDL_GetVersion(&v);
+
+        std::cout << "SDL Version: " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
+    }
 
     if(!rb->getDisableGUI())
     {
