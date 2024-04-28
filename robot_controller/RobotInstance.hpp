@@ -157,8 +157,6 @@ private:
         setPosition(pos, pos);
     }
 
-    std::array<std::optional<std::pair<int, int>>, 4> getNeighbors(std::pair<int, int> index);
-
     void turnTo(double speed, double target_angle);
 
     bool determineLetter(const cv::Mat& roi, std::string side, const double* position);

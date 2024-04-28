@@ -23,6 +23,7 @@
 #include "imgui/implot.h"
 #include "imgui/imgui_impl_sdl2.h"
 #include "imgui/imgui_impl_sdlrenderer2.h"
+#include "imgui/imgui_internal.h"
 
 #ifdef _WIN32
 #include "win_imgui/imgui_impl_win32.h"
@@ -132,17 +133,19 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             {
                 ImGui::Checkbox("Stop Movement", &rb->getStopMovement());
 
-                if(ImGui::Button("Exit"))
-                {
-                    exit(0);
-                }
-
                 ImGui::EndTabItem();
             }
 
             ImGui::EndTabBar();
         }
         ImGui::End();
+    }
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    if(io.KeyAlt && io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false))
+    {
+        rb->getStopMovement() = !rb->getStopMovement();
     }
 }
 
@@ -156,6 +159,7 @@ void poll_events(bool &running)
         if(event.type == SDL_QUIT)
         {
             running = false;
+            exit(0);
         }
     }
 }
@@ -222,11 +226,7 @@ int main(int argc, char **argv) {
     RobotInstance* rb = RobotInstance::getInstance();
     bool running = true;
 
-    const int horizontalResolution = rb->getLidar()->getHorizontalResolution();
-    const int numberOfLayers = rb->getLidar()->getNumberOfLayers();
-
-    std::cout << horizontalResolution << std::endl;
-    std::cout << numberOfLayers << std::endl;
+    std::cout << "ImGui version: " << ImGui::GetVersion() << std::endl;
 
     if(!rb->getDisableGUI())
     {
