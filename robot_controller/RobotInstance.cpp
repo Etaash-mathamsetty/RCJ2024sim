@@ -145,7 +145,7 @@ void RobotInstance::turnTo(double speed, double target_angle)
             calc_speed += std::max(0.2, 3.0 * abs(error));
 
         forward(-calc_speed, calc_speed);
-        lookForLetter();
+        detectVictims();
     }
 
     stopMotors();
@@ -207,7 +207,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     double traveled = 0;
     while(traveled <= ticks && step() != -1)
     {
-        lookForLetter();
+        detectVictims();
         if(blackDetected())
         {
             break;
