@@ -200,6 +200,8 @@ bool RobotInstance::alignmentNeeded()
 
 bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 {
+    double startTime = m_robot->getTime();
+    double currentTime = m_robot->getTime();
     pdd start = getCurrentGPSPosition();
     //TODO: use PID
     double traveled = 0;
@@ -212,6 +214,11 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         }
         forward(vel);
         pdd cur = getCurrentGPSPosition();
+        currentTime = m_robot->getTime();
+        if (currentTime > startTime + 5)
+        {
+            break;
+        }
         traveled = hypot(cur.first - start.first, cur.second - start.second);
     }
 
