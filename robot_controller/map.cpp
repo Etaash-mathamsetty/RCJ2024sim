@@ -251,19 +251,19 @@ void addLidarPoint(pdd point)
 
 ImPlotPoint getPointFromMap(int idx, void *_map)
 {
-    return ImPlotPoint(vecLidarPoints[idx].first, vecLidarPoints[idx].second);
+    return {vecLidarPoints[idx].first, vecLidarPoints[idx].second};
 }
 
 ImPlotPoint getCameraPointFromMap(int idx, void *_map)
 {
-    return ImPlotPoint(vecCameraPoints[idx].first, vecCameraPoints[idx].second);
+    return {vecCameraPoints[idx].first, vecCameraPoints[idx].second};
 }
 
 ImPlotPoint getVisitedPlotPt(int idx, void *param)
 {
     auto it = getVisited().begin();
     std::advance(it, idx);
-    return ImPlotPoint(it->first, it->second);
+    return {it->first, it->second};
 }
 
 size_t getCount()
@@ -299,7 +299,7 @@ void plotPoints(RobotInstance *rb, int w, int h)
 
     ImVec2 GraphSize = ImVec2(w-50, h-100);
 
-    if(regions.size() > 0 && ImPlot::BeginPlot("Debug View", GraphSize))
+    if(!regions.empty() && ImPlot::BeginPlot("Debug View", GraphSize))
     {
         ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Outside | ImPlotLegendFlags_Horizontal);
         ImPlot::SetNextLineStyle(ImVec4(0,0.4,1.0,1));

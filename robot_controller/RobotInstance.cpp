@@ -340,7 +340,6 @@ void RobotInstance::lookForLetter()
     std::vector<std::vector<cv::Point>> contoursR = getContours("Right Contours", frameR);
     if (rangeImage[horizontalResolution * 3 / 4] < MAX_VIC_DETECTION_RANGE)
     {
-        double camCenterX = m_leftCamera->getHeight() / 2;
         for (size_t i = 0; i < contoursL.size(); i++)
         {
             boundRect = boundingRect(contoursL[i]);
