@@ -75,7 +75,6 @@ RobotInstance::RobotInstance()
 
     m_lposoffset = 0;
     m_rposoffset = 0;
-    setSpeed(3);
 
     int res = step();
 
@@ -199,14 +198,14 @@ bool RobotInstance::alignmentNeeded()
     return getDirection() == -1;
 }
 
+const double drive_kp = 1.0;
+
 bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 {
     double startTime = m_robot->getTime();
-    double currentTime = m_robot->getTime();
     pdd start = getRawGPSPosition();
     //TODO: use PID
     double traveled = 0;
-    ticks *= 0.97;
     while(traveled <= ticks && step() != -1)
     {
         detectVictims();
@@ -214,10 +213,9 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         {
             break;
         }
-        forward(vel);
+        forward(std::max(0.1, vel - (traveled/ticks) * drive_kp * vel));
         pdd cur = getRawGPSPosition();
-        currentTime = m_robot->getTime();
-        if (currentTime > startTime + 5)
+        if (m_robot->getTime() > startTime + 5)
         {
             break;
         }
@@ -407,26 +405,26 @@ void RobotInstance::moveToNextPos()
     {
         switch(zdiff)
         {
-            case 1: turnTo(3, -M_PI / 4); forwardTicks(getSpeed(), 0.95 * hypot(0.01, 0.01), nextPos); break;
-            case 0: turnTo(3, -M_PI / 2); forwardTicks(getSpeed(), 0.0095, nextPos); break;
-            case -1: turnTo(3, -M_PI * 3 / 4); forwardTicks(getSpeed(), 0.95 * hypot(0.01, 0.01), nextPos); break;
+            case 1: turnTo(3, -M_PI / 4); forwardTicks(3, hypot(0.01, 0.01), nextPos); break;
+            case 0: turnTo(3, -M_PI / 2); forwardTicks(3, 0.01, nextPos); break;
+            case -1: turnTo(3, -M_PI * 3 / 4); forwardTicks(3, hypot(0.01, 0.01), nextPos); break;
         }
     }
     else if(xdiff == 0)
     {
         switch(zdiff)
         {
-            case 1: turnTo(3, 0); forwardTicks(getSpeed(), 0.0095, nextPos); break;
-            case -1: turnTo(3, M_PI); forwardTicks(getSpeed(), 0.0095, nextPos); break;
+            case 1: turnTo(3, 0); forwardTicks(3, 0.01, nextPos); break;
+            case -1: turnTo(3, M_PI); forwardTicks(3, 0.01, nextPos); break;
         }
     }
     else
     {
         switch(zdiff)
         {
-            case 1: turnTo(3, M_PI / 4); forwardTicks(getSpeed(), 0.95 * hypot(0.01, 0.01), nextPos); break;
-            case 0: turnTo(3, M_PI / 2); forwardTicks(getSpeed(), 0.0095, nextPos); break;
-            case -1: turnTo(3, M_PI * 3 / 4); forwardTicks(getSpeed(), 0.95 * hypot(0.01, 0.01), nextPos); break;
+            case 1: turnTo(3, M_PI / 4); forwardTicks(3,hypot(0.01, 0.01), nextPos); break;
+            case 0: turnTo(3, M_PI / 2); forwardTicks(3, 0.01, nextPos); break;
+            case -1: turnTo(3, M_PI * 3 / 4); forwardTicks(3, hypot(0.01, 0.01), nextPos); break;
         }
     }
 }

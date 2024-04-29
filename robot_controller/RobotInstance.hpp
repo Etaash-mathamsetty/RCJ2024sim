@@ -125,17 +125,6 @@ public:
 
     void updateTargetPos();
     void moveToNextPos();
-    void moveToPoint(pdd point);
-
-    void setSpeed(double speed)
-    {
-        moveSpeed = speed;
-    }
-
-    double getSpeed()
-    {
-        return moveSpeed;
-    }
 
     void updateVisited();
 
@@ -212,7 +201,6 @@ private:
 
     pdd m_targetPos;
     pdd m_lastPos;
-    double moveSpeed;
 
     bool m_disabledGUI;
 

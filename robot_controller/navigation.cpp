@@ -99,7 +99,7 @@ bool isTraversable(RobotInstance* rb, pdd pos, const vector<pdd>& points)
 {
     for (size_t i = 0; i < points.size(); i++)
     {
-        if (getDist(pos, points[i]) < (0.065 / sqrt(rb->getSpeed())))
+        if (getDist(pos, points[i]) < 0.05)
             return false;
     }
     return true;
@@ -353,7 +353,6 @@ pdd chooseMove(RobotInstance *rb, double rotation)
         }
         currentPoint = rb->getRawGPSPosition();
         cout << currentPoint.first << " " << currentPoint.second << " --> " << nextPoint.first << " " << nextPoint.second << endl;
-        rb->setSpeed(2);
         return nextPoint;
     }
     for (int i = 0; i <= 2; i++)
@@ -378,7 +377,6 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                     }
                     return nextPoint;
                 }
-                rb->setSpeed(2);
                 return nextPoint;
             }
         }
@@ -391,7 +389,6 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 && isTraversable(rb, target, getLidarPoints()))
             {
                 std::cout << "(" << target.first << ", " << target.second << ")" << std::endl;
-                rb->setSpeed(3);
                 return target;
             }
             if ((!isVisited(target)
@@ -400,7 +397,6 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 && isTraversable(rb, target, getLidarPoints()))
             {
                 std::cout << "(" << target.first << ", " << target.second << ")" << std::endl;
-                rb->setSpeed(3);
                 return target;
             }
         }
@@ -450,7 +446,6 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             }
             if(nextPoint != currentPoint)
             {
-                rb->setSpeed(3);
                 return nextPoint;
             }
         }
