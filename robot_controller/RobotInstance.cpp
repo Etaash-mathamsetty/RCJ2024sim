@@ -395,7 +395,7 @@ pdd RobotInstance::calcNextPos()
 void RobotInstance::moveToNextPos()
 {
     pdd nextPos = getTargetPos();
-    pdd curPos = getCurrentGPSPosition();
+    pdd curPos = getRawGPSPosition();
     double dist = getDist(curPos, nextPos);
     double angle = -std::atan2(nextPos.first - curPos.first, nextPos.second - curPos.second);
 
