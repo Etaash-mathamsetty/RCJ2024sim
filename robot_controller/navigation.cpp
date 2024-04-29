@@ -374,12 +374,17 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             pdd nextPoint = r2d(bfsResult.top());
             if(currentPoint == nextPoint)
             {
-                bfsResult.pop();
-                if(bfsResult.empty())
+                pdd nextPoint = r2d(bfsResult.top());
+                if(currentPoint == nextPoint)
                 {
-                    return currentPoint;
+                    bfsResult.pop();
+                    if(bfsResult.empty())
+                    {
+                        return currentPoint;
+                    }
+                    nextPoint = r2d(bfsResult.top());
                 }
-                nextPoint = r2d(bfsResult.top());
+                return nextPoint;
             }
             rb->setSpeed(2);
             return nextPoint;
