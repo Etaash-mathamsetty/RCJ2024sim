@@ -401,39 +401,6 @@ void RobotInstance::moveToNextPos()
 
     turnTo(3, angle);
     forwardTicks(3, dist, nextPos);
-
-    // int xdiff = 100 * r2d(nextPos.first - getCurrentGPSPosition().first);
-    // int zdiff = 100 * r2d(nextPos.second - getCurrentGPSPosition().second);
-    // if(zdiff != 0)
-    // {
-    //     zdiff = copysign(1, zdiff);
-    // }
-    // if(xdiff > 0)
-    // {
-    //     switch(zdiff)
-    //     {
-    //         case 1: turnTo(3, -M_PI / 4); forwardTicks(3, hypot(0.01, 0.01), nextPos); break;
-    //         case 0: turnTo(3, -M_PI / 2); forwardTicks(3, 0.01, nextPos); break;
-    //         case -1: turnTo(3, -M_PI * 3 / 4); forwardTicks(3, hypot(0.01, 0.01), nextPos); break;
-    //     }
-    // }
-    // else if(xdiff == 0)
-    // {
-    //     switch(zdiff)
-    //     {
-    //         case 1: turnTo(3, 0); forwardTicks(3, 0.01, nextPos); break;
-    //         case -1: turnTo(3, M_PI); forwardTicks(3, 0.01, nextPos); break;
-    //     }
-    // }
-    // else
-    // {
-    //     switch(zdiff)
-    //     {
-    //         case 1: turnTo(3, M_PI / 4); forwardTicks(3,hypot(0.01, 0.01), nextPos); break;
-    //         case 0: turnTo(3, M_PI / 2); forwardTicks(3, 0.01, nextPos); break;
-    //         case -1: turnTo(3, M_PI * 3 / 4); forwardTicks(3, hypot(0.01, 0.01), nextPos); break;
-    //     }
-    //}
 }
 
 void RobotInstance::updateVisited()
