@@ -118,8 +118,24 @@ public:
         return pdd(r2d(m_gps->getValues()[0]), -r2d(m_gps->getValues()[2]));
     }
 
+    pdd getRawGPSPosition()
+    {
+        return pdd(m_gps->getValues()[0], -m_gps->getValues()[2]);
+    }
+
     void updateTargetPos();
     void moveToNextPos();
+    void moveToPoint(pdd point);
+
+    void setSpeed(double speed)
+    {
+        moveSpeed = speed;
+    }
+
+    double getSpeed()
+    {
+        return moveSpeed;
+    }
 
     void updateVisited();
 
@@ -196,6 +212,7 @@ private:
 
     pdd m_targetPos;
     pdd m_lastPos;
+    double moveSpeed;
 
     bool m_disabledGUI;
 
