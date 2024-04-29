@@ -99,7 +99,7 @@ bool isTraversable(RobotInstance* rb, pdd pos, const vector<pdd>& points)
 {
     for (size_t i = 0; i < points.size(); i++)
     {
-        if (getDist(pos, points[i]) < (0.062 / sqrt(rb->getSpeed())))
+        if (getDist(pos, points[i]) < (0.065 / sqrt(rb->getSpeed())))
             return false;
     }
     return true;
@@ -315,18 +315,8 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     pdd currentPoint = r2d(rb->getCurrentGPSPosition());
     int horizontalResolution = lidar->getHorizontalResolution();
     const float* lidar_image = lidar->getRangeImage();
-    float sides[8] = {0.0f};
     // webots rotation is flipped sin(-t) = x and cos(-t) = y
     rotation *= -1;
-
-    sides[0] = lidar_image[0];
-    sides[1] = lidar_image[horizontalResolution / 8];
-    sides[2] = lidar_image[horizontalResolution / 4];
-    sides[3] = lidar_image[horizontalResolution * 3 / 8];
-    sides[4] = lidar_image[horizontalResolution / 2];
-    sides[5] = lidar_image[horizontalResolution * 5 / 8];
-    sides[6] = lidar_image[horizontalResolution * 3 / 4];
-    sides[7] = lidar_image[horizontalResolution * 7 / 8];
 
     if(!toVisit.empty() && isVisited(toVisit.back()))
     {
@@ -371,23 +361,26 @@ pdd chooseMove(RobotInstance *rb, double rotation)
         if (i == 2 && !toVisit.empty())
         {
             bfsResult = bfs(rb, currentPoint, getMinMax(getLidarPoints()));
-            pdd nextPoint = r2d(bfsResult.top());
-            if(currentPoint == nextPoint)
+            if(!bfsResult.empty())
             {
                 pdd nextPoint = r2d(bfsResult.top());
                 if(currentPoint == nextPoint)
                 {
-                    bfsResult.pop();
-                    if(bfsResult.empty())
+                    pdd nextPoint = r2d(bfsResult.top());
+                    if(currentPoint == nextPoint)
                     {
-                        return currentPoint;
+                        bfsResult.pop();
+                        if(bfsResult.empty())
+                        {
+                            return currentPoint;
+                        }
+                        nextPoint = r2d(bfsResult.top());
                     }
-                    nextPoint = r2d(bfsResult.top());
+                    return nextPoint;
                 }
+                rb->setSpeed(2);
                 return nextPoint;
             }
-            rb->setSpeed(2);
-            return nextPoint;
         }
         if (i == 0)
         {
@@ -427,7 +420,8 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                     case 6: angle = -M_PI * 3 / 4; ret = pointTo(currentPoint, rotation - M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation - M_PI * 3 / 4, 0.07); break;
                     case 2: angle = -M_PI / 2; ret = pointTo(currentPoint, rotation - M_PI / 2); farRet = pointTo(currentPoint, rotation - M_PI / 2, 0.07); break;
                     case 3: angle = -M_PI / 4; ret = pointTo(currentPoint, rotation - M_PI / 4); farRet = pointTo(currentPoint, rotation - M_PI / 4, 0.07); break;
-                    case 0: angle = 0;
+                    case 0:
+                    default: angle = 0; break;
                 }
                 if (angle == 0)
                 {
