@@ -400,7 +400,7 @@ void RobotInstance::moveToNextPos()
     double angle = -std::atan2(nextPos.first - curPos.first, nextPos.second - curPos.second);
 
     turnTo(3, angle);
-    forwardTicks(3, dist, nextPos);
+    forwardTicks(5, dist, nextPos);
 }
 
 void RobotInstance::updateVisited()
