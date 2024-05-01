@@ -15,14 +15,14 @@ pdd r2d(pdd point)
     return pdd(r2d(point.first), r2d(point.second));
 }
 
-void printPoint(pdd point)
+void printPoint(const pdd& point)
 {
-    std::cout << point.first << " " << point.second << std::endl;
+    std::cout << "(" << point.first << ", " << point.second << ")" << std::endl;
 }
 
-bool areEqual(pdd a, pdd b)
+std::string pointToString(const pdd& point)
 {
-    return (a.first == b.first) && (a.second == b.second);
+    return std::string("(") + std::to_string(point.first) + ", " + std::to_string(point.second) + ")";
 }
 
 SDL_Texture *  getTextureFromMat(SDL_Renderer *r, const cv::Mat& mat, SDL_PixelFormatEnum f)

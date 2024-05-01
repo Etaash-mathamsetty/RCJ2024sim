@@ -22,8 +22,8 @@ inline SDL_Renderer *renderer;
 
 double r2d(double decimal);
 pdd r2d(pdd point);
-void printPoint(pdd point);
-bool areEqual(pdd a, pdd b);
+void printPoint(const pdd& point);
+std::string pointToString(const pdd& point);
 SDL_Texture *getTextureFromMat(SDL_Renderer *r, const cv::Mat& mat, SDL_PixelFormatEnum f);
 
 #endif

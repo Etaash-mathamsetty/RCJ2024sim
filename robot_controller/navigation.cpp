@@ -311,10 +311,7 @@ stack<pdd> bfs(RobotInstance* rb, pdd current, pair<pdd, pdd> minMax)
 
 pdd chooseMove(RobotInstance *rb, double rotation)
 {
-    Lidar *lidar = rb->getLidar();
-    pdd currentPoint = r2d(rb->getCurrentGPSPosition());
-    int horizontalResolution = lidar->getHorizontalResolution();
-    const float* lidar_image = lidar->getRangeImage();
+    pdd currentPoint = rb->getCurrentGPSPosition();
     // webots rotation is flipped sin(-t) = x and cos(-t) = y
     rotation *= -1;
 
@@ -325,7 +322,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     if (!bfsResult.empty())
     {
         pdd nextPoint = r2d(bfsResult.top());
-        if(areEqual(currentPoint, nextPoint))
+        if(currentPoint == nextPoint)
         {
             bfsResult.pop();
             if(bfsResult.empty())
@@ -351,8 +348,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 }
             }
         }
-        currentPoint = rb->getRawGPSPosition();
-        cout << currentPoint.first << " " << currentPoint.second << " --> " << nextPoint.first << " " << nextPoint.second << endl;
+        cout << pointToString(rb->getRawGPSPosition()) << " --> " << pointToString(nextPoint) << endl;
         return nextPoint;
     }
     for (int i = 0; i <= 2; i++)
@@ -362,10 +358,11 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             bfsResult = bfs(rb, currentPoint, getMinMax(getLidarPoints()));
             if(!bfsResult.empty())
             {
+                //FIXME: this duplicate logic doesn't make sense
                 pdd nextPoint = r2d(bfsResult.top());
                 if(currentPoint == nextPoint)
                 {
-                    pdd nextPoint = r2d(bfsResult.top());
+                    nextPoint = r2d(bfsResult.top());
                     if(currentPoint == nextPoint)
                     {
                         bfsResult.pop();
@@ -388,7 +385,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                         && canSee(currentPoint, pointTo(currentPoint, rotation, 0.07), getLidarPoints())))
                 && isTraversable(rb, target, getLidarPoints()))
             {
-                std::cout << "(" << target.first << ", " << target.second << ")" << std::endl;
+                printPoint(target);
                 return target;
             }
             if ((!isVisited(target)
@@ -396,7 +393,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                         && canSee(currentPoint, pointTo(currentPoint, rotation, 0.1), getLidarPoints())))
                 && isTraversable(rb, target, getLidarPoints()))
             {
-                std::cout << "(" << target.first << ", " << target.second << ")" << std::endl;
+                printPoint(target);
                 return target;
             }
         }
@@ -429,7 +426,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                             && canSee(currentPoint, farRet, getLidarPoints())))
                     && isTraversable(rb, ret, getLidarPoints()))
                 {
-                    std::cout << "[" << ret.first << ", " << ret.second << "]" << std::endl;
+                    printPoint(ret);
                     nextPoint = ret;
                     i = 8;
                 }
@@ -439,7 +436,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                             && canSee(currentPoint, farRet, getLidarPoints())))
                     && isTraversable(rb, ret, getLidarPoints()))
                 {
-                    std::cout << "[" << ret.first << ", " << ret.second << "]" << std::endl;
+                    printPoint(ret);
                     nextPoint = ret;
                     i = 8;
                 }
