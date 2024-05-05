@@ -164,6 +164,8 @@ private:
 
     void turnTo(double speed, double target_angle);
 
+    void delay(double seconds);
+
     bool determineLetter(const cv::Mat& roi, std::string side, const double* position);
 
     void lookForLetter();

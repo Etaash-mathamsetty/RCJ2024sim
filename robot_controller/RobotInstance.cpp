@@ -198,7 +198,7 @@ bool RobotInstance::alignmentNeeded()
     return getDirection() == -1;
 }
 
-const double drive_kp = 1.0;
+const double drive_kp = 1.2;
 
 bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 {
@@ -213,7 +213,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         {
             break;
         }
-        forward(std::max(1.5, vel - (traveled/ticks) * drive_kp * vel));
+        forward(std::max(0.75, vel - (traveled/ticks) * drive_kp * vel));
         pdd cur = getRawGPSPosition();
         if (m_robot->getTime() > startTime + 5)
         {
@@ -247,6 +247,12 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     return true;
 }
 
+void RobotInstance::delay(double seconds)
+{
+    double current = m_robot->getTime();
+    while(m_robot->getTime() < current + seconds && m_robot->step(m_timestep) != -1);
+}
+
 std::vector<std::vector<cv::Point>> RobotInstance::getContours(std::string name, cv::Mat frame)
 {
     cv::Mat frame2;
@@ -264,7 +270,7 @@ std::vector<std::vector<cv::Point>> RobotInstance::getContours(std::string name,
 std::vector<std::vector<cv::Point>> RobotInstance::getContours(cv::Mat frame)
 {
     cv::Mat frame2;
-    cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(frame, frame2, cv::COLOR_RGB2GRAY);
     cv::threshold(frame2, frame2, 80, 255, cv::THRESH_BINARY_INV);
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
@@ -321,6 +327,8 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
         return false;
     }
     std::cout << message[8] << " found" << std::endl;
+    stopMotors();
+    delay(1);
     m_emitter->send(message, 9);
     return true;
 }
@@ -336,7 +344,7 @@ void RobotInstance::lookForLetter()
     addTexture("Right Camera", frameR, SDL_PIXELFORMAT_RGB888);
     std::vector<std::vector<cv::Point>> contoursL = getContours("Left Contours", frameL);
     std::vector<std::vector<cv::Point>> contoursR = getContours("Right Contours", frameR);
-    if (rangeImage[horizontalResolution * 3 / 4] < MAX_VIC_DETECTION_RANGE)
+    if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE)
     {
         for (size_t i = 0; i < contoursL.size(); i++)
         {
@@ -354,7 +362,7 @@ void RobotInstance::lookForLetter()
             }
         }
     }
-    if (rangeImage[horizontalResolution / 4] < MAX_VIC_DETECTION_RANGE)
+    if (rangeImage[horizontalResolution / 4] <= MAX_VIC_DETECTION_RANGE)
     {
         for (size_t i = 0; i < contoursR.size(); i++)
         {
@@ -388,7 +396,7 @@ void RobotInstance::detectVictims()
 pdd RobotInstance::calcNextPos()
 {
     pdd ret = r2d(chooseMove(this, m_imu->getRollPitchYaw()[2]));
-    std::cout << "traversable: " << isTraversable(this, ret, getLidarPoints()) << std::endl;
+    std::cout << "traversable: " << isTraversable(ret, getLidarPoints()) << std::endl;
     return ret;
 }
 
@@ -396,7 +404,7 @@ void RobotInstance::moveToNextPos()
 {
     pdd nextPos = getTargetPos();
     pdd curPos = getRawGPSPosition();
-    double dist = getDist(curPos, nextPos);
+    double dist = getDist(curPos, nextPos) * 0.95;
     double angle = -std::atan2(nextPos.first - curPos.first, nextPos.second - curPos.second);
 
     turnTo(3, angle);
@@ -417,7 +425,7 @@ void RobotInstance::updateVisited()
     }
     if(cur != m_lastPos)
     {
-        const double radius = 0.07;
+        const double radius = 0.08;
 
         double x = cur.first - radius, y = cur.second - radius;
         for(; x <= cur.first + radius; x += 0.008)
@@ -425,11 +433,11 @@ void RobotInstance::updateVisited()
             for(y = cur.second - radius; y <= cur.second + radius; y += 0.008)
             {
                 pdd point = r2d(pdd(x, y));
-                if(point == pointTo(cur, m_imu->getRollPitchYaw()[2]))
-                {
-                    continue;
-                }
-                if(!isVisited(point) && isTraversable(this, point, getLidarPoints()) && canSee(cur, point, getLidarPoints()))
+                // if(point == pointTo(cur, m_imu->getRollPitchYaw()[2]))
+                // {
+                //     continue;
+                // }
+                if(!isVisited(point) && isTraversable(point, getLidarPoints()) && canSee(cur, point, getLidarPoints()))
                 {
                     if(getDist(cur, point) <= 0.05)
                     {

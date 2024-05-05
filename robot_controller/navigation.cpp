@@ -59,7 +59,7 @@ pair<pdd, pdd> getMinMax(const vector<pdd>& list)
         if (list[i].f > maxx) maxx = list[i].f;
         if (list[i].s > maxy) maxy = list[i].s;
     }
-    return { { minx,miny },{maxx,maxy} };
+    return make_pair(pdd(minx, miny), pdd(maxx, maxy));
 }
 
 void getPlot(vector<double> datalist, pdd  pos, vector<pdd> *pList, double angle)
@@ -95,7 +95,7 @@ void printStack(stack<pdd> pts)
     }
 }
 
-bool isTraversable(RobotInstance* rb, pdd pos, const vector<pdd>& points)
+bool isTraversable(pdd pos, const vector<pdd>& points)
 {
     for (size_t i = 0; i < points.size(); i++)
     {
@@ -131,60 +131,50 @@ bool canSee(pdd cur, pdd tar, const vector<pdd>& points)
     return true;
 }
 
-pii convert(pdd point)
+stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
 {
-    return pii((int)round(point.f / 0.01), (int)round(point.s / 0.01));
-}
-
-pdd antiConvert(pii point)
-{
-    return pdd(point.f * 0.01, point.s * 0.01);
-}
-
-stack<pdd> pointBfs(RobotInstance* rb, pdd cur, pdd tar, pair<pdd, pdd> minMax)
-{
-    pii min = convert(minMax.f), max = convert(minMax.s);
-    map<pii, pii> parent;
-    map<pii, bool> visited;
-    queue<pii> q;
-    pii current = convert(cur);
-    pii target = convert(tar);
-    q.push(current);
-    parent[current] = make_pair(INT_MAX, INT_MAX);
+    pdd min = r2d(minMax.f), max = r2d(minMax.s);
+    map<pdd, pdd> parent;
+    map<pdd, bool> visited;
+    queue<pdd> q;
+    cur = r2d(cur);
+    tar = r2d(tar);
+    q.push(cur);
+    parent[cur] = pdd(DBL_MAX, DBL_MAX);
     bool targetFound = false;
     while (!q.empty())
     {
-        pii node = q.front();
+        pdd node = r2d(q.front());
         q.pop();
-        if (visited[node] || !isTraversable(rb, antiConvert(node), getLidarPoints()) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
+        if (visited[node] || !isTraversable(node, getLidarPoints()) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
             continue;
         }
         visited[node] = true;
-        if (node != target)
+        if (!compPts(node, tar) || (isBlind && !isVisited(node)))
         {
             //north: +y, east: +x, south: -y, west: -x; 
-            pii adjacentNodes[8] = {
-                pii(node.f, node.s + 1),
-                pii(node.f + 1, node.s),
-                pii(node.f, node.s - 1),
-                pii(node.f - 1, node.s),
-                pii(node.f - 1, node.s - 1),
-                pii(node.f - 1, node.s + 1),
-                pii(node.f + 1, node.s - 1),
-                pii(node.f + 1, node.s + 1)
-            };
-
-            // pii adjacentNodes[4] = {
-            //     pii(node.f, node.s + 1),
-            //     pii(node.f + 1, node.s),
-            //     pii(node.f, node.s - 1),
-            //     pii(node.f - 1, node.s)
+            // pdd adjacentNodes[8] = {
+            //     r2d(pdd(node.f, node.s - 0.01)),
+            //     r2d(pdd(node.f, node.s + 0.01)),
+            //     r2d(pdd(node.f + 0.01, node.s)),
+            //     r2d(pdd(node.f - 0.01, node.s)),
+            //     r2d(pdd(node.f - 0.01, node.s - 0.01)),
+            //     r2d(pdd(node.f + 0.01, node.s + 0.01)),
+            //     r2d(pdd(node.f + 0.01, node.s - 0.01)),
+            //     r2d(pdd(node.f - 0.01, node.s + 0.01))
             // };
 
-            for (pii adjacent : adjacentNodes)
+            pdd adjacentNodes[4] = {
+                r2d(pdd(node.f, node.s + 0.01)),
+                r2d(pdd(node.f + 0.01, node.s)),
+                r2d(pdd(node.f, node.s - 0.01)),
+                r2d(pdd(node.f - 0.01, node.s))
+            };
+
+            for (const pdd& adjacent : adjacentNodes)
             {
-                if (!visited[adjacent] && isTraversable(rb, antiConvert(adjacent), getLidarPoints()))
+                if (!visited[adjacent] && isTraversable(adjacent, getLidarPoints()))
                 {
                     q.push(adjacent);
                     parent[adjacent] = node;
@@ -194,17 +184,18 @@ stack<pdd> pointBfs(RobotInstance* rb, pdd cur, pdd tar, pair<pdd, pdd> minMax)
         else
         {
             targetFound = true;
+            tar = node;
             break;
         }
     }
     if (targetFound)
     {
-        pii pindex = target;
+        pdd pindex = tar;
         stack<pdd> route;
-        while (pindex != current)
+        while (pindex != cur)
         {
-            route.push(antiConvert(pindex));
-            pindex = parent[pindex];
+            route.push(pindex);
+            pindex = r2d(parent[pindex]);
         }
         cout << "!!!!! successful bfs" << endl;
         return route;
@@ -223,7 +214,7 @@ bool isOnWall(RobotInstance* rb, pdd point)
     };
     for (pdd adjacent : adjacents)
     {
-        if (!isTraversable(rb, adjacent, getLidarPoints()))
+        if (!isTraversable(adjacent, getLidarPoints()))
         {
             return true;
         }
@@ -298,9 +289,9 @@ const std::deque<pdd>& getToVisit()
     return toVisit;
 }
 
-stack<pdd> bfs(RobotInstance* rb, pdd current, pair<pdd, pdd> minMax)
+stack<pdd> toVisitBfs(pdd current, pair<pdd, pdd> minMax)
 {
-    stack<pdd> res = pointBfs(rb, current, toVisit.back(), minMax);
+    stack<pdd> res = pointBfs(current, toVisit.back(), minMax, false);
     while(!toVisit.empty() && res.empty())
     {
         toVisit.pop_back();
@@ -308,7 +299,7 @@ stack<pdd> bfs(RobotInstance* rb, pdd current, pair<pdd, pdd> minMax)
         {
             return res;
         }
-        res = pointBfs(rb, current, toVisit.back(), minMax);
+        res = pointBfs(current, toVisit.back(), minMax, false);
     }
     return res;
 }
@@ -343,13 +334,13 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             }
             nextPoint = r2d(bfsResult.top());
         }
-        else if(!isTraversable(rb, nextPoint, getLidarPoints()) && !toVisit.empty())
+        else if(!isTraversable(nextPoint, getLidarPoints()) && !toVisit.empty())
         {
-            bfsResult = bfs(rb, currentPoint, getMinMax(getLidarPoints()));
+            bfsResult = toVisitBfs(currentPoint, getMinMax(getLidarPoints()));
             if(!bfsResult.empty())
             {
                 nextPoint = r2d(bfsResult.top());
-                if(!toVisit.empty() && !isTraversable(rb, nextPoint, getLidarPoints()))
+                if(!toVisit.empty() && !isTraversable(nextPoint, getLidarPoints()))
                 {
                     toVisit.pop_back();
                     while(!bfsResult.empty())
@@ -369,7 +360,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     {
         if (i == 2 && !toVisit.empty())
         {
-            bfsResult = bfs(rb, currentPoint, getMinMax(getLidarPoints()));
+            bfsResult = toVisitBfs(currentPoint, getMinMax(getLidarPoints()));
             if(!bfsResult.empty())
             {
                 //FIXME: this duplicate logic doesn't make sense
@@ -400,7 +391,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             if ((!isVisited(target)
                     || (!isVisited(pointTo(currentPoint, rotation, 0.05))
                         && canSee(currentPoint, pointTo(currentPoint, rotation, 0.05), getLidarPoints())))
-                && isTraversable(rb, target, getLidarPoints()))
+                && isTraversable(target, getLidarPoints()))
             {
                 printPoint(target);
                 isBfs = false;
@@ -408,7 +399,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             }
             if (!isVisited(pointTo(currentPoint, rotation, 0.07))
                     && canSee(currentPoint, pointTo(currentPoint, rotation, 0.07), getLidarPoints())
-                    && isTraversable(rb, target, getLidarPoints()))
+                    && isTraversable(target, getLidarPoints()))
             {
                 printPoint(target);
                 isBfs = false;
@@ -416,7 +407,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             }
             if (!isVisited(pointTo(currentPoint, rotation, 0.09))
                     && canSee(currentPoint, pointTo(currentPoint, rotation, 0.09), getLidarPoints())
-                    && isTraversable(rb, target, getLidarPoints()))
+                    && isTraversable(target, getLidarPoints()))
             {
                 printPoint(target);
                 isBfs = false;
@@ -450,7 +441,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 if ((!isVisited(ret)
                         || (!isVisited(farRet)
                             && canSee(currentPoint, farRet, getLidarPoints())))
-                    && isTraversable(rb, ret, getLidarPoints()))
+                    && isTraversable(ret, getLidarPoints()))
                 {
                     printPoint(ret);
                     nextPoint = ret;
@@ -461,7 +452,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 if ((!isVisited(ret)
                         || (!isVisited(farRet)
                             && canSee(currentPoint, farRet, getLidarPoints())))
-                    && isTraversable(rb, ret, getLidarPoints()))
+                    && isTraversable(ret, getLidarPoints()))
                 {
                     printPoint(ret);
                     nextPoint = ret;
@@ -474,6 +465,17 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 isBfs = false;
                 return nextPoint;
             }
+        }
+    }
+    if (toVisit.empty())
+    {
+        printPoint(currentPoint);
+        bfsResult = pointBfs(currentPoint, pdd(0, 0), getMinMax(getLidarPoints()), true);
+        if (!bfsResult.empty())
+        {
+            pdd nextPoint = bfsResult.top();
+            bfsResult.pop();
+            return nextPoint;
         }
     }
     cout << "no move found" << endl;
@@ -508,7 +510,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
 //     {
 //         while (curPos.f <= getMinMax(points).s.f)
 //         {
-//             if (isTraversable(rb, curPos, points, rad))
+//             if (isTraversable(curPos, points, rad))
 //             {
 //                 traversable.push_back(curPos);
 //                 if (compPts(curPos, cur))
