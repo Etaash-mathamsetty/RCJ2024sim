@@ -9,7 +9,7 @@
 
 #include "RobotInstance.hpp"
 
-double getDist(pdd  pt1, pdd pt2);
+double getDist(const pdd& pt1,const pdd& pt2);
 bool onRoute(std::stack<pdd> pts, pdd point);
 bool isTraversable(RobotInstance* rb, pdd pos, const std::vector<pdd>& points);
 bool canSee(pdd cur, pdd tar, const std::vector<pdd>& points);
@@ -23,5 +23,6 @@ bool isInToVisit(pdd point);
 bool isFollowingBfs();
 pdd chooseMove(RobotInstance *rb, double currentRotation);
 const std::set<pdd>& getVisited();
+const std::deque<pdd>& getToVisit();
 
 #endif
