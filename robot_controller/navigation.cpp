@@ -201,13 +201,12 @@ stack<pdd> pointBfs(RobotInstance* rb, pdd cur, pdd tar, pair<pdd, pdd> minMax)
     {
         pii pindex = target;
         stack<pdd> route;
-        int i = 0;
-        while (i < 6 && pindex != current)
+        while (pindex != current)
         {
             route.push(antiConvert(pindex));
             pindex = parent[pindex];
-            i++;
         }
+        cout << "!!!!! successful bfs" << endl;
         return route;
     }
     cout << "Route not found" << endl;
@@ -309,6 +308,13 @@ stack<pdd> bfs(RobotInstance* rb, pdd current, pair<pdd, pdd> minMax)
     return res;
 }
 
+bool isBfs = false;
+
+bool isFollowingBfs()
+{
+    return isBfs;
+}
+
 pdd chooseMove(RobotInstance *rb, double rotation)
 {
     pdd currentPoint = rb->getCurrentGPSPosition();
@@ -327,6 +333,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             bfsResult.pop();
             if(bfsResult.empty())
             {
+                isBfs = false;
                 return currentPoint;
             }
             nextPoint = r2d(bfsResult.top());
@@ -344,10 +351,12 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                     {
                         bfsResult.pop();
                     }
+                    isBfs = false;
                     return currentPoint;
                 }
             }
         }
+        isBfs = true;
         cout << pointToString(rb->getRawGPSPosition()) << " --> " << pointToString(nextPoint) << endl;
         return nextPoint;
     }
@@ -368,12 +377,15 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                         bfsResult.pop();
                         if(bfsResult.empty())
                         {
+                            isBfs = false;
                             return currentPoint;
                         }
                         nextPoint = r2d(bfsResult.top());
                     }
+                    isBfs = true;
                     return nextPoint;
                 }
+                isBfs = true;
                 return nextPoint;
             }
         }
@@ -381,19 +393,28 @@ pdd chooseMove(RobotInstance *rb, double rotation)
         {
             pdd target = r2d(pointTo(currentPoint, rotation));
             if ((!isVisited(target)
-                    || (!isVisited(pointTo(currentPoint, rotation, 0.07))
-                        && canSee(currentPoint, pointTo(currentPoint, rotation, 0.07), getLidarPoints())))
+                    || (!isVisited(pointTo(currentPoint, rotation, 0.05))
+                        && canSee(currentPoint, pointTo(currentPoint, rotation, 0.05), getLidarPoints())))
                 && isTraversable(rb, target, getLidarPoints()))
             {
                 printPoint(target);
+                isBfs = false;
                 return target;
             }
-            if ((!isVisited(target)
-                    || (!isVisited(pointTo(currentPoint, rotation, 0.1))
-                        && canSee(currentPoint, pointTo(currentPoint, rotation, 0.1), getLidarPoints())))
-                && isTraversable(rb, target, getLidarPoints()))
+            if (!isVisited(pointTo(currentPoint, rotation, 0.07))
+                    && canSee(currentPoint, pointTo(currentPoint, rotation, 0.07), getLidarPoints())
+                    && isTraversable(rb, target, getLidarPoints()))
             {
                 printPoint(target);
+                isBfs = false;
+                return target;
+            }
+            if (!isVisited(pointTo(currentPoint, rotation, 0.09))
+                    && canSee(currentPoint, pointTo(currentPoint, rotation, 0.09), getLidarPoints())
+                    && isTraversable(rb, target, getLidarPoints()))
+            {
+                printPoint(target);
+                isBfs = false;
                 return target;
             }
         }
@@ -428,9 +449,10 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 {
                     printPoint(ret);
                     nextPoint = ret;
+                    cout << "turning to " << i << endl;
                     i = 8;
                 }
-                farRet = pointTo(currentPoint, rotation + angle, 0.1);
+                farRet = pointTo(currentPoint, rotation + angle, 0.07);
                 if ((!isVisited(ret)
                         || (!isVisited(farRet)
                             && canSee(currentPoint, farRet, getLidarPoints())))
@@ -438,11 +460,13 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 {
                     printPoint(ret);
                     nextPoint = ret;
+                    cout << "turning to " << i << endl;
                     i = 8;
                 }
             }
             if(nextPoint != currentPoint)
             {
+                isBfs = false;
                 return nextPoint;
             }
         }

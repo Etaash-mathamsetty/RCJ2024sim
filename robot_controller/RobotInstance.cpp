@@ -213,7 +213,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         {
             break;
         }
-        forward(std::max(0.1, vel - (traveled/ticks) * drive_kp * vel));
+        forward(std::max(1.5, vel - (traveled/ticks) * drive_kp * vel));
         pdd cur = getRawGPSPosition();
         if (m_robot->getTime() > startTime + 5)
         {
@@ -401,6 +401,11 @@ void RobotInstance::moveToNextPos()
 
     turnTo(3, angle);
     forwardTicks(5, dist, nextPos);
+    if (!isFollowingBfs() && dist > 0.012)
+    {
+        double rounded = clampAngle(std::round(angle / (M_PI / 2)) * M_PI / 2);
+        turnTo(3, rounded);
+    }
 }
 
 void RobotInstance::updateVisited()
@@ -424,7 +429,7 @@ void RobotInstance::updateVisited()
                 {
                     continue;
                 }
-                if(!isVisited(point) && canSee(cur, point, getLidarPoints()))
+                if(!isVisited(point) && isTraversable(this, point, getLidarPoints()) && canSee(cur, point, getLidarPoints()))
                 {
                     if(getDist(cur, point) <= 0.05)
                     {

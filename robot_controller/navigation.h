@@ -20,6 +20,7 @@ bool isVisited(pdd point);
 void addVisited(pdd pt);
 void addToVisit(pdd point);
 bool isInToVisit(pdd point);
+bool isFollowingBfs();
 pdd chooseMove(RobotInstance *rb, double currentRotation);
 const std::set<pdd>& getVisited();
 
