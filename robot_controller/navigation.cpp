@@ -26,14 +26,14 @@ pdd getXY(double angle, double distance)
     return { distance * sin(angle), distance * cos(angle) };
 }
 
-double getDist(pdd  pt1, pdd pt2)
-{
-    return (sqrt((pt1.f - pt2.f)* (pt1.f - pt2.f) + (pt1.s - pt2.s)* (pt1.s - pt2.s)));
-}
-
-double getDist2(pdd pt1, pdd pt2)
+double getDist2(const pdd& pt1, const pdd& pt2)
 {
     return pow(pt2.f - pt1.f, 2) + pow(pt2.s - pt1.s, 2);
+}
+
+double getDist(const pdd&  pt1, const pdd& pt2)
+{
+    return sqrt(getDist2(pt1, pt2));
 }
 
 bool compPts(pdd pt1, pdd pt2, double thresh)
@@ -292,6 +292,11 @@ void printToVisit()
         it++;
     }
     cout << endl;
+}
+
+const std::deque<pdd>& getToVisit()
+{
+    return toVisit;
 }
 
 stack<pdd> bfs(RobotInstance* rb, pdd current, pair<pdd, pdd> minMax)
