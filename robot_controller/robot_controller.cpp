@@ -101,9 +101,13 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             if(ImGui::BeginTabItem("Lidar Debug", nullptr))
             {
                 ImGui::Text("Number of points: %ld", getCount());
+                ImGui::Text("Score: %f   Time: %d", rb->getScore(), rb->getTimeLeft());
 
                 if(ImGui::Button("Clear Point Cloud"))
                     clearPointCloud();
+                ImGui::SameLine();
+                if(ImGui::Button("Lack of Progress"))
+                    rb->sendLackOP();
                 
                 plotPoints(rb, width, height);
 
@@ -232,6 +236,10 @@ int main(int argc, char **argv) {
         SDL_GetVersion(&v);
 
         std::cout << "SDL Version: " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
+
+#ifdef __linux__
+        SDL_SetHint(SDL_HINT_VIDEODRIVER, "wayland,x11");
+#endif
     }
 
     if(!rb->getDisableGUI())

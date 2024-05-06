@@ -4,6 +4,7 @@
 #include <webots/InertialUnit.hpp>
 #include <webots/PositionSensor.hpp>
 #include <webots/Emitter.hpp>
+#include <webots/Receiver.hpp>
 #include <webots/Camera.hpp>
 #include <webots/GPS.hpp>
 #include <stack>
@@ -147,6 +148,12 @@ public:
 
     void addTexture(std::string name, cv::Mat, SDL_PixelFormatEnum);
 
+    float getScore() { return m_score; }
+
+    int getTimeLeft() { return m_timeLeft; }
+
+    void sendLackOP() { m_emitter->send("L", 1); }
+
 private:
 
     //DOES NOT AFFECT POSITION SENSOR
@@ -187,6 +194,7 @@ private:
     webots::PositionSensor *m_lmpos;
     webots::PositionSensor *m_rmpos;
     webots::Emitter *m_emitter;
+    webots::Receiver *m_receiver;
     webots::Camera *m_color;
     webots::Camera *m_rightCamera;
     webots::Camera *m_leftCamera;
@@ -200,6 +208,9 @@ private:
     bool m_isFinished;
     bool m_stopMovement;
     DIR m_dir;
+
+    float m_score;
+    int m_timeLeft;
 
     pdd m_targetPos;
     pdd m_lastPos;

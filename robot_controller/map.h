@@ -36,11 +36,41 @@ struct POINT_TYPE {
   POINT_TYPE() : wall(false), camera(false) {}
 };
 
+inline bool nearly_equal(double a, double b, const double thresh = 0.02)
+{
+    return std::abs(a-b) <= thresh;
+}
+
+struct GPS_position
+{
+    double x;
+    int y; //floor number
+    double z;
+
+    GPS_position(const double *pos)
+    {
+        x = *pos;
+        y = *(pos+1);
+        z = *(pos+2);
+    }
+
+    bool operator==(const GPS_position& other) const
+    {
+        return nearly_equal(other.x, x) && other.y == y && nearly_equal(other.z, z);
+    }
+
+    explicit operator std::string() const
+    {
+        return std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z);
+    }
+};
+
 struct REGION {
   //points
   std::map<std::pair<double,double>, POINT_TYPE> points;
 };
 
 REGION* get_region(webots::GPS *gps);
+std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt);
 
 #endif

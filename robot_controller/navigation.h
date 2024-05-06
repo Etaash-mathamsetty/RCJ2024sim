@@ -11,7 +11,8 @@
 
 double getDist(const pdd& pt1,const pdd& pt2);
 bool onRoute(std::stack<pdd> pts, pdd point);
-bool isTraversable(pdd pos, const std::vector<pdd>& points);
+bool isTraversable(const pdd& pos, const std::vector<pdd>& points);
+bool isTraversableOpt(const pdd& pos);
 bool canSee(pdd cur, pdd tar, const std::vector<pdd>& points);
 pdd pointTo(pdd point, double dir);
 std::pair<pdd, pdd> getMinMax(const std::vector<pdd>& list);

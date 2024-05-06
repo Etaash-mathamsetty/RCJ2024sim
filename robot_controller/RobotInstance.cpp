@@ -51,6 +51,8 @@ RobotInstance::RobotInstance()
     m_rmpos->enable(m_timestep);
 
     m_emitter = m_robot->getEmitter("emitter");
+    m_receiver = m_robot->getReceiver("receiver");
+    m_receiver->enable(m_timestep);
 
     setPosition(INFINITY);
     forward(0.0);
@@ -76,7 +78,7 @@ RobotInstance::RobotInstance()
     m_lposoffset = 0;
     m_rposoffset = 0;
 
-    int res = step();
+    int res = m_robot->step(m_timestep);
 
     if(res == -1)
     {
@@ -92,6 +94,30 @@ RobotInstance::RobotInstance()
         //navigation update
         this->update_lidar_cloud();
         this->updateVisited();
+
+        this->m_emitter->send("G", 1);
+        while(this->m_receiver->getQueueLength() > 0) { // If receiver queue is not empty
+            char *message = (char *)m_receiver->getData(); // Grab data as a string
+            if (message[0] == 'L') { // 'L' means a lack of progress occurred
+                std::cout << "Detected Lack of Progress!" << std::endl;
+                this->m_receiver->nextPacket(); // Discard the current data packet
+            }
+            else if(message[0] == 'G')
+            {
+                char *receivedData = (char *)this->m_receiver->getData(); // Grab data as a string
+                if (receivedData[0] == 'G') {
+                    memcpy(&this->m_score, receivedData + 4, 4); // Score stored in bytes 4 to 7
+                    memcpy(&this->m_timeLeft, receivedData + 8, 4);  // Remaining time stored in bytes 8 to 11
+                    this->m_receiver->nextPacket(); // Discard the current data packet
+                }
+            }
+            else
+            {
+                this->m_receiver->nextPacket();
+            }
+        }
+
+
     });
 
     m_isFinished = false;
@@ -270,7 +296,7 @@ std::vector<std::vector<cv::Point>> RobotInstance::getContours(std::string name,
 std::vector<std::vector<cv::Point>> RobotInstance::getContours(cv::Mat frame)
 {
     cv::Mat frame2;
-    cv::cvtColor(frame, frame2, cv::COLOR_RGB2GRAY);
+    cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
     cv::threshold(frame2, frame2, 80, 255, cv::THRESH_BINARY_INV);
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
@@ -396,7 +422,7 @@ void RobotInstance::detectVictims()
 pdd RobotInstance::calcNextPos()
 {
     pdd ret = r2d(chooseMove(this, m_imu->getRollPitchYaw()[2]));
-    std::cout << "traversable: " << isTraversable(ret, getLidarPoints()) << std::endl;
+    std::cout << "traversable: " << isTraversableOpt(ret) << std::endl;
     return ret;
 }
 
@@ -433,11 +459,11 @@ void RobotInstance::updateVisited()
             for(y = cur.second - radius; y <= cur.second + radius; y += 0.008)
             {
                 pdd point = r2d(pdd(x, y));
-                // if(point == pointTo(cur, m_imu->getRollPitchYaw()[2]))
-                // {
-                //     continue;
-                // }
-                if(!isVisited(point) && isTraversable(point, getLidarPoints()) && canSee(cur, point, getLidarPoints()))
+//                if(point == pointTo(cur, m_imu->getRollPitchYaw()[2]))
+//                {
+//                    continue;
+//                }
+                if(!isVisited(point) && isTraversableOpt(point) && canSee(cur, point, getLidarPoints()))
                 {
                     if(getDist(cur, point) <= 0.05)
                     {

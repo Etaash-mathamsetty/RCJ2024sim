@@ -19,11 +19,6 @@ using namespace webots;
 
 const double region_size = 0.1;
 
-inline bool nearly_equal(double a, double b, const double thresh = 0.02)
-{
-    return std::abs(a-b) <= thresh;
-}
-
 inline double round_to(double value, const double precision = 0.01)
 {
     return std::round(value / precision) * precision;
@@ -34,41 +29,15 @@ inline double floor_to(double value, const double precision = 0.01)
     return std::floor(value / precision) * precision;
 }
 
-struct GPS_position
+inline double ceil_to(double value, const double precision = 0.01)
 {
-    double x;
-    int y; //floor number
-    double z;
+    return std::ceil(value / precision) * precision;
+}
 
-    GPS_position(const double *pos)
-    {
-        x = *pos;
-        y = *(pos+1);
-        z = *(pos+2);
-    }
 
-    bool operator==(const GPS_position& other) const
-    {
-        return nearly_equal(other.x, x) && other.y == y && nearly_equal(other.z, z);
-    }
-
-};
-
-struct GPS_hash
-{
-    std::size_t operator()(const GPS_position& pos) const
-    {
-        std::size_t res = 0;
-        hash_combine(res, pos.x);
-        hash_combine(res, pos.y);
-        hash_combine(res, pos.z);
-        return res;
-    }
-};
-
-std::unordered_map<GPS_position, REGION, GPS_hash> regions;
-std::vector<std::pair<double, double>> vecLidarPoints;
-std::vector<std::pair<double, double>> vecCameraPoints;
+std::map<pdd, REGION> regions;
+std::vector<pdd> vecLidarPoints;
+std::vector<pdd> vecCameraPoints;
 
 //theta is in radians
 void update_regions_map(GPS *gps, const float *lidar_image, float theta)
@@ -92,9 +61,6 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         pos_rounded[2] = floor_to(pos[2], region_size);
         double x = dist*sin(angle - theta) + (pos[0] - pos_rounded[0]);
         double y = dist*cos(angle - theta) + (pos[2] - pos_rounded[2]);
-
-        x = floor_to(x);
-        y = floor_to(y);
 
         while(x < 0)
         {
@@ -120,13 +86,22 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
             pos_rounded[0] += region_size;
         }
 
-        const auto coord = std::make_pair(x,y);
+        x += pos_rounded[0];
+        y += pos_rounded[2];
+
+        x = floor_to(x);
+        y = floor_to(y);
+
+        const auto coord2 = std::make_pair(x, y);
+        const auto rcoord = std::make_pair(pos_rounded[0], pos_rounded[2]);
+
+        //std::cout << "pts: " << (std::string)GPS_position(pos_rounded) << ": " << pointToString(coord2) << std::endl;
+
         //std::cout << "x: " << x << " y: " << y << std::endl;
-        const auto coord2 = std::make_pair(x + pos_rounded[0], y + pos_rounded[2]);
-        if(regions[GPS_position(pos_rounded)].points.count(coord) == 0 || !regions[GPS_position(pos_rounded)].points[coord].wall)
+        if(regions[rcoord].points.count(coord2) == 0 || !regions[rcoord].points[coord2].wall)
         {
             vecLidarPoints.push_back(coord2);
-            regions[GPS_position(pos_rounded)].points[coord].wall = true;
+            regions[rcoord].points[coord2].wall = true;
         }
     }
 }
@@ -196,9 +171,6 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
         double x = dist * sin(angle - theta) + (pos[0] - pos_rounded[0]);
         double y = dist * cos(angle - theta) + (pos[2] - pos_rounded[2]);
 
-        x = floor_to(x);
-        y = floor_to(y);
-
         while (x < 0)
         {
             x += region_size;
@@ -223,13 +195,20 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
             pos_rounded[0] += region_size;
         }
 
-        const auto coord = std::make_pair(x, y);
+        x += pos_rounded[0];
+        y += pos_rounded[2];
+
+        x = floor_to(x);
+        y = floor_to(y);
+
         //cout << "x: " << x << " y: " << y << endl;
-        const auto coord2 = std::make_pair(x + pos_rounded[0], y + pos_rounded[2]);
-        if (regions[GPS_position(pos_rounded)].points.count(coord) == 0 || !regions[GPS_position(pos_rounded)].points[coord].camera)
+        const auto coord2 = std::make_pair(x, y);
+        const auto rcoord = std::make_pair(pos_rounded[0], pos_rounded[2]);
+
+        if (regions[rcoord].points.count(coord2) == 0 || !regions[rcoord].points[coord2].camera)
         {
             vecCameraPoints.push_back(coord2);
-            regions[GPS_position(pos_rounded)].points[coord].camera = true;
+            regions[rcoord].points[coord2].camera = true;
         }
     }
 }
@@ -302,7 +281,9 @@ void plotPoints(RobotInstance *rb, int w, int h)
     memcpy(pos, gps->getValues(), 3 * sizeof(double));
     pos[2] *= -1;
 
-    ImVec2 GraphSize = ImVec2(w-50, h-100);
+    ImVec2 GraphSize = ImVec2(w-50, h-115);
+
+    ImGui::Text("Number of Regions %ld", regions.size());
 
     if(!regions.empty() && ImPlot::BeginPlot("Debug View", GraphSize))
     {
@@ -320,9 +301,9 @@ void plotPoints(RobotInstance *rb, int w, int h)
         for(const auto& r : regions)
         {
             ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0,0.5));
-            double xs[] = {r.first.x, r.first.x+0.1, r.first.x, r.first.x};
-            double ys[] = {r.first.z, r.first.z, r.first.z, r.first.z+0.1};
-            ImPlot::PlotLine("Regions", xs, ys, 4);
+            double xs[] = {r.first.first, r.first.first+0.1, r.first.first + 0.1, r.first.first};
+            double ys[] = {r.first.second, r.first.second, r.first.second + 0.1, r.first.second+0.1};
+            ImPlot::PlotLine("Regions", xs, ys, 4, ImPlotLineFlags_Loop);
         }
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
         ImPlot::PlotScatter("Robot", pos, pos + 2, 1, ImPlotItemFlags_NoFit);
@@ -369,8 +350,41 @@ REGION* get_region(webots::GPS *gps)
   pos_rounded[1] = floor_to(pos[1], region_size);
   pos_rounded[2] = floor_to(pos[2], region_size);
 
-  if(regions.count(GPS_position(pos_rounded)))
-    return &regions[pos_rounded];
+
+  const auto rcoord = std::make_pair(pos_rounded[0], pos_rounded[2]);
+
+  if(regions.count(rcoord))
+    return &regions[rcoord];
 
   return nullptr;
+}
+
+std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt)
+{
+    double pos_rounded[3];
+    std::vector<REGION*> ret;
+    pos_rounded[1] = 0;
+    pos_rounded[0] = floor_to(pt.first, region_size) - region_size;
+    pos_rounded[2] = floor_to(pt.second, region_size) - region_size;
+
+    ret.reserve(9);
+
+    for(int i = 0; i < 3; i++)
+    {
+        auto rcoord = std::make_pair(pos_rounded[0], pos_rounded[2]);
+        for(int l = 0; l < 3; l++)
+        {
+            //printPoint(rcoord);
+            if(regions.count(rcoord) > 0)
+            {
+                ret.push_back(&regions[rcoord]);
+            }
+            rcoord.first += region_size;
+        }
+        pos_rounded[2] += region_size;
+    }
+
+    //std::cout << pointToString(pt) << " " << "nearest regions: " << ret.size() << std::endl;
+
+    return ret;
 }
