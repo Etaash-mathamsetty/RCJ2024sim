@@ -352,7 +352,7 @@ REGION* get_region(webots::GPS *gps)
   pos_rounded[2] = floor_to(pos[2], region_size);
 
 
-  const auto rcoord = std::make_pair(pos_rounded[0], pos_rounded[2]);
+  const auto rcoord = r2d(std::make_pair(pos_rounded[0], pos_rounded[2]));
 
   if(regions.count(rcoord))
     return &regions[rcoord];
@@ -365,8 +365,8 @@ std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt
     double pos_rounded[3];
     std::vector<REGION*> ret;
     pos_rounded[1] = 0;
-    pos_rounded[0] = floor_to(pt.first, region_size) - region_size;
-    pos_rounded[2] = floor_to(pt.second, region_size) - region_size;
+    pos_rounded[0] = floor_to(pt.first - region_size, region_size);
+    pos_rounded[2] = floor_to(pt.second - region_size, region_size);
 
     ret.reserve(9);
 
@@ -381,9 +381,11 @@ std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt
                 ret.push_back(&regions[rcoord]);
             }
             rcoord.first += region_size;
+            rcoord.first = r2d(rcoord.first);
         }
         pos_rounded[2] += region_size;
-    }
+        pos_rounded[2] = r2d(pos_rounded[2]);
+     }
 
     //std::cout << pointToString(pt) << " " << "nearest regions: " << ret.size() << std::endl;
 

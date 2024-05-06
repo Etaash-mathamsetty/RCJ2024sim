@@ -118,8 +118,7 @@ bool isTraversableOpt(const pdd& pos)
         }
     }
 
-    //TODO: remove once above code works properly
-    return isTraversable(pos, getLidarPoints());
+    return true;
 }
 
 double minDist(pdd a, pdd b, pdd p)
