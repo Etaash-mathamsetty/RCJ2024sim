@@ -93,7 +93,7 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         y = floor_to(y);
 
         const auto coord2 = std::make_pair(x, y);
-        const auto rcoord = std::make_pair(pos_rounded[0], pos_rounded[2]);
+        const auto rcoord = r2d(std::make_pair(pos_rounded[0], pos_rounded[2]));
 
         //std::cout << "pts: " << (std::string)GPS_position(pos_rounded) << ": " << pointToString(coord2) << std::endl;
 
@@ -203,7 +203,8 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
 
         //cout << "x: " << x << " y: " << y << endl;
         const auto coord2 = std::make_pair(x, y);
-        const auto rcoord = std::make_pair(pos_rounded[0], pos_rounded[2]);
+        //ensure rounded values
+        const auto rcoord = r2d(std::make_pair(pos_rounded[0], pos_rounded[2]));
 
         if (regions[rcoord].points.count(coord2) == 0 || !regions[rcoord].points[coord2].camera)
         {
@@ -298,6 +299,10 @@ void plotPoints(RobotInstance *rb, int w, int h)
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Cross, 4);
             ImPlot::PlotScatterG("Visited", getVisitedPlotPt, nullptr, getVisited().size(), ImPlotItemFlags_NoFit);
         }
+        {
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 3);
+            ImPlot::PlotScatterG("To Visit", getToVisitPoint, nullptr, getToVisit().size(), ImPlotItemFlags_NoFit);
+        }
         for(const auto& r : regions)
         {
             ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0,0.5));
@@ -328,10 +333,6 @@ void plotPoints(RobotInstance *rb, int w, int h)
 
             ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0.8,1));
             ImPlot::PlotLine("Path", xs, ys, 2, ImPlotItemFlags_NoFit);
-        }
-        {
-            ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 3);
-            ImPlot::PlotScatterG("To Visit", getToVisitPoint, nullptr, getToVisit().size(), ImPlotItemFlags_NoFit);
         }
         ImPlot::EndPlot();
     }
@@ -371,7 +372,7 @@ std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt
 
     for(int i = 0; i < 3; i++)
     {
-        auto rcoord = std::make_pair(pos_rounded[0], pos_rounded[2]);
+        auto rcoord = r2d(std::make_pair(pos_rounded[0], pos_rounded[2]));
         for(int l = 0; l < 3; l++)
         {
             //printPoint(rcoord);
