@@ -29,6 +29,10 @@
 #include "win_imgui/imgui_impl_win32.h"
 #endif
 
+#ifdef __linux__
+#include <unistd.h>
+#endif
+
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
 using namespace std;
@@ -226,6 +230,10 @@ int main(int argc, char **argv) {
     //std::filesystem::current_path("/home/etaash/Documents/Erebus-v23_0_5/game/controllers/robot_controller/build");
 
     //std::cout << std::filesystem::current_path() << std::endl;
+
+#ifdef __linux__
+    std::cout << "PID: " << getpid() << std::endl;
+#endif
 
     RobotInstance* rb = RobotInstance::getInstance();
     bool running = true;

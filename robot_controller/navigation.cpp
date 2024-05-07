@@ -151,7 +151,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
 {
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
     map<pdd, pdd> parent;
-    map<pdd, bool> visited;
+    set<pdd> visited;
     queue<pdd> q;
     cur = r2d(cur);
     tar = r2d(tar);
@@ -162,11 +162,11 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
     {
         pdd node = r2d(q.front());
         q.pop();
-        if (visited[node] || !isTraversableOpt(node) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
+        if (visited.count(node) > 0 || !isTraversableOpt(node) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
             continue;
         }
-        visited[node] = true;
+        visited.insert(node);
         if (!compPts(node, tar) || (isBlind && !isVisited(node)))
         {
             //north: +y, east: +x, south: -y, west: -x; 
@@ -190,7 +190,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
 
             for (const pdd& adjacent : adjacentNodes)
             {
-                if (!visited[adjacent] && isTraversableOpt(adjacent))
+                if (!visited.count(adjacent) && isTraversableOpt(adjacent))
                 {
                     q.push(adjacent);
                     parent[adjacent] = node;
