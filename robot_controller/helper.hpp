@@ -8,12 +8,23 @@
 #ifndef _HELPER_HPP_
 #define _HELPER_HPP_
 
+//thanks stack overflow
+template <class T>
+inline void hash_combine(std::size_t & s, const T & v)
+{
+    std::hash<T> h;
+    s ^= h(v) + 0x9e3779b9 + (s<< 6) + (s>> 2);
+}
+
+template<typename T>
 struct pair_hash_combiner
 {
-    std::size_t operator()(const std::pair<int, int>& p) const
+    std::size_t operator()(const std::pair<T, T>& p) const
     {
-        std::string s = std::to_string(p.first) + " " + std::to_string(p.second);
-        return std::hash<std::string>()(s);
+        std::size_t hash = 0;
+        hash_combine(hash, p.first);
+        hash_combine(hash, p.second);
+        return hash;
     }
 };
 

@@ -21,14 +21,6 @@ size_t getCount();
 void clearPointCloud();
 double clampAngle(double theta);
 
-//thanks stack overflow
-template <class T>
-inline void hash_combine(std::size_t & s, const T & v)
-{
-    std::hash<T> h;
-    s ^= h(v) + 0x9e3779b9 + (s<< 6) + (s>> 2);
-}
-
 struct POINT_TYPE {
   bool wall : 4;
   bool camera : 4;

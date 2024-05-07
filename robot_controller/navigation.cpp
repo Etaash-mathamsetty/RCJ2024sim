@@ -150,7 +150,7 @@ bool canSee(pdd cur, pdd tar, const vector<pdd>& points)
 stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
 {
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
-    map<pdd, pdd> parent;
+    unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
     set<pdd> visited;
     queue<pdd> q;
     cur = r2d(cur);
