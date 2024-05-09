@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
 #include <opencv2/opencv.hpp>
+#include "constants.h"
 
 #ifndef _HELPER_HPP_
 #define _HELPER_HPP_

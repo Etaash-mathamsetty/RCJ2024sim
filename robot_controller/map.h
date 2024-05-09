@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include <optional>
+#include "helper.hpp"
 
 #ifndef _MAP_H_
 #define _MAP_H_
@@ -59,7 +60,7 @@ struct GPS_position
 
 struct REGION {
   //points
-  std::map<std::pair<double,double>, POINT_TYPE> points;
+  std::unordered_map<std::pair<double,double>, POINT_TYPE, pair_hash_combiner<double>> points;
 };
 
 REGION* get_region(webots::GPS *gps);

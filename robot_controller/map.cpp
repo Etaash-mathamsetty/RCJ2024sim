@@ -49,6 +49,8 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         float dist = lidar_image[i];
         if(std::isinf(dist))
             continue;
+        if(dist > 0.4) //gets noisy after 0.4
+            continue;
         const float angle = i/512.0 * 2.0 * M_PI;
         double pos[3];
         double pos_rounded[3];
@@ -328,8 +330,8 @@ void plotPoints(RobotInstance *rb, int w, int h)
             ImPlot::PlotLine("Robot", xs, ys, 2, ImPlotItemFlags_NoFit);
         }
         {
-            double xs[] = { rb->getCurrentGPSPosition().first, rb->getTargetPos().first };
-            double ys[] = { rb->getCurrentGPSPosition().second, rb->getTargetPos().second };
+            double xs[] = { rb->getRawGPSPosition().first, rb->getTargetPos().first };
+            double ys[] = { rb->getRawGPSPosition().second, rb->getTargetPos().second };
 
             ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0.8,1));
             ImPlot::PlotLine("Path", xs, ys, 2, ImPlotItemFlags_NoFit);
