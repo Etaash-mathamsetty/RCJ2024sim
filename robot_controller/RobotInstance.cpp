@@ -94,30 +94,6 @@ RobotInstance::RobotInstance()
         //navigation update
         this->update_lidar_cloud();
         this->updateVisited();
-
-        this->m_emitter->send("G", 1);
-        while(this->m_receiver->getQueueLength() > 0) { // If receiver queue is not empty
-            char *message = (char *)m_receiver->getData(); // Grab data as a string
-            if (message[0] == 'L') { // 'L' means a lack of progress occurred
-                std::cout << "Detected Lack of Progress!" << std::endl;
-                this->m_receiver->nextPacket(); // Discard the current data packet
-            }
-            else if(message[0] == 'G')
-            {
-                char *receivedData = (char *)this->m_receiver->getData(); // Grab data as a string
-                if (receivedData[0] == 'G') {
-                    memcpy(&this->m_score, receivedData + 4, 4); // Score stored in bytes 4 to 7
-                    memcpy(&this->m_timeLeft, receivedData + 8, 4);  // Remaining time stored in bytes 8 to 11
-                    this->m_receiver->nextPacket(); // Discard the current data packet
-                }
-            }
-            else
-            {
-                this->m_receiver->nextPacket();
-            }
-        }
-
-
     });
 
     m_isFinished = false;
@@ -183,6 +159,31 @@ int RobotInstance::step() {
         return -1;
 
     run_callbacks();
+
+    this->m_emitter->send("G", 1);
+    while(this->m_receiver->getQueueLength() > 0) { // If receiver queue is not empty
+        char *message = (char *)m_receiver->getData(); // Grab data as a string
+        if (message[0] == 'L') { // 'L' means a lack of progress occurred
+            std::cout << "Detected Lack of Progress!" << std::endl;
+            this->m_receiver->nextPacket(); // Discard the current data packet
+            this->m_robot->step(this->m_timestep); // update all the senors, for updated gps pos
+            clearBfsResult();
+            this->updateTargetPos();
+        }
+        else if(message[0] == 'G')
+        {
+            char *receivedData = (char *)this->m_receiver->getData(); // Grab data as a string
+            if (receivedData[0] == 'G') {
+                memcpy(&this->m_score, receivedData + 4, 4); // Score stored in bytes 4 to 7
+                memcpy(&this->m_timeLeft, receivedData + 8, 4);  // Remaining time stored in bytes 8 to 11
+                this->m_receiver->nextPacket(); // Discard the current data packet
+            }
+        }
+        else
+        {
+            this->m_receiver->nextPacket();
+        }
+    }
 
     return ret;
 }
@@ -283,13 +284,14 @@ std::vector<std::vector<cv::Point>> RobotInstance::getContours(std::string name,
 {
     cv::Mat frame2;
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
-    cv::threshold(frame2, frame2, 80, 255, cv::THRESH_BINARY_INV);
+    cv::adaptiveThreshold(frame2, frame2, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY_INV, 11, 2.0);
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
     cv::findContours(frame2, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
     cv::Mat frame3(frame);
     cv::drawContours(frame3, contours, -1, cv::Scalar(255, 0, 0));
     addTexture(name, frame3, SDL_PIXELFORMAT_RGB888);
+    addTexture(name + " Threshold", frame2, SDL_PIXELFORMAT_RGB332);
     return contours;
 }
 
@@ -297,7 +299,7 @@ std::vector<std::vector<cv::Point>> RobotInstance::getContours(cv::Mat frame)
 {
     cv::Mat frame2;
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
-    cv::threshold(frame2, frame2, 80, 255, cv::THRESH_BINARY_INV);
+    cv::adaptiveThreshold(frame2, frame2, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY_INV, 11, 2.0);
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
     cv::findContours(frame2, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
@@ -430,7 +432,7 @@ void RobotInstance::moveToNextPos()
 {
     pdd nextPos = getTargetPos();
     pdd curPos = getRawGPSPosition();
-    double dist = getDist(curPos, nextPos) * 0.95;
+    double dist = getDist(curPos, nextPos) * 0.95; //prevent overshooting
     double angle = -std::atan2(nextPos.first - curPos.first, nextPos.second - curPos.second);
 
     turnTo(3, angle);
@@ -444,7 +446,7 @@ void RobotInstance::moveToNextPos()
 
 void RobotInstance::updateVisited()
 {
-    pdd cur = r2d(getCurrentGPSPosition());
+    pdd cur = getCurrentGPSPosition();
     if(!isVisited(cur))
     {
         addVisited(cur);
@@ -463,7 +465,9 @@ void RobotInstance::updateVisited()
 //                {
 //                    continue;
 //                }
-                if(!isVisited(point) && isTraversableOpt(point) && canSee(cur, point, getLidarPoints()))
+                bool visited = isVisited(point);
+                bool traversable = isTraversableOpt(point);
+                if(!visited && traversable && canSee(cur, point, getLidarPoints()))
                 {
                     if(getDist(cur, point) <= 0.05)
                     {
@@ -474,7 +478,11 @@ void RobotInstance::updateVisited()
                         addToVisit(point);
                     }
                 }
-                if(!isTraversableOpt(point))
+                // else if(visited && !traversable)
+                // {
+                //     removeVisited(point);
+                // }
+                else if(!traversable)
                 {
                     removeToVisit(point);
                 }
