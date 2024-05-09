@@ -329,6 +329,23 @@ void plotPoints(RobotInstance *rb, int w, int h)
             ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
             ImPlot::PlotLine("Robot", xs, ys, 2, ImPlotItemFlags_NoFit);
         }
+        if(getBfsPath().size() > 0)
+        {
+            std::vector<double> xs, ys;
+            std::stack<pdd> path = getBfsPath();
+            xs.push_back(rb->getRawGPSPosition().first);
+            ys.push_back(rb->getRawGPSPosition().second);
+            while(!path.empty())
+            {
+                xs.push_back(path.top().first);
+                ys.push_back(path.top().second);
+                path.pop();
+            }
+            ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0.8,1));
+            ImPlot::PlotLine("BFS Path", xs.data(), ys.data(), xs.size(), ImPlotItemFlags_NoFit);
+            ImPlot::PlotScatter("BFS Path", xs.data(), ys.data(), xs.size(), ImPlotItemFlags_NoFit);
+        }
+        else
         {
             double xs[] = { rb->getRawGPSPosition().first, rb->getTargetPos().first };
             double ys[] = { rb->getRawGPSPosition().second, rb->getTargetPos().second };

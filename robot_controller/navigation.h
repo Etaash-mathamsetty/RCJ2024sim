@@ -28,5 +28,6 @@ void clearBfsResult();
 pdd chooseMove(RobotInstance *rb, double currentRotation);
 const std::set<pdd>& getVisited();
 const std::deque<pdd>& getToVisit();
+const std::stack<pdd>& getBfsPath();
 
 #endif

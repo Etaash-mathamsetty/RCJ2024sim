@@ -156,6 +156,41 @@ bool canSee(pdd cur, pdd tar, const vector<pdd>& points)
 
 unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
 
+stack<pdd> optimizeRoute(stack<pdd> route)
+{
+    stack<pdd> ret;
+    vector<pdd> last_pts;
+    last_pts.push_back(route.top());
+    route.pop();
+    last_pts.push_back(route.top());
+    route.pop();
+
+    while (!route.empty())
+    {
+        pdd cur = r2d(route.top());
+        route.pop();
+        if (getDist(r2d(last_pts.front()), cur) >= 0.02)
+        {
+            last_pts.erase(last_pts.begin());
+            last_pts.push_back(cur);
+            continue;
+        }
+        ret.push(cur);
+        last_pts.erase(last_pts.begin());
+        last_pts.push_back(cur);
+    }
+
+    //flip the path again (cuz this stack class sucks)
+    stack<pdd> rev_ret;
+    while (!ret.empty())
+    {
+        rev_ret.push(ret.top());
+        ret.pop();
+    }
+
+    return rev_ret;
+}
+
 stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
 {
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
@@ -224,6 +259,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
             pindex = r2d(parent[pindex]);
         }
         cout << "!!!!! successful bfs" << endl;
+        route = optimizeRoute(route);
         return route;
     }
     cout << "Route not found" << endl;
@@ -352,6 +388,11 @@ void clearBfsResult()
     bfsResult = stack<pdd>();
 }
 
+const stack<pdd>& getBfsPath()
+{
+    return bfsResult;
+}
+
 pdd chooseMove(RobotInstance *rb, double rotation)
 {
     pdd currentPoint = rb->getCurrentGPSPosition();
@@ -473,8 +514,8 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                             && canSee(currentPoint, farRet, getLidarPoints()))
                     && isTraversableOpt(farRet) && isTraversableOpt(ret))
                 {
-                    printPoint(ret);
-                    nextPoint = ret;
+                    printPoint(farRet);
+                    nextPoint = farRet;
                     cout << "turning to " << i << endl;
                     i = 8;
                 }
