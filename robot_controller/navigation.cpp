@@ -171,7 +171,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
             continue;
         }
         visited.insert(node);
-        if (!compPts(node, tar) || (isBlind && !isVisited(node)))
+        if (!compPts(node, tar) || (isBlind && isVisited(node)))
         {
             //north: +y, east: +x, south: -y, west: -x; 
             // pdd adjacentNodes[8] = {
@@ -273,6 +273,15 @@ void addToVisit(pdd point)
         return;
     }
     toVisit.push_back(point);
+}
+
+void removeToVisit(pdd point)
+{
+    auto it = find(toVisit.begin(), toVisit.end(), point);
+    if(it != toVisit.end())
+    {
+        toVisit.erase(it);
+    }
 }
 
 bool isInToVisit(pdd point)

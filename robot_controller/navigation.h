@@ -20,6 +20,7 @@ std::stack<pdd> pointBfs(pdd cur, pdd tar, std::pair<pdd, pdd> minMax);
 bool isVisited(pdd point);
 void addVisited(pdd pt);
 void addToVisit(pdd point);
+void removeToVisit(pdd point);
 bool isInToVisit(pdd point);
 bool isFollowingBfs();
 pdd chooseMove(RobotInstance *rb, double currentRotation);

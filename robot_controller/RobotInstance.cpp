@@ -474,6 +474,10 @@ void RobotInstance::updateVisited()
                         addToVisit(point);
                     }
                 }
+                if(!isTraversableOpt(point))
+                {
+                    removeToVisit(point);
+                }
             }
         }
     }
