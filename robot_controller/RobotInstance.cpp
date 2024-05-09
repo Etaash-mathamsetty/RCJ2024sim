@@ -108,6 +108,11 @@ RobotInstance::~RobotInstance()
 
 const double turn_kp = 0.75;
 
+double signsqrt(double x)
+{
+    return x < 0 ? -sqrt(-x) : sqrt(x);
+}
+
 // turns shortest way to the direction
 void RobotInstance::turnTo(double speed, double target_angle)
 {
@@ -136,7 +141,7 @@ void RobotInstance::turnTo(double speed, double target_angle)
         else
             mult = 1.0;
 
-        double error = target_angle - current;
+        double error = signsqrt(target_angle - current);
 
         double calc_speed = speed * error * turn_kp * mult;
 
