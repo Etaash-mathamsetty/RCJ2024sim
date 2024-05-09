@@ -240,7 +240,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         {
             break;
         }
-        forward(std::max(0.75, vel - (traveled/ticks) * drive_kp * vel));
+        forward(std::max(0.75, vel - pow(traveled/ticks, 2) * drive_kp * vel));
         pdd cur = getRawGPSPosition();
         if (m_robot->getTime() > startTime + 5)
         {
