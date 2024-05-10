@@ -15,6 +15,7 @@ bool isTraversable(const pdd& pos, const std::vector<pdd>& points);
 bool isTraversableOpt(const pdd& pos);
 bool canSee(pdd cur, pdd tar, const std::vector<pdd>& points);
 pdd pointTo(pdd point, double dir);
+pdd pointTo(pdd point, double dir, double dist);
 std::pair<pdd, pdd> getMinMax(const std::vector<pdd>& list);
 std::stack<pdd> pointBfs(pdd cur, pdd tar, std::pair<pdd, pdd> minMax);
 void removeVisited(pdd point);

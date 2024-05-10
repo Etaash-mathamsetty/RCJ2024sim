@@ -102,17 +102,18 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
     {
         if(ImGui::BeginTabBar("tabs", ImGuiTabBarFlags_Reorderable))
         {
-            if(ImGui::BeginTabItem("Lidar Debug", nullptr))
+            if(ImGui::BeginTabItem("Map Debug", nullptr))
             {
-                ImGui::Text("Number of points: %ld", getCount());
-                ImGui::Text("Score: %f   Time: %d", rb->getScore(), rb->getTimeLeft());
+                ImGui::Text("Lidar points: %ld  Score: %f  Time: %d", getCount(), rb->getScore(), rb->getTimeLeft());
+                ImGui::Text("IsTraversable%s: %d", pointToString(rb->getCurrentGPSPosition()).c_str(),
+                                isTraversableOpt(rb->getCurrentGPSPosition()));
 
                 if(ImGui::Button("Clear Point Cloud"))
                     clearPointCloud();
                 ImGui::SameLine();
                 if(ImGui::Button("Lack of Progress"))
                     rb->sendLackOP();
-                
+
                 plotPoints(rb, width, height);
 
                 ImGui::EndTabItem();
@@ -140,6 +141,16 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             if(ImGui::BeginTabItem("Debug Controls"))
             {
                 ImGui::Checkbox("Stop Movement", &rb->getStopMovement());
+
+                ImGui::EndTabItem();
+            }
+
+            if(ImGui::BeginTabItem("KNN Trainer") && rb->getKNN())
+            {
+                if(ImGui::Button("Save to File"))
+                {
+                    rb->getKNN()->save("knn.yml");
+                }
 
                 ImGui::EndTabItem();
             }
@@ -182,42 +193,6 @@ void delete_gui(SDL_Window* window, SDL_Renderer *renderer)
     SDL_Quit();
 }
 
-bool is_blocked(const float *cloud, bool extra = false)
-{
-    float val = cloud[0];
-    float val2 = cloud[10];
-    float val3 = cloud[500];
-    float val4 = cloud[20];
-    float val5 = cloud[490];
-    float val6 = cloud[30];
-    float val7 = cloud[480];
-    float val8 = cloud[40];
-    float val9 = cloud[470];
-
-    const float thresh = 0.06 + 0.04 * extra;
-
-    if(val < thresh)
-        return true;
-    if(val2 < thresh)
-        return true;
-    if(val3 < thresh)
-        return true;
-    if(val4 < thresh)
-        return true;
-    if(val5 < thresh)
-        return true;
-    if(val6 < thresh)
-        return true;
-    if(val7 < thresh)
-        return true;
-    if(val8 < thresh)
-        return true;
-    if(val9 < thresh)
-        return true;
-
-    return false;
-}
-
 // This is the main program of your controller.
 // It creates an instance of your Robot instance, launches its
 // function(s) and destroys it at the end of the execution.
@@ -236,6 +211,10 @@ int main(int argc, char **argv) {
 #endif
 
     RobotInstance* rb = RobotInstance::getInstance();
+
+#ifdef COMPMODE
+    rb->setDisableGUI(true);
+#endif
     bool running = true;
 
     std::cout << "ImGui Version: " << ImGui::GetVersion() << std::endl;

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <string.h>
 #include <unordered_map>
+#include <filesystem>
 #include <optional>
 #include <stack>
 #include <list>
@@ -95,6 +96,15 @@ RobotInstance::RobotInstance()
         this->update_lidar_cloud();
         this->updateVisited();
     });
+
+    m_knn = cv::ml::KNearest::create();
+
+    if(std::filesystem::exists("knn.yml"))
+    {
+        m_knn->load("knn.yml");
+    }
+
+    //m_knn->setDefaultK(3);
 
     m_isFinished = false;
     m_disabledGUI = false;
@@ -236,7 +246,6 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 {
     double startTime = m_robot->getTime();
     pdd start = getRawGPSPosition();
-    //TODO: use PID
     double traveled = 0;
     while(traveled <= ticks && step() != -1)
     {
@@ -259,17 +268,19 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     if(blackDetected())
     {
         std::cout << "black detected" << std::endl;
-        pdd cur = getCurrentGPSPosition();
-        addLidarPoint(cur);
-        addVisited(target);
+        pdd cur = getRawGPSPosition();
+        addLidarPoint(r2d(pointTo(cur, this->getYaw(), 0.03)));
+        updateVisited();
+        resetPosition();
 
-        while(traveled >= 0.003 && step() != -1)
+        while(traveled >= -2 && step() != -1)
         {
             forward(-vel * 0.5);
             cur = getRawGPSPosition();
-            traveled = hypot(cur.first - start.first, cur.second - start.second);
+            getPosition(&traveled, nullptr);
         }
 
+        clearBfsResult();
 
         stopMotors();
 

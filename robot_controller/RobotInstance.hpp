@@ -154,6 +154,10 @@ public:
 
     void sendLackOP() { m_emitter->send("L", 1); }
 
+    cv::ml::KNearest* getKNN() { return m_knn; }
+
+    double getYaw() { return -m_imu->getRollPitchYaw()[2]; }
+ 
 private:
 
     //DOES NOT AFFECT POSITION SENSOR
@@ -219,5 +223,7 @@ private:
 
     std::vector<std::function<void()>> m_callbacks;
     std::map<std::string, SDL_Texture*> m_tex;
+
+    cv::ml::KNearest* m_knn;
 };
 #endif
