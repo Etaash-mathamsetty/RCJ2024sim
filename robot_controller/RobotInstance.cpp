@@ -338,8 +338,8 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     int top = countContours(topRoi);
     int mid = countContours(midRoi);
     int bottom = countContours(bottomRoi);
-    int xPos = (int)position[0] * 100;
-    int zPos = (int)position[2] * 100;
+    int xPos = (int)(position[0] * 100);
+    int zPos = (int)(position[2] * 100);
     char message[9];
     memcpy(&message[0], &xPos, 4);
     memcpy(&message[4], &zPos, 4);
@@ -359,10 +359,10 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     {
         return false;
     }
-    std::cout << message[8] << " found" << std::endl;
+    std::cout << message[8] << " found on side " << side << std::endl;
     stopMotors();
     delay(1);
-    m_emitter->send(message, 9);
+    m_emitter->send(message, sizeof(message));
     return true;
 }
 
