@@ -228,7 +228,16 @@ std::vector<std::pair<double, double>>& getCameraPoints()
 
 void addLidarPoint(pdd point)
 {
-    vecLidarPoints.push_back(point);
+    point = r2d(point);
+    auto rcoord = point;
+    rcoord.first = floor_to(rcoord.first, region_size);
+    rcoord.second = floor_to(rcoord.second, region_size);
+
+    if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
+    {
+        vecLidarPoints.push_back(point);
+        regions[rcoord].points[point].wall = true;
+    }
 }
 
 ImPlotPoint getPointFromMap(int idx, void *_map)
