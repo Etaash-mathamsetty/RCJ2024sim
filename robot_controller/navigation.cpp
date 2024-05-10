@@ -399,6 +399,57 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     // webots rotation is flipped sin(-t) = x and cos(-t) = y
     rotation *= -1;
 
+    if(!isTraversableOpt(currentPoint))
+    {
+        std::cout << "current point is not traversable!" << std::endl;
+        //look for a nearby traversable point
+        pdd nextPoint = currentPoint;
+        for(int i = 1; i <= 7; i++)
+        {
+            pdd ret, farRet;
+            double angle;
+            switch(i)
+            {
+                //case 4: angle = M_PI / 4; ret = pointTo(currentPoint, rotation + M_PI / 4); farRet = pointTo(currentPoint, rotation + M_PI / 4, 0.07); break;
+                case 1: angle = M_PI / 2; ret = pointTo(currentPoint, rotation + M_PI / 2); farRet = pointTo(currentPoint, rotation + M_PI / 2, 0.07); break;
+                // case 5: angle = M_PI * 3 / 4; ret = pointTo(currentPoint, rotation + M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation + M_PI * 3 / 4, 0.07); break;
+                case 7: angle = M_PI; ret = pointTo(currentPoint, rotation + M_PI); farRet = pointTo(currentPoint, rotation + M_PI, 0.07); break;
+                //case 6: angle = -M_PI * 3 / 4; ret = pointTo(currentPoint, rotation - M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation - M_PI * 3 / 4, 0.07); break;
+                case 2: angle = -M_PI / 2; ret = pointTo(currentPoint, rotation - M_PI / 2); farRet = pointTo(currentPoint, rotation - M_PI / 2, 0.07); break;
+                //case 3: angle = -M_PI / 4; ret = pointTo(currentPoint, rotation - M_PI / 4); farRet = pointTo(currentPoint, rotation - M_PI / 4, 0.07); break;
+                case 0:
+                default: angle = 0; break;
+            }
+            if (angle == 0)
+            {
+                continue;
+            }
+            ret = r2d(ret);
+            if (canSee(currentPoint, ret, getLidarPoints())
+                && isTraversableOpt(ret))
+            {
+                printPoint(ret);
+                nextPoint = ret;
+                cout << "turning to " << i << endl;
+                i = 8;
+            }
+            farRet = r2d(farRet);
+            if (canSee(currentPoint, farRet, getLidarPoints())
+                && isTraversableOpt(farRet) && isTraversableOpt(ret))
+            {
+                printPoint(farRet);
+                nextPoint = farRet;
+                cout << "turning to " << i << endl;
+                i = 8;
+            }
+        }
+        if(nextPoint != currentPoint)
+        {
+            isBfs = false;
+            return nextPoint;
+        }
+    }
+
     if(!toVisit.empty() && isVisited(toVisit.back()))
     {
         toVisit.pop_back();
