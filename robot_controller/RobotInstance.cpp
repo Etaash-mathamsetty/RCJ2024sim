@@ -254,7 +254,14 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         {
             break;
         }
-        forward(std::max(0.75, vel - pow(traveled/ticks, 2) * drive_kp * vel));
+        if(ticks - traveled <= 0.01)
+        {
+            forward(std::max(0.75, vel - pow((traveled - (ticks - 0.01))/0.01, 2) * drive_kp * vel));
+        }
+        else
+        {
+            forward(vel);
+        }
         pdd cur = getRawGPSPosition();
         if (m_robot->getTime() > startTime + 5)
         {
@@ -451,12 +458,12 @@ void RobotInstance::moveToNextPos()
     double dist = getDist(curPos, nextPos) * 0.95; //prevent overshooting
     double angle = -std::atan2(nextPos.first - curPos.first, nextPos.second - curPos.second);
 
-    turnTo(3, angle);
+    turnTo(4, angle);
     forwardTicks(5, dist, nextPos);
     if (!isFollowingBfs() && dist > 0.012)
     {
         double rounded = clampAngle(std::round(angle / (M_PI / 2)) * M_PI / 2);
-        turnTo(3, rounded);
+        turnTo(4, rounded);
     }
 }
 
