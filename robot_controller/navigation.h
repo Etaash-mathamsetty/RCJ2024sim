@@ -13,6 +13,7 @@ double getDist(const pdd& pt1,const pdd& pt2);
 bool onRoute(std::stack<pdd> pts, pdd point);
 bool isTraversable(const pdd& pos, const std::vector<pdd>& points);
 bool isTraversableOpt(const pdd& pos);
+bool isTraversableOpt(const pdd& pos, double rad);
 bool canSee(pdd cur, pdd tar, const std::vector<pdd>& points);
 pdd pointTo(pdd point, double dir);
 pdd pointTo(pdd point, double dir, double dist);

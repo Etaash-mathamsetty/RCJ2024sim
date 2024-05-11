@@ -10,6 +10,16 @@ double r2d(double decimal)
     return std::round(decimal * 100) / 100;
 }
 
+double r3d(double decimal)
+{
+    return std::round(decimal * 1000) / 1000.0;
+}
+
+pdd midpoint(const pdd& pt1, const pdd& pt2)
+{
+    return pdd((pt1.first + pt2.first) / 2, (pt1.second + pt2.second) / 2);
+}
+
 pdd r2d(pdd point)
 {
     return pdd(r2d(point.first), r2d(point.second));

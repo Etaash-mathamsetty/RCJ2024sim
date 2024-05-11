@@ -105,20 +105,25 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points)
     return true;
 }
 
-bool isTraversableOpt(const pdd& pos)
+bool isTraversableOpt(const pdd& pos, double rad)
 {
     for (const auto& r : get_neighboring_regions(pos))
     {
         if(r)
         {
             for (const auto &pair: r->points) {
-                if (getDist(pos, pair.first) < 0.043 && pair.second.wall)
+                if (getDist(pos, pair.first) < rad && pair.second.wall)
                     return false;
             }
         }
     }
 
     return true;
+}
+
+bool isTraversableOpt(const pdd& pos)
+{
+    return isTraversableOpt(pos, 0.043);
 }
 
 double minDist(pdd a, pdd b, pdd p)
@@ -153,6 +158,30 @@ bool canSee(pdd cur, pdd tar, const vector<pdd>& points)
     return true;
 }
 
+bool midpoint_check(pdd a, pdd b)
+{
+    pdd mid = r2d(midpoint(a, b));
+
+    const double trav_r = 0.048;
+
+    if(!isTraversableOpt(mid, trav_r))
+    {
+        return false;
+    }
+
+    if(!isTraversableOpt(a, trav_r) || !isTraversableOpt(b, trav_r))
+    {
+        return false;
+    }
+
+    if(a == b || mid == a || mid == b)
+    {
+        return true;
+    }
+
+    return midpoint_check(a, mid) && midpoint_check(mid, b);
+
+}
 
 unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
 
@@ -160,16 +189,16 @@ stack<pdd> optimizeRoute(stack<pdd> route)
 {
     stack<pdd> ret;
     vector<pdd> last_pts;
-    last_pts.push_back(route.top());
+    last_pts.push_back(r2d(route.top()));
     route.pop();
-    last_pts.push_back(route.top());
+    last_pts.push_back(r2d(route.top()));
     route.pop();
 
     while (!route.empty())
     {
         pdd cur = r2d(route.top());
         route.pop();
-        if (getDist(r2d(last_pts.front()), cur) >= 0.02)
+        if (ret.size() > 0 && midpoint_check(ret.top(), cur))
         {
             last_pts.erase(last_pts.begin());
             last_pts.push_back(cur);
@@ -178,6 +207,12 @@ stack<pdd> optimizeRoute(stack<pdd> route)
         ret.push(cur);
         last_pts.erase(last_pts.begin());
         last_pts.push_back(cur);
+    }
+
+    //ensure the last point is added
+    if(ret.size() == 0 || ret.top() != last_pts.back())
+    {
+        ret.push(last_pts.back());
     }
 
     //flip the path again (cuz this stack class sucks)
@@ -402,6 +437,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     if(!isTraversableOpt(currentPoint))
     {
         std::cout << "current point is not traversable!" << std::endl;
+        clearBfsResult();
         //look for a nearby traversable point
         pdd nextPoint = currentPoint;
         for(int i = 1; i <= 7; i++)
@@ -410,13 +446,13 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             double angle;
             switch(i)
             {
-                //case 4: angle = M_PI / 4; ret = pointTo(currentPoint, rotation + M_PI / 4); farRet = pointTo(currentPoint, rotation + M_PI / 4, 0.07); break;
+                case 4: angle = M_PI / 4; ret = pointTo(currentPoint, rotation + M_PI / 4); farRet = pointTo(currentPoint, rotation + M_PI / 4, 0.07); break;
                 case 1: angle = M_PI / 2; ret = pointTo(currentPoint, rotation + M_PI / 2); farRet = pointTo(currentPoint, rotation + M_PI / 2, 0.07); break;
-                // case 5: angle = M_PI * 3 / 4; ret = pointTo(currentPoint, rotation + M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation + M_PI * 3 / 4, 0.07); break;
+                case 5: angle = M_PI * 3 / 4; ret = pointTo(currentPoint, rotation + M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation + M_PI * 3 / 4, 0.07); break;
                 case 7: angle = M_PI; ret = pointTo(currentPoint, rotation + M_PI); farRet = pointTo(currentPoint, rotation + M_PI, 0.07); break;
-                //case 6: angle = -M_PI * 3 / 4; ret = pointTo(currentPoint, rotation - M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation - M_PI * 3 / 4, 0.07); break;
+                case 6: angle = -M_PI * 3 / 4; ret = pointTo(currentPoint, rotation - M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation - M_PI * 3 / 4, 0.07); break;
                 case 2: angle = -M_PI / 2; ret = pointTo(currentPoint, rotation - M_PI / 2); farRet = pointTo(currentPoint, rotation - M_PI / 2, 0.07); break;
-                //case 3: angle = -M_PI / 4; ret = pointTo(currentPoint, rotation - M_PI / 4); farRet = pointTo(currentPoint, rotation - M_PI / 4, 0.07); break;
+                case 3: angle = -M_PI / 4; ret = pointTo(currentPoint, rotation - M_PI / 4); farRet = pointTo(currentPoint, rotation - M_PI / 4, 0.07); break;
                 case 0:
                 default: angle = 0; break;
             }

@@ -268,6 +268,18 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
             break;
         }
         traveled = hypot(cur.first - start.first, cur.second - start.second);
+
+        if(!isTraversableOpt(pointTo(cur, this->getYaw(), 0.03), 0.015))
+        {
+            std::cout << "Maybe let's not run into a wall :)" << std::endl;
+            //move back to traversable area
+            while(step() != -1 && !isTraversableOpt(pointTo(cur, this->getYaw(), 0.03), 0.015))
+            {
+                forward(-vel * 0.5);
+                cur = getRawGPSPosition();
+            }
+            return false;
+        }
     }
 
     stopMotors();

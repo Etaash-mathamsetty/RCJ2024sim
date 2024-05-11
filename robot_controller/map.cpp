@@ -388,14 +388,17 @@ REGION* get_region(webots::GPS *gps)
   return nullptr;
 }
 
+
+std::vector<REGION*> ret;
+
 std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt)
 {
     double pos_rounded[3];
-    std::vector<REGION*> ret;
     pos_rounded[1] = 0;
     pos_rounded[0] = floor_to(pt.first - region_size, region_size);
     pos_rounded[2] = floor_to(pt.second - region_size, region_size);
 
+    ret.clear();
     ret.reserve(9);
 
     for(int i = 0; i < 3; i++)
