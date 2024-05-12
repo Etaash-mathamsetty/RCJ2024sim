@@ -160,6 +160,8 @@ bool canSee(pdd cur, pdd tar, const vector<pdd>& points)
 
 bool midpoint_check(pdd a, pdd b)
 {
+    a = r2d(a);
+    b = r2d(b);
     pdd mid = r2d(midpoint(a, b));
 
     const double trav_r = 0.048;
@@ -188,11 +190,7 @@ unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
 stack<pdd> optimizeRoute(stack<pdd> route)
 {
     stack<pdd> ret;
-    vector<pdd> last_pts;
-    last_pts.push_back(r2d(route.top()));
-    route.pop();
-    last_pts.push_back(r2d(route.top()));
-    route.pop();
+    pdd last_pt = route.top();
 
     while (!route.empty())
     {
@@ -200,19 +198,17 @@ stack<pdd> optimizeRoute(stack<pdd> route)
         route.pop();
         if (ret.size() > 0 && midpoint_check(ret.top(), cur))
         {
-            last_pts.erase(last_pts.begin());
-            last_pts.push_back(cur);
+            last_pt = cur;
             continue;
         }
         ret.push(cur);
-        last_pts.erase(last_pts.begin());
-        last_pts.push_back(cur);
+        last_pt = cur;
     }
 
     //ensure the last point is added
-    if(ret.size() == 0 || ret.top() != last_pts.back())
+    if(ret.size() == 0 || ret.top() != last_pt)
     {
-        ret.push(last_pts.back());
+        ret.push(last_pt);
     }
 
     //flip the path again (cuz this stack class sucks)
@@ -403,10 +399,19 @@ const std::deque<pdd>& getToVisit()
 
 stack<pdd> toVisitBfs(pdd current, pair<pdd, pdd> minMax)
 {
+    if(!isTraversableOpt(current))
+    {
+        return stack<pdd>();
+    }
+
     stack<pdd> res = pointBfs(current, toVisit.back(), minMax, false);
     for(auto it = toVisit.rbegin(); it != toVisit.rend() && res.empty(); it++)
     {
         res = pointBfs(current, *it, minMax, false);
+        if(res.empty())
+        {
+            removeToVisit(*it);
+        }
     }
     return res;
 }
