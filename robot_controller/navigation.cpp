@@ -555,7 +555,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             ret = pointTo(currentPoint, rotation + angle);
             farRet = pointTo(currentPoint, rotation + angle, 0.03);
             ret = r2d(ret);
-            if (canSee(currentPoint, ret, getLidarPoints())
+            if (canSee(currentPoint, ret)
                 && isTraversableOpt(ret))
             {
                 printPoint(ret);
@@ -564,8 +564,8 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 i = 8;
             }
             farRet = r2d(farRet);
-            if (canSee(currentPoint, farRet, getLidarPoints())
-                && isTraversableOpt(farRet) && isTraversableOpt(ret))
+            if (canSee(currentPoint, farRet)
+                && isTraversableOpt(farRet))
             {
                 printPoint(farRet);
                 nextPoint = farRet;
