@@ -39,6 +39,52 @@ std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
 std::vector<pdd> vecCameraPoints;
 
+pdd lidarToPoint(GPS* gps, double dist, double absAngle)
+{
+    double pos[3];
+    double pos_rounded[3];
+    memcpy(pos, gps->getValues(), 3 * sizeof(double));
+    pos[2] *= -1;
+    //force single floor for now
+    pos[1] = 0;
+    pos_rounded[0] = floor_to(pos[0], region_size);
+    pos_rounded[1] = floor_to(pos[1], region_size);
+    pos_rounded[2] = floor_to(pos[2], region_size);
+    double x = dist*sin(absAngle) + (pos[0] - pos_rounded[0]);
+    double y = dist*cos(absAngle) + (pos[2] - pos_rounded[2]);
+
+    while(x < 0)
+    {
+        x += region_size;
+        pos_rounded[0] -= region_size;
+    }
+
+    while(y < 0)
+    {
+        y += region_size;
+        pos_rounded[2] -= region_size;
+    }
+
+    while(y >= region_size)
+    {
+        y -= region_size;
+        pos_rounded[2] += region_size;
+    }
+
+    while(x >= region_size)
+    {
+        x -= region_size;
+        pos_rounded[0] += region_size;
+    }
+
+    x += pos_rounded[0];
+    y += pos_rounded[2];
+
+    x = floor_to(x);
+    y = floor_to(y);
+    return pdd(x, y);
+}
+
 //theta is in radians
 void update_regions_map(GPS *gps, const float *lidar_image, float theta)
 {
@@ -61,40 +107,8 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         pos_rounded[0] = floor_to(pos[0], region_size);
         pos_rounded[1] = floor_to(pos[1], region_size);
         pos_rounded[2] = floor_to(pos[2], region_size);
-        double x = dist*sin(angle - theta) + (pos[0] - pos_rounded[0]);
-        double y = dist*cos(angle - theta) + (pos[2] - pos_rounded[2]);
 
-        while(x < 0)
-        {
-            x += region_size;
-            pos_rounded[0] -= region_size;
-        }
-
-        while(y < 0)
-        {
-            y += region_size;
-            pos_rounded[2] -= region_size;
-        }
-
-        while(y >= region_size)
-        {
-            y -= region_size;
-            pos_rounded[2] += region_size;
-        }
-
-        while(x >= region_size)
-        {
-            x -= region_size;
-            pos_rounded[0] += region_size;
-        }
-
-        x += pos_rounded[0];
-        y += pos_rounded[2];
-
-        x = floor_to(x);
-        y = floor_to(y);
-
-        const auto coord2 = std::make_pair(x, y);
+        const pdd coord2 = lidarToPoint(gps, dist, angle - theta);
         const auto rcoord = r2d(std::make_pair(pos_rounded[0], pos_rounded[2]));
 
         //std::cout << "pts: " << (std::string)GPS_position(pos_rounded) << ": " << pointToString(coord2) << std::endl;
@@ -170,42 +184,8 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
         pos_rounded[0] = floor_to(pos[0], region_size);
         pos_rounded[1] = floor_to(pos[1], region_size);
         pos_rounded[2] = floor_to(pos[2], region_size);
-        double x = dist * sin(angle - theta) + (pos[0] - pos_rounded[0]);
-        double y = dist * cos(angle - theta) + (pos[2] - pos_rounded[2]);
 
-        while (x < 0)
-        {
-            x += region_size;
-            pos_rounded[0] -= region_size;
-        }
-
-        while (y < 0)
-        {
-            y += region_size;
-            pos_rounded[2] -= region_size;
-        }
-
-        while (y >= region_size)
-        {
-            y -= region_size;
-            pos_rounded[2] += region_size;
-        }
-
-        while (x >= region_size)
-        {
-            x -= region_size;
-            pos_rounded[0] += region_size;
-        }
-
-        x += pos_rounded[0];
-        y += pos_rounded[2];
-
-        x = floor_to(x);
-        y = floor_to(y);
-
-        //cout << "x: " << x << " y: " << y << endl;
-        const auto coord2 = std::make_pair(x, y);
-        //ensure rounded values
+        const pdd coord2 = lidarToPoint(gps, dist, angle - theta);
         const auto rcoord = r2d(std::make_pair(pos_rounded[0], pos_rounded[2]));
 
         if (regions[rcoord].points.count(coord2) == 0 || !regions[rcoord].points[coord2].camera)

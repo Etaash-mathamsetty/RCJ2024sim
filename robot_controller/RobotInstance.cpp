@@ -123,6 +123,16 @@ double signsqrt(double x)
     return x < 0 ? -sqrt(-x) : sqrt(x);
 }
 
+void RobotInstance::turn360(double speed)
+{
+    double yaw = m_imu->getRollPitchYaw()[2];
+    for(int i = 0; i < 4; i++, yaw += M_PI / 2);
+    {
+        yaw = clampAngle(yaw);
+        turnTo(speed, yaw);
+    }
+}
+
 // turns shortest way to the direction
 void RobotInstance::turnTo(double speed, double target_angle)
 {
@@ -352,6 +362,8 @@ int RobotInstance::countContours(cv::Mat frame)
     return getContours(frame).size();
 }
 
+char message[9];
+
 bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const double* position) //"l" or "r"
 {
     const int rows = roi.rows;
@@ -370,7 +382,6 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     int bottom = countContours(bottomRoi);
     int xPos = (int)(position[0] * 100);
     int zPos = (int)(position[2] * 100);
-    char message[9];
     memcpy(&message[0], &xPos, 4);
     memcpy(&message[4], &zPos, 4);
     if (top == 2 && mid == 2 && bottom == 1)
@@ -392,7 +403,6 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     std::cout << message[8] << " found on side " << side << std::endl;
     stopMotors();
     delay(1);
-    m_emitter->send(message, sizeof(message));
     return true;
 }
 
@@ -415,11 +425,34 @@ void RobotInstance::lookForLetter()
             cv::Mat roi(frameL, boundRect);
             addTexture("Left ROI", roi, SDL_PIXELFORMAT_RGB888);
             double rectCenterX = boundRect.x + boundRect.width / 2; //in columns
-            double thetaFromStraight;
             if (boundRect.width > 20 && boundRect.height > 20 && boundRect.x != 0 && boundRect.width + boundRect.x < frameL.cols)
             {
                 if (determineLetter(roi, "l", m_gps->getValues()))
                 {
+                    double offset = rectCenterX - frameL.cols / 2;
+                    double percent = offset / (frameL.cols / 2);
+                    double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
+                    double thetaFromRobot = -M_PI / 2 + thetaFromCenter;
+                    if (thetaFromRobot < 0)
+                    {
+                        thetaFromRobot += 2 * M_PI;
+                    }
+                    int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
+                    pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2]));
+                    if (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
+                    {
+                        m_emitter->send(message, sizeof(message));
+                        isFollowingVictim = false;
+                    }
+                    else
+                    {
+                        if (!isFollowingVictim)
+                        {
+                            moveToPoint(this, nearestTraversable(point, getRawGPSPosition(), getMinMax(getLidarPoints())));
+                            turn360(1.5);
+                            isFollowingVictim = true;
+                        }
+                    }
                     return;
                 }
             }
@@ -432,10 +465,36 @@ void RobotInstance::lookForLetter()
             boundRect = boundingRect(contoursR[i]);
             cv::Mat roi(frameR, boundRect);
             addTexture("Right ROI", roi, SDL_PIXELFORMAT_RGB888);
+            double rectCenterX = boundRect.x + boundRect.width / 2; //in columns
             if (boundRect.width > 20 && boundRect.height > 20 && boundRect.x != 0 && boundRect.width + boundRect.x < frameR.cols)
             {
                 if (determineLetter(roi, "r", m_gps->getValues()))
                 {
+                    double offset = rectCenterX - frameR.cols / 2;
+                    double percent = offset / (frameR.cols / 2);
+                    double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
+                    double thetaFromRobot = M_PI / 2 + thetaFromCenter;
+                    if (thetaFromRobot < 0)
+                    {
+                        thetaFromRobot += 2 * M_PI;
+                    }
+                    int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
+                    pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2]));
+                    // std::cout << getCurrentGPSPosition().first <<" " << getCurrentGPSPosition().second << " " << point.first << " " << point.second << std::endl;
+                    if (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
+                    {
+                        m_emitter->send(message, sizeof(message));
+                        isFollowingVictim = false;
+                    }
+                    else
+                    {
+                        if (!isFollowingVictim)
+                        {
+                            moveToPoint(this, nearestTraversable(point, getRawGPSPosition(), getMinMax(getLidarPoints())));
+                            turn360(1.5);
+                            isFollowingVictim = true;
+                        }
+                    }
                     return;
                 }
             }
@@ -463,20 +522,25 @@ pdd RobotInstance::calcNextPos()
     return ret;
 }
 
-void RobotInstance::moveToNextPos()
+void RobotInstance::moveToPos(pdd pos)
 {
-    pdd nextPos = getTargetPos();
     pdd curPos = getRawGPSPosition();
-    double dist = getDist(curPos, nextPos) * 0.95; //prevent overshooting
-    double angle = -std::atan2(nextPos.first - curPos.first, nextPos.second - curPos.second);
+    double dist = getDist(curPos, pos) * 0.95; //prevent overshooting
+    double angle = -std::atan2(pos.first - curPos.first, pos.second - curPos.second);
 
     turnTo(4, angle);
-    forwardTicks(5, dist, nextPos);
+    forwardTicks(5, dist, pos);
     if (!isFollowingBfs() && dist > 0.012)
     {
         double rounded = clampAngle(std::round(angle / (M_PI / 2)) * M_PI / 2);
         turnTo(4, rounded);
     }
+}
+
+void RobotInstance::moveToNextPos()
+{
+    moveToPos(getTargetPos());
+    
 }
 
 void RobotInstance::updateVisited()
@@ -502,7 +566,7 @@ void RobotInstance::updateVisited()
 //                }
                 bool visited = isVisited(point);
                 bool traversable = isTraversableOpt(point);
-                if(!visited && traversable && canSee(cur, point, getLidarPoints()))
+                if(!visited && traversable && canSee(cur, point))
                 {
                     if(getDist(cur, point) <= 0.05)
                     {
