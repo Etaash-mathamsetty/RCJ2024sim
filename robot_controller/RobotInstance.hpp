@@ -76,6 +76,7 @@ public:
     void endSimulation()
     {
         m_emitter->send((const void*)"E", 1);
+        step();
     }
 
     bool forwardTicks(double vel, double ticks, pdd target);
@@ -158,6 +159,8 @@ public:
     cv::ml::KNearest* getKNN() { return m_knn; }
 
     double getYaw() { return -m_imu->getRollPitchYaw()[2]; }
+
+    const pdd& getStartPos() { return m_startPos; }
  
 private:
 
@@ -223,6 +226,7 @@ private:
 
     pdd m_targetPos;
     pdd m_lastPos;
+    pdd m_startPos;
 
     bool m_disabledGUI;
 

@@ -95,20 +95,22 @@ RobotInstance::RobotInstance()
         //navigation update
         this->update_lidar_cloud();
         this->updateVisited();
+
+        if(getToVisit().size() == 0 && this->getCurrentGPSPosition() == this->m_startPos)
+        {
+            this->m_isFinished = true;
+        }
     });
 
     m_knn = cv::ml::KNearest::create();
-
-    if(std::filesystem::exists("knn.yml"))
-    {
-        m_knn->load("knn.yml");
-    }
 
     //m_knn->setDefaultK(3);
 
     m_isFinished = false;
     m_disabledGUI = false;
     m_stopMovement = false;
+
+    m_startPos = this->getCurrentGPSPosition();
 }
 
 RobotInstance::~RobotInstance()

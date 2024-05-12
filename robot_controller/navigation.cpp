@@ -162,23 +162,34 @@ bool midpoint_check(pdd a, pdd b)
 {
     a = r2d(a);
     b = r2d(b);
-    pdd mid = r2d(midpoint(a, b));
 
     const double trav_r = 0.048;
 
-    if(!isTraversableOpt(mid, trav_r))
-    {
-        return false;
-    }
+
+    
 
     if(!isTraversableOpt(a, trav_r) || !isTraversableOpt(b, trav_r))
     {
         return false;
     }
 
-    if(a == b || mid == a || mid == b)
+    pdd mid = midpoint(a, b);
+
+    if(!isTraversableOpt(mid, trav_r))
     {
-        return true;
+        return false;
+    }
+
+    mid = r2d(mid);
+
+    if(mid == a)
+    {
+        return isTraversableOpt(a, trav_r);
+    }
+
+    if(mid == b)
+    {
+        return isTraversableOpt(b, trav_r);
     }
 
     return midpoint_check(a, mid) && midpoint_check(mid, b);
@@ -348,6 +359,13 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
         route = optimizeRoute(route);
         return route;
     }
+
+    if(getToVisit().size() == 0)
+    {
+        removeVisited(RobotInstance::getInstance()->getStartPos());
+        addToVisit(RobotInstance::getInstance()->getStartPos());
+    }
+
     cout << "Route not found" << endl;
     return stack<pdd>();
 }
@@ -520,13 +538,13 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             double angle;
             switch(i)
             {
-                case 4: angle = M_PI / 4; ret = pointTo(currentPoint, rotation + M_PI / 4); farRet = pointTo(currentPoint, rotation + M_PI / 4, 0.07); break;
-                case 1: angle = M_PI / 2; ret = pointTo(currentPoint, rotation + M_PI / 2); farRet = pointTo(currentPoint, rotation + M_PI / 2, 0.07); break;
-                case 5: angle = M_PI * 3 / 4; ret = pointTo(currentPoint, rotation + M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation + M_PI * 3 / 4, 0.07); break;
-                case 7: angle = M_PI; ret = pointTo(currentPoint, rotation + M_PI); farRet = pointTo(currentPoint, rotation + M_PI, 0.07); break;
-                case 6: angle = -M_PI * 3 / 4; ret = pointTo(currentPoint, rotation - M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation - M_PI * 3 / 4, 0.07); break;
-                case 2: angle = -M_PI / 2; ret = pointTo(currentPoint, rotation - M_PI / 2); farRet = pointTo(currentPoint, rotation - M_PI / 2, 0.07); break;
-                case 3: angle = -M_PI / 4; ret = pointTo(currentPoint, rotation - M_PI / 4); farRet = pointTo(currentPoint, rotation - M_PI / 4, 0.07); break;
+                case 4: angle = M_PI / 4; break;
+                case 1: angle = M_PI / 2; break;
+                case 5: angle = M_PI * 3 / 4; break;
+                case 7: angle = M_PI; break;
+                case 6: angle = -M_PI * 3 / 4; break;
+                case 2: angle = -M_PI / 2; break;
+                case 3: angle = -M_PI / 4; break;
                 case 0:
                 default: angle = 0; break;
             }
@@ -534,8 +552,10 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             {
                 continue;
             }
+            ret = pointTo(currentPoint, rotation + angle);
+            farRet = pointTo(currentPoint, rotation + angle, 0.03);
             ret = r2d(ret);
-            if (canSee(currentPoint, ret)
+            if (canSee(currentPoint, ret, getLidarPoints())
                 && isTraversableOpt(ret))
             {
                 printPoint(ret);
@@ -544,7 +564,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 i = 8;
             }
             farRet = r2d(farRet);
-            if (canSee(currentPoint, farRet)
+            if (canSee(currentPoint, farRet, getLidarPoints())
                 && isTraversableOpt(farRet) && isTraversableOpt(ret))
             {
                 printPoint(farRet);
