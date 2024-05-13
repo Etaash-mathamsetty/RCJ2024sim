@@ -221,9 +221,15 @@ void addLidarPoint(pdd point)
     }
 }
 
-void addVictim(pdd point)
+bool addVictim(pdd point)
 {
-    victims.insert(r2d(point));
+    point = r2d(point);
+    if(victims.find(point) != victims.end())
+    {
+        return false;
+    }
+    victims.insert(point);
+    return true;
 }
 
 ImPlotPoint getPointFromMap(int idx, void *_map)

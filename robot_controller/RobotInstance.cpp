@@ -425,7 +425,6 @@ void RobotInstance::lookForLetter()
             {
                 if (determineLetter(roi, "l", m_gps->getValues()))
                 {
-                    stopMotors();
                     double offset = rectCenterX - frameL.cols / 2;
                     double percent = offset / (frameL.cols / 2);
                     double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
@@ -436,19 +435,21 @@ void RobotInstance::lookForLetter()
                     }
                     int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                     pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2]));
-                    addVictim(point);
-                    if (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE || reporting)
+                    bool ret = addVictim(point);
+                    if (ret && (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE || reporting))
                     {
+                        stopMotors();
                         std::cout << "emitting" << std::endl;
                         delay(1);
                         m_emitter->send(message, sizeof(message));
                         isFollowingVictim = false;
                         reporting = false;
                     }
-                    else
+                    else if(ret)
                     {
                         if (!isFollowingVictim)
                         {
+                            stopMotors();
                             pdd nearest = nearestTraversable(point, getRawGPSPosition(), getMinMax(getLidarPoints()));
                             isFollowingVictim = true;
                             moveToPoint(this, nearest);
@@ -475,7 +476,6 @@ void RobotInstance::lookForLetter()
             {
                 if (determineLetter(roi, "r", m_gps->getValues()))
                 {
-                    stopMotors();
                     double offset = rectCenterX - frameR.cols / 2;
                     double percent = offset / (frameR.cols / 2);
                     double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
@@ -486,20 +486,22 @@ void RobotInstance::lookForLetter()
                     }
                     int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                     pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2]));
-                    addVictim(point);
+                    bool ret = addVictim(point);
                     // std::cout << getCurrentGPSPosition().first <<" " << getCurrentGPSPosition().second << " " << point.first << " " << point.second << std::endl;
-                    if (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE || reporting)
+                    if (ret && (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE || reporting))
                     {
+                        stopMotors();
                         std::cout << "emitting" << std::endl;
                         delay(1);
                         m_emitter->send(message, sizeof(message));
                         isFollowingVictim = false;
                         reporting = false;
                     }
-                    else
+                    else if(ret)
                     {
                         if (!isFollowingVictim)
                         {
+                            stopMotors();
                             pdd nearest = nearestTraversable(point, getRawGPSPosition(), getMinMax(getLidarPoints()));
                             isFollowingVictim = true;
                             moveToPoint(this, nearest);
