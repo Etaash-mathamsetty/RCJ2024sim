@@ -84,6 +84,10 @@ std::pair<pdd, pdd> lidarToPoint(GPS* gps, double dist, double absAngle)
     x = floor_to(x);
     y = floor_to(y);
 
+    //addition causes rounding errors
+    pos_rounded[0] = r2d(pos_rounded[0]);
+    pos_rounded[2] = r2d(pos_rounded[2]);
+
     return std::make_pair(pdd(x, y), std::make_pair(pos_rounded[0], pos_rounded[2]));
 }
 
@@ -104,9 +108,6 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         const auto coord = lidarToPoint(gps, dist, angle - theta);
         const pdd coord2 = coord.first;
         const pdd rcoord = coord.second;
-
-        printPoint(coord2);
-        printPoint(rcoord);
 
         //std::cout << "pts: " << (std::string)GPS_position(pos_rounded) << ": " << pointToString(coord2) << std::endl;
 

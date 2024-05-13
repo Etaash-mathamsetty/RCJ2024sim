@@ -33,7 +33,7 @@ double getDist2(const pdd& pt1, const pdd& pt2)
 
 double getDist(const pdd&  pt1, const pdd& pt2)
 {
-    return sqrt(getDist2(pt1, pt2));
+    return hypot(pt2.f - pt1.f, pt2.s - pt1.s);
 }
 
 bool compPts(pdd pt1, pdd pt2, double thresh)
