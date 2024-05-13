@@ -131,6 +131,7 @@ double signsqrt(double x)
 // turns shortest way to the direction
 void RobotInstance::turnTo(double speed, double target_angle)
 {
+    target_angle = inputModulus(target_angle, -M_PI, M_PI);
     double current = m_imu->getRollPitchYaw()[2];
 
     //std::cout << "current: " << current << std::endl;

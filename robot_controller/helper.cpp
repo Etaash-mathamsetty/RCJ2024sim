@@ -25,6 +25,21 @@ pdd r2d(pdd point)
     return pdd(r2d(point.first), r2d(point.second));
 }
 
+double inputModulus(double input, double minimumInput, double maximumInput)
+{
+    double modulus = maximumInput - minimumInput;
+
+    // Wrap input if it's above the maximum input
+    int numMax = (int) ((input - minimumInput) / modulus);
+    input -= numMax * modulus;
+
+    // Wrap input if it's below the minimum input
+    int numMin = (int) ((input - maximumInput) / modulus);
+    input -= numMin * modulus;
+
+    return input;
+}
+
 void printPoint(const pdd& point)
 {
     std::cout << "(" << point.first << ", " << point.second << ")" << std::endl;
