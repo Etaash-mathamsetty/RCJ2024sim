@@ -252,6 +252,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     double startTime = m_robot->getTime();
     pdd start = getRawGPSPosition();
     double traveled = 0;
+    double angle = std::atan2(target.first - start.first, target.second - start.second);
     while(traveled <= ticks && step() != -1)
     {
         detectVictims();
@@ -265,7 +266,13 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         }
         else
         {
-            forward(vel);
+            double cur_angle = getYaw();
+            double err = angle - cur_angle;
+            if(err > M_PI)
+                err -= 2 * M_PI;
+            else if(err < -M_PI)
+                err += 2 * M_PI;
+            forward(vel + err * turn_kp, vel - err * turn_kp);
         }
         pdd cur = getRawGPSPosition();
         if (m_robot->getTime() > startTime + 5)
@@ -273,16 +280,12 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
             break;
         }
         traveled = hypot(cur.first - start.first, cur.second - start.second);
+        angle = std::atan2(target.first - cur.first, target.second - cur.second);
 
-        if(!isTraversableOpt(pointTo(cur, this->getYaw(), 0.03), 0.015))
+        if (!isTraversableOpt(target))
         {
-            std::cout << "Maybe let's not run into a wall :)" << std::endl;
-            //move back to traversable area
-            while(step() != -1 && !isTraversableOpt(pointTo(cur, this->getYaw(), 0.03), 0.015))
-            {
-                forward(-vel * 0.5);
-                cur = getRawGPSPosition();
-            }
+            std::cout << "path to target is not traversable!" << std::endl;
+            clearBfsResult();
             return false;
         }
     }
@@ -317,7 +320,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 void RobotInstance::delay(double seconds)
 {
     double current = m_robot->getTime();
-    while(m_robot->getTime() < current + seconds && m_robot->step(m_timestep) != -1);
+    while(m_robot->step(m_timestep) != -1 && m_robot->getTime() < current + seconds);
 }
 
 std::vector<std::vector<cv::Point>> RobotInstance::getContours(std::string name, cv::Mat frame)

@@ -99,7 +99,7 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points)
 {
     for (const pdd& pt : points)
     {
-        if (getDist(pos, pt) < 0.04)
+        if (getDist(pos, pt) < 0.044)
             return false;
     }
     return true;
@@ -112,7 +112,7 @@ bool isTraversableOpt(const pdd& pos, double rad)
         if(r)
         {
             for (const auto &pair: r->points) {
-                if (getDist(pos, pair.first) < rad && pair.second.wall)
+                if (getDist(pos, pair.first) <= rad && pair.second.wall)
                     return false;
             }
         }
@@ -123,7 +123,7 @@ bool isTraversableOpt(const pdd& pos, double rad)
 
 bool isTraversableOpt(const pdd& pos)
 {
-    return isTraversableOpt(pos, 0.043);
+    return isTraversableOpt(pos, 0.044);
 }
 
 double minDist(pdd a, pdd b, pdd p)
@@ -160,36 +160,23 @@ bool canSee(pdd cur, pdd tar)
 
 bool midpoint_check(pdd a, pdd b)
 {
-    a = r2d(a);
-    b = r2d(b);
+    std::cout << "midpoint check: " << pointToString(a) << " " << pointToString(b) << std::endl;
 
-    const double trav_r = 0.048;
-
-
-    
-
-    if(!isTraversableOpt(a, trav_r) || !isTraversableOpt(b, trav_r))
+    if(!isTraversableOpt(a) || !isTraversableOpt(b))
     {
         return false;
     }
 
     pdd mid = midpoint(a, b);
 
-    if(!isTraversableOpt(mid, trav_r))
+    if(!isTraversableOpt(mid))
     {
         return false;
     }
 
-    mid = r2d(mid);
-
-    if(mid == a)
+    if(r2d(a) == r2d(b) || r2d(mid) == r2d(a) || r2d(mid) == r2d(b))
     {
-        return isTraversableOpt(a, trav_r);
-    }
-
-    if(mid == b)
-    {
-        return isTraversableOpt(b, trav_r);
+        return true;
     }
 
     return midpoint_check(a, mid) && midpoint_check(mid, b);
@@ -205,33 +192,35 @@ stack<pdd> optimizeRoute(stack<pdd> route)
         return route;
     }
     stack<pdd> ret;
-    pdd last_pt = route.top();
 
     while (!route.empty())
     {
         pdd cur = r2d(route.top());
         route.pop();
-        if (ret.size() > 0 && midpoint_check(ret.top(), cur))
-        {
-            last_pt = cur;
-            continue;
-        }
         ret.push(cur);
-        last_pt = cur;
     }
 
-    //ensure the last point is added
-    if(ret.size() == 0 || ret.top() != last_pt)
-    {
-        ret.push(last_pt);
-    }
+    pdd last_pt = ret.top();
 
     //flip the path again (cuz this stack class sucks)
     stack<pdd> rev_ret;
     while (!ret.empty())
     {
-        rev_ret.push(ret.top());
+        pdd cur = ret.top();
         ret.pop();
+        if (rev_ret.size() > 0 && midpoint_check(rev_ret.top(), cur))
+        {
+            last_pt = cur;
+            continue;
+        }
+        rev_ret.push(cur);
+        last_pt = cur;
+    }
+
+    //ensure the last point is added
+    if(rev_ret.size() == 0 || rev_ret.top() != last_pt)
+    {
+        rev_ret.push(last_pt);
     }
 
     return rev_ret;
@@ -354,8 +343,11 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
             route.push(pindex);
             pindex = r2d(parent[pindex]);
         }
-        cout << "!!!!! successful bfs route length " << route.size() << endl;
+        cout << "!!!!! successful bfs route length: " << route.size() << endl;
+        route.push(cur);
         route = optimizeRoute(route);
+        route.pop();
+        cout << "!!!!! optimized bfs route length: " << route.size() << endl;
         return route;
     }
 
@@ -512,11 +504,17 @@ void moveToPoint(RobotInstance *rb, pdd point)
     while(!bfsResult.empty())
     {
         pdd next = bfsResult.top();
+        if(!midpoint_check(point, next))
+        {
+            clearBfsResult();
+            return;
+        }
         rb->moveToPos(next);
         if (compPts(rb->getRawGPSPosition(), next))
         {
             bfsResult.pop();
         }
+        point = next;
     }
 }
 
@@ -552,25 +550,18 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             {
                 continue;
             }
-            ret = pointTo(currentPoint, rotation + angle);
-            farRet = pointTo(currentPoint, rotation + angle, 0.03);
-            ret = r2d(ret);
-            if (canSee(currentPoint, ret)
-                && isTraversableOpt(ret))
+            for(double l = 0.05; l >= 0.01; l-=0.01)
             {
-                printPoint(ret);
-                nextPoint = ret;
-                cout << "turning to " << i << endl;
-                i = 8;
-            }
-            farRet = r2d(farRet);
-            if (canSee(currentPoint, farRet)
-                && isTraversableOpt(farRet))
-            {
-                printPoint(farRet);
-                nextPoint = farRet;
-                cout << "turning to " << i << endl;
-                i = 8;
+                ret = pointTo(currentPoint, rotation + angle, l);
+                ret = r2d(ret);
+                if (isTraversableOpt(ret))
+                {
+                    printPoint(ret);
+                    nextPoint = ret;
+                    cout << "turning to " << i << endl;
+                    i = 8;
+                    break;
+                }
             }
         }
         if(nextPoint != currentPoint)
@@ -587,7 +578,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     if (!bfsResult.empty())
     {
         pdd nextPoint = r2d(bfsResult.top());
-        if(currentPoint == nextPoint)
+        if(currentPoint == nextPoint && midpoint_check(currentPoint, nextPoint) && isTraversableOpt(nextPoint))
         {
             bfsResult.pop();
             if(bfsResult.empty())
@@ -597,7 +588,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             }
             nextPoint = r2d(bfsResult.top());
         }
-        else if(!isTraversableOpt(nextPoint) && !toVisit.empty())
+        else if((!isTraversableOpt(nextPoint) || !midpoint_check(currentPoint, nextPoint)) && !toVisit.empty())
         {
             bfsResult = toVisitBfs(currentPoint, getMinMax(getLidarPoints()));
             if(!bfsResult.empty())
@@ -693,7 +684,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 farRet = r2d(farRet);
                 if ((!isVisited(farRet)
                             && canSee(currentPoint, farRet))
-                    && isTraversableOpt(farRet) && isTraversableOpt(ret))
+                    && midpoint_check(currentPoint, farRet))
                 {
                     printPoint(farRet);
                     nextPoint = farRet;
