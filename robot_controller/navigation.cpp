@@ -251,14 +251,13 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
     while (!q.empty())
     {
         pdd node = r2d(q.front());
-        printPoint(node);
         q.pop();
-        if (visited.count(node) > 0 || !isTraversableOpt(node) || !canSee(cur, node) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
+        if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
             continue;
         }
         visited.insert(node);
-        if (isTraversableOpt(node))
+        if (isTraversableOpt(node) && canSee(cur, node))
         {
             cout << "nearest traversable found" << endl;
             return node;
@@ -277,7 +276,7 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
             };
             for (const pdd& adjacent : adjacentNodes)
             {
-                if (!visited.count(adjacent) && isTraversableOpt(adjacent))
+                if (!visited.count(adjacent))
                 {
                     q.push(adjacent);
                     parent[adjacent] = node;
@@ -355,7 +354,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
             route.push(pindex);
             pindex = r2d(parent[pindex]);
         }
-        cout << "!!!!! successful bfs" << endl;
+        cout << "!!!!! successful bfs route length " << route.size() << endl;
         route = optimizeRoute(route);
         return route;
     }
@@ -509,14 +508,15 @@ const stack<pdd>& getBfsPath()
 void moveToPoint(RobotInstance *rb, pdd point)
 {
     point = r2d(point);
-    printPoint(rb->getCurrentGPSPosition());
-    printPoint(point);
-    stack<pdd> path = pointBfs(rb->getCurrentGPSPosition(), point, getMinMax(getLidarPoints()), false);
-    while(!path.empty())
+    bfsResult = pointBfs(rb->getCurrentGPSPosition(), point, getMinMax(getLidarPoints()), false);
+    while(!bfsResult.empty())
     {
-        pdd next = path.top();
-        path.pop();
+        pdd next = bfsResult.top();
         rb->moveToPos(next);
+        if (compPts(rb->getRawGPSPosition(), next))
+        {
+            bfsResult.pop();
+        }
     }
 }
 

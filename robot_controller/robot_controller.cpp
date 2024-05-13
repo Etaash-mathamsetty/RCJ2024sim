@@ -276,11 +276,10 @@ int main(int argc, char **argv) {
         rb->moveToNextPos();
     }
 
-    if(!rb->getDisableGUI())
-        delete_gui(window, renderer);
-
     // Enter here exit cleanup code.
     rb->endSimulation();
+    if(!rb->getDisableGUI())
+        delete_gui(window, renderer);
     rb->destroyInstance();
     return 0;
 }

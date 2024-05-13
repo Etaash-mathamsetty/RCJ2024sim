@@ -38,6 +38,7 @@ inline double ceil_to(double value, const double precision = 0.01)
 std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
 std::vector<pdd> vecCameraPoints;
+std::set<pdd> victims;
 
 pdd lidarToPoint(GPS* gps, double dist, double absAngle)
 {
@@ -82,7 +83,7 @@ pdd lidarToPoint(GPS* gps, double dist, double absAngle)
 
     x = floor_to(x);
     y = floor_to(y);
-    return pdd(x, y);
+    return r2d(pdd(x, y));
 }
 
 //theta is in radians
@@ -220,6 +221,11 @@ void addLidarPoint(pdd point)
     }
 }
 
+void addVictim(pdd point)
+{
+    victims.insert(r2d(point));
+}
+
 ImPlotPoint getPointFromMap(int idx, void *_map)
 {
     return {vecLidarPoints[idx].first, vecLidarPoints[idx].second};
@@ -242,6 +248,13 @@ ImPlotPoint getVisitedPlotPt(int idx, void *param)
     return {it->first, it->second};
 }
 
+ImPlotPoint getVictimPoint(int idx, void *param)
+{
+    auto it = victims.begin();
+    std::advance(it, idx);
+    return {it->first, it->second};
+}
+
 size_t getCount()
 {
     return vecLidarPoints.size();
@@ -250,6 +263,11 @@ size_t getCount()
 size_t getCameraCount()
 {
     return vecCameraPoints.size();
+}
+
+size_t getVictimCount()
+{
+    return victims.size();
 }
 
 void clearPointCloud()
@@ -293,6 +311,10 @@ void plotPoints(RobotInstance *rb, int w, int h)
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 3);
             ImPlot::PlotScatterG("To Visit", getToVisitPoint, nullptr, getToVisit().size(), ImPlotItemFlags_NoFit);
+        }
+        {
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Diamond, 4);
+            ImPlot::PlotScatterG("Victims", getVictimPoint, nullptr, getVictimCount(), ImPlotItemFlags_NoFit);
         }
         for(const auto& r : regions)
         {

@@ -177,17 +177,15 @@ private:
         setPosition(pos, pos);
     }
 
-    void turn360(double speed);
     void turnTo(double speed, double target_angle);
 
     void delay(double seconds);
 
     bool determineLetter(const cv::Mat& roi, std::string side, const double* position);
 
-    bool isFollowingVictim = false;
+    bool isFollowingVictim;
+    bool reporting;
     void lookForLetter();
-
-    std::vector<pdd> victimTargets;
 
     RobotInstance();
 
