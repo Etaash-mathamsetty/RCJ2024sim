@@ -211,7 +211,7 @@ stack<pdd> optimizeRoute(stack<pdd> route)
             last_pt = cur;
             continue;
         }
-        rev_ret.push(cur);
+        rev_ret.push(last_pt);
         last_pt = cur;
     }
 
