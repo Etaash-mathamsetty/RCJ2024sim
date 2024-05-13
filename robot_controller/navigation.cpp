@@ -112,7 +112,7 @@ bool isTraversableOpt(const pdd& pos, double rad)
         if(r)
         {
             for (const auto &pair: r->points) {
-                if (getDist(pos, pair.first) <= rad && pair.second.wall)
+                if (pair.second.wall && getDist(pos, pair.first) <= rad)
                     return false;
             }
         }

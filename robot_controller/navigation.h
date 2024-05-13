@@ -15,6 +15,7 @@ bool isTraversable(const pdd& pos, const std::vector<pdd>& points);
 bool isTraversableOpt(const pdd& pos);
 bool isTraversableOpt(const pdd& pos, double rad);
 bool canSee(pdd cur, pdd tar);
+bool compPts(pdd a, pdd b);
 pdd pointTo(pdd point, double dir);
 pdd pointTo(pdd point, double dir, double dist);
 bool midpoint_check(pdd a, pdd b);

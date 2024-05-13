@@ -434,9 +434,9 @@ void RobotInstance::lookForLetter()
                         thetaFromRobot += 2 * M_PI;
                     }
                     int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
-                    pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2]));
+                    pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
                     bool ret = addVictim(point);
-                    if (ret && (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE || reporting))
+                    if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) || reporting)
                     {
                         stopMotors();
                         std::cout << "emitting" << std::endl;
@@ -445,18 +445,20 @@ void RobotInstance::lookForLetter()
                         isFollowingVictim = false;
                         reporting = false;
                     }
-                    else if(ret)
+                    else if(ret && !reporting)
                     {
                         if (!isFollowingVictim)
                         {
+                            std::cout << "following victim" << std::endl;
                             stopMotors();
-                            pdd nearest = nearestTraversable(point, getRawGPSPosition(), getMinMax(getLidarPoints()));
+                            pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
                             isFollowingVictim = true;
                             moveToPoint(this, nearest);
                             pdd cur = getRawGPSPosition();
                             turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
                             isFollowingVictim = false;
                             reporting = true;
+                            std::cout << "done following victim" << std::endl;
                         }
                     }
                     return;
@@ -485,10 +487,10 @@ void RobotInstance::lookForLetter()
                         thetaFromRobot += 2 * M_PI;
                     }
                     int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
-                    pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2]));
+                    pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
                     bool ret = addVictim(point);
                     // std::cout << getCurrentGPSPosition().first <<" " << getCurrentGPSPosition().second << " " << point.first << " " << point.second << std::endl;
-                    if (ret && (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE || reporting))
+                    if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) || reporting)
                     {
                         stopMotors();
                         std::cout << "emitting" << std::endl;
@@ -497,18 +499,20 @@ void RobotInstance::lookForLetter()
                         isFollowingVictim = false;
                         reporting = false;
                     }
-                    else if(ret)
+                    else if(ret && !reporting)
                     {
                         if (!isFollowingVictim)
                         {
+                            std::cout << "following victim" << std::endl;
                             stopMotors();
-                            pdd nearest = nearestTraversable(point, getRawGPSPosition(), getMinMax(getLidarPoints()));
+                            pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
                             isFollowingVictim = true;
                             moveToPoint(this, nearest);
                             pdd cur = getRawGPSPosition();
                             turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
                             isFollowingVictim = false;
                             reporting = true;
+                            std::cout << "done following victim" << std::endl;
                         }
                     }
                     return;
@@ -545,16 +549,23 @@ pdd RobotInstance::calcNextPos()
 void RobotInstance::moveToPos(pdd pos)
 {
     pdd curPos = getRawGPSPosition();
+
+    if(compPts(curPos, pos))
+    {
+        std::cout << "already at position!" << std::endl;
+        return;
+    }
+
     double dist = getDist(curPos, pos) * 0.95; //prevent overshooting
     double angle = -std::atan2(pos.first - curPos.first, pos.second - curPos.second);
     
     turnTo(4, angle);
     forwardTicks(5, dist, pos);
-    if (!isFollowingBfs() && dist > 0.012)
-    {
-        double rounded = clampAngle(std::round(angle / (M_PI / 2)) * M_PI / 2);
-        turnTo(4, rounded);
-    }
+    // if (!isFollowingBfs() && dist > 0.012)
+    // {
+    //     double rounded = clampAngle(std::round(angle / (M_PI / 2)) * M_PI / 2);
+    //     turnTo(4, rounded);
+    // }
 }
 
 void RobotInstance::moveToNextPos()

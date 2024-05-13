@@ -40,7 +40,7 @@ std::vector<pdd> vecLidarPoints;
 std::vector<pdd> vecCameraPoints;
 std::set<pdd> victims;
 
-pdd lidarToPoint(GPS* gps, double dist, double absAngle)
+std::pair<pdd, pdd> lidarToPoint(GPS* gps, double dist, double absAngle)
 {
     double pos[3];
     double pos_rounded[3];
@@ -83,7 +83,8 @@ pdd lidarToPoint(GPS* gps, double dist, double absAngle)
 
     x = floor_to(x);
     y = floor_to(y);
-    return r2d(pdd(x, y));
+
+    return std::make_pair(pdd(x, y), std::make_pair(pos_rounded[0], pos_rounded[2]));
 }
 
 //theta is in radians
@@ -99,18 +100,13 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         if(dist > 0.4) //gets noisy after 0.4
             continue;
         const float angle = i/512.0 * 2.0 * M_PI;
-        double pos[3];
-        double pos_rounded[3];
-        memcpy(pos, gps->getValues(), 3 * sizeof(double));
-        pos[2] *= -1;
-        //force single floor for now
-        pos[1] = 0;
-        pos_rounded[0] = floor_to(pos[0], region_size);
-        pos_rounded[1] = floor_to(pos[1], region_size);
-        pos_rounded[2] = floor_to(pos[2], region_size);
 
-        const pdd coord2 = lidarToPoint(gps, dist, angle - theta);
-        const auto rcoord = r2d(std::make_pair(pos_rounded[0], pos_rounded[2]));
+        const auto coord = lidarToPoint(gps, dist, angle - theta);
+        const pdd coord2 = coord.first;
+        const pdd rcoord = coord.second;
+
+        printPoint(coord2);
+        printPoint(rcoord);
 
         //std::cout << "pts: " << (std::string)GPS_position(pos_rounded) << ": " << pointToString(coord2) << std::endl;
 
@@ -176,18 +172,10 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
             continue;
         if (dist > MAX_VIC_DETECTION_RANGE)
             continue;
-        double pos[3];
-        double pos_rounded[3];
-        memcpy(pos, gps->getValues(), 3 * sizeof(double));
-        pos[2] *= -1;
-        //force single floor for now
-        pos[1] = 0;
-        pos_rounded[0] = floor_to(pos[0], region_size);
-        pos_rounded[1] = floor_to(pos[1], region_size);
-        pos_rounded[2] = floor_to(pos[2], region_size);
 
-        const pdd coord2 = lidarToPoint(gps, dist, angle - theta);
-        const auto rcoord = r2d(std::make_pair(pos_rounded[0], pos_rounded[2]));
+        const auto coord = lidarToPoint(gps, dist, angle - theta);
+        const pdd coord2 = coord.first;
+        const pdd rcoord = coord.second;
 
         if (regions[rcoord].points.count(coord2) == 0 || !regions[rcoord].points[coord2].camera)
         {

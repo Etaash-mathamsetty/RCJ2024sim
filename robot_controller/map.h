@@ -15,7 +15,7 @@ class RobotInstance;
 void plotPoints(RobotInstance *rb, int w, int h);
 void update_regions_map(webots::GPS *gps, const float *lidar_image, float theta=0);
 void update_camera_map(webots::GPS *gps, const float *lidar_image, webots::Camera *camera, float theta=0);
-pdd lidarToPoint(webots::GPS *gps, double dist, double absAngle);
+std::pair<std::pair<double, double>, pdd> lidarToPoint(webots::GPS *gps, double dist, double absAngle);
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
 void addLidarPoint(std::pair<double, double> point);
