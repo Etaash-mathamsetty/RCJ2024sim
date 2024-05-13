@@ -160,8 +160,6 @@ bool canSee(pdd cur, pdd tar)
 
 bool midpoint_check(pdd a, pdd b)
 {
-    std::cout << "midpoint check: " << pointToString(a) << " " << pointToString(b) << std::endl;
-
     if(!isTraversableOpt(a) || !isTraversableOpt(b))
     {
         return false;
