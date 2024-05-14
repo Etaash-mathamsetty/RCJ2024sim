@@ -99,7 +99,7 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points)
 {
     for (const pdd& pt : points)
     {
-        if (getDist(pos, pt) < 0.044)
+        if (getDist(pos, pt) < 0.042)
             return false;
     }
     return true;
@@ -123,7 +123,7 @@ bool isTraversableOpt(const pdd& pos, double rad)
 
 bool isTraversableOpt(const pdd& pos)
 {
-    return isTraversableOpt(pos, 0.044);
+    return isTraversableOpt(pos, 0.042);
 }
 
 double minDist(pdd a, pdd b, pdd p)
@@ -142,7 +142,22 @@ double minDist(pdd a, pdd b, pdd p)
 
 bool canSee(pdd cur, pdd tar)
 {
-    for (const auto& r : get_neighboring_regions(tar))
+    auto vec = get_neighboring_regions(tar);
+    for (const auto& r : vec)
+    {
+        if(r)
+        {
+            for(const auto& pair: r->points)
+            {
+                if(minDist(cur, tar, pair.first) < 0.01 && pair.second.wall)
+                {
+                    return false;
+                }
+            }
+        }
+    }
+    vec = get_neighboring_regions(cur);
+    for (const auto& r : vec)
     {
         if(r)
         {
