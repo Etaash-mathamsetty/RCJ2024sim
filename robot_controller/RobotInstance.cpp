@@ -365,40 +365,23 @@ char message[9];
 
 bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const double* position) //"l" or "r"
 {
-    const int rows = roi.rows;
-    const int cols = roi.cols;
-    if (!(rows >= 30 && rows <= 96 && cols >= 23 && cols <= 74))
+
+    cv::Mat Roi1D;
+    cv::resize(roi, Roi1D, cv::Size(20, 20));
+    Roi1D.convertTo(Roi1D, CV_32F);
+    Roi1D = Roi1D.reshape(1, 20*20);
+    std::vector<float> dists;
+    float ret = m_knn->findNearest(Roi1D, 3, cv::noArray(), cv::noArray(), dists);
+    char ch = (char)ret;
+    float dist = dists[0];
+
+    if(dist > 3000000)
     {
         return false;
     }
-    const int firstThird = rows / 3;
-    const int secondThird = rows * 2 / 3;
-    cv::Mat topRoi(roi, cv::Rect(0, 0, cols, firstThird));
-    cv::Mat midRoi(roi, cv::Rect(0, firstThird, cols, firstThird));
-    cv::Mat bottomRoi(roi, cv::Rect(0, secondThird, cols, firstThird));
-    int top = countContours(topRoi);
-    int mid = countContours(midRoi);
-    int bottom = countContours(bottomRoi);
-    int xPos = (int)(position[0] * 100);
-    int zPos = (int)(position[2] * 100);
-    memcpy(&message[0], &xPos, 4);
-    memcpy(&message[4], &zPos, 4);
-    if (top == 2 && mid == 2 && bottom == 1)
-    {
-        message[8] = 'U';
-    }
-    else if (top == 2 && mid == 1 && bottom == 2)
-    {
-        message[8] = 'H';
-    }
-    else if (top == 1 && mid == 1 && bottom == 1)
-    {
-        message[8] = 'S';
-    }
-    else
-    {
-        return false;
-    }
+
+    message[8] = ch;
+
     std::cout << message[8] << " found on side " << side << std::endl;
     return true;
 }
@@ -422,7 +405,7 @@ void RobotInstance::lookForLetter()
             cv::Mat roi(frameL, boundRect);
             addTexture("Left ROI", roi, SDL_PIXELFORMAT_RGB888);
             double rectCenterX = boundRect.x + boundRect.width / 2; //in columns
-            if (boundRect.width > 20 && boundRect.height > 20 && boundRect.x != 0 && boundRect.width + boundRect.x < frameL.cols)
+            if (boundRect.width * boundRect.height > 400)
             {
                 if (determineLetter(roi, "l", m_gps->getValues()))
                 {
@@ -475,7 +458,7 @@ void RobotInstance::lookForLetter()
             cv::Mat roi(frameR, boundRect);
             addTexture("Right ROI", roi, SDL_PIXELFORMAT_RGB888);
             double rectCenterX = boundRect.x + boundRect.width / 2; //in columns
-            if (boundRect.width > 20 && boundRect.height > 20 && boundRect.x != 0 && boundRect.width + boundRect.x < frameR.cols)
+            if (boundRect.width * boundRect.height > 400)
             {
                 if (determineLetter(roi, "r", m_gps->getValues()))
                 {
