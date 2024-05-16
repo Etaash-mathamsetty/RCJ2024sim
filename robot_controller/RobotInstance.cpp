@@ -160,7 +160,10 @@ void RobotInstance::add_training_data(std::string side, char classification)
         cv::Mat roi4;
         roi3.convertTo(roi4, CV_32FC1);
         cv::Mat roi2 = roi4.reshape(1, 1);
-        cv::vconcat(training_data, roi2, training_data);
+        if(training_data.rows == 0)
+            training_data.push_back(roi2);
+        else
+            cv::vconcat(training_data, roi2, training_data);
         output.push_back((int)classification);
     }
     else if(side == "R")
@@ -183,7 +186,10 @@ void RobotInstance::add_training_data(std::string side, char classification)
         cv::Mat roi4;
         roi3.convertTo(roi4, CV_32FC1);
         cv::Mat roi2 = roi4.reshape(1, 1);
-        cv::vconcat(training_data, roi2, training_data);
+        if(training_data.rows == 0)
+            training_data.push_back(roi2);
+        else
+            cv::vconcat(training_data, roi2, training_data);
         output.push_back((int)classification);
     }
 
@@ -928,7 +934,7 @@ REGION* RobotInstance::get_current_region()
     return get_region(m_gps);
 }
 
-std::map<std::pair<std::pair<pdd, std::string>, double>, char> getVictims()
+std::map<std::pair<std::pair<pdd, std::string>, double>, char>& getVictims()
 {
     return victims;
 }
