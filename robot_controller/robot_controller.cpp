@@ -153,8 +153,8 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                     ImGui::Image((void*)pair.second, ImVec2(256, 256));
                 }
 
-                const char classifications[5] = {'H', 'S', 'U', '1', '2'};
-                const char* classification_names[5] = {"Harmed", "Stable", "Unharmed", "1", "2"};
+                const char classifications[5] = {'H', 'S', 'U', 'P', 'C'};
+                const char* classification_names[5] = {"Harmed", "Stable", "Unharmed", "Poision", "Corrosive"};
                 static int idx = 0;
 
                 ImGui::Combo("Classification", &idx, classification_names, 5);
