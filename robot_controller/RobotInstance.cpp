@@ -298,6 +298,17 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         std::cout << "black detected" << std::endl;
         pdd cur = getRawGPSPosition();
         addLidarPoint(r2d(pointTo(cur, this->getYaw(), 0.03)));
+        addLidarPoint(r2d(target));
+        pdd adjacents[4] = {
+            pdd(target.first - 0.01, target.second),
+            pdd(target.first + 0.01, target.second),
+            pdd(target.first, target.second - 0.01),
+            pdd(target.first, target.second + 0.01)
+        };
+        for (const pdd& adjacent : adjacents)
+        {
+            addLidarPoint(r2d(adjacent));
+        }
         updateVisited();
         resetPosition();
 
@@ -365,22 +376,42 @@ char message[9];
 
 bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const double* position) //"l" or "r"
 {
-
-    cv::Mat Roi1D;
-    cv::resize(roi, Roi1D, cv::Size(20, 20));
-    Roi1D.convertTo(Roi1D, CV_32F);
-    Roi1D = Roi1D.reshape(1, 20*20);
-    std::vector<float> dists;
-    float ret = m_knn->findNearest(Roi1D, 3, cv::noArray(), cv::noArray(), dists);
-    char ch = (char)ret;
-    float dist = dists[0];
-
-    if(dist > 3000000)
+    const int rows = roi.rows;
+    const int cols = roi.cols;
+    if (!(rows >= 30 && rows <= 96 && cols >= 23 && cols <= 74))
+    {
+        return false;
+    }
+    const int firstThird = rows / 3;
+    const int secondThird = rows * 2 / 3;
+    cv::Mat topRoi(roi, cv::Rect(0, 0, cols, firstThird));
+    cv::Mat midRoi(roi, cv::Rect(0, firstThird, cols, firstThird));
+    cv::Mat bottomRoi(roi, cv::Rect(0, secondThird, cols, firstThird));
+    int top = countContours(topRoi);
+    int mid = countContours(midRoi);
+    int bottom = countContours(bottomRoi);
+    int xPos = (int)(position[0] * 100);
+    int zPos = (int)(position[2] * 100);
+    memcpy(&message[0], &xPos, 4);
+    memcpy(&message[4], &zPos, 4);
+    if (top == 2 && mid == 2 && bottom == 1)
+    {
+        message[8] = 'U';
+    }
+    else if (top == 2 && mid == 1 && bottom == 2)
+    {
+        message[8] = 'H';
+    }
+    else if (top == 1 && mid == 1 && bottom == 1)
+    {
+        message[8] = 'S';
+    }
+    else
     {
         return false;
     }
 
-    message[8] = ch;
+    // message[8] = ch;
 
     std::cout << message[8] << " found on side " << side << std::endl;
     return true;
@@ -429,22 +460,22 @@ void RobotInstance::lookForLetter()
                         isFollowingVictim = false;
                         reporting = false;
                     }
-                    else if(ret && !reporting)
-                    {
-                        if (!isFollowingVictim)
-                        {
-                            std::cout << "following victim" << std::endl;
-                            stopMotors();
-                            pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
-                            isFollowingVictim = true;
-                            moveToPoint(this, nearest);
-                            pdd cur = getRawGPSPosition();
-                            turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
-                            isFollowingVictim = false;
-                            reporting = true;
-                            std::cout << "done following victim" << std::endl;
-                        }
-                    }
+                    // else if(ret && !reporting)
+                    // {
+                    //     if (!isFollowingVictim)
+                    //     {
+                    //         std::cout << "following victim" << std::endl;
+                    //         stopMotors();
+                    //         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
+                    //         isFollowingVictim = true;
+                    //         moveToPoint(this, nearest);
+                    //         pdd cur = getRawGPSPosition();
+                    //         turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
+                    //         isFollowingVictim = false;
+                    //         reporting = true;
+                    //         std::cout << "done following victim" << std::endl;
+                    //     }
+                    // }
                     return;
                 }
             }
@@ -483,22 +514,22 @@ void RobotInstance::lookForLetter()
                         isFollowingVictim = false;
                         reporting = false;
                     }
-                    else if(ret && !reporting)
-                    {
-                        if (!isFollowingVictim)
-                        {
-                            std::cout << "following victim" << std::endl;
-                            stopMotors();
-                            pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
-                            isFollowingVictim = true;
-                            moveToPoint(this, nearest);
-                            pdd cur = getRawGPSPosition();
-                            turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
-                            isFollowingVictim = false;
-                            reporting = true;
-                            std::cout << "done following victim" << std::endl;
-                        }
-                    }
+                    // else if(ret && !reporting)
+                    // {
+                    //     if (!isFollowingVictim)
+                    //     {
+                    //         std::cout << "following victim" << std::endl;
+                    //         stopMotors();
+                    //         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
+                    //         isFollowingVictim = true;
+                    //         moveToPoint(this, nearest);
+                    //         pdd cur = getRawGPSPosition();
+                    //         turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
+                    //         isFollowingVictim = false;
+                    //         reporting = true;
+                    //         std::cout << "done following victim" << std::endl;
+                    //     }
+                    // }
                     return;
                 }
             }
