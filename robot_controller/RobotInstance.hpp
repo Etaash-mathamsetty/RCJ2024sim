@@ -117,7 +117,7 @@ public:
 
     pdd getCurrentGPSPosition()
     {
-        return pdd(r2d(m_gps->getValues()[0]), -r2d(m_gps->getValues()[2]));
+        return r2d(getRawGPSPosition());
     }
 
     pdd getRawGPSPosition()
@@ -161,7 +161,11 @@ public:
     double getYaw() { return -m_imu->getRollPitchYaw()[2]; }
 
     const pdd& getStartPos() { return m_startPos; }
- 
+
+    void save_training_data();
+
+    void add_training_data(std::string side, char classification);
+
 private:
 
     //DOES NOT AFFECT POSITION SENSOR
@@ -193,10 +197,8 @@ private:
 
     pdd calcNextPos();
 
-    std::vector<std::vector<cv::Point>> getContours(std::string, cv::Mat);
-    std::vector<std::vector<cv::Point>> getContours(cv::Mat);
-
-    int countContours(cv::Mat);
+    std::vector<cv::Point> getContour(std::string, cv::Mat);
+    std::vector<cv::Point> getContour(cv::Mat);
 
     webots::Robot *m_robot;
     webots::Motor *m_lm;
@@ -231,6 +233,6 @@ private:
     std::vector<std::function<void()>> m_callbacks;
     std::map<std::string, SDL_Texture*> m_tex;
 
-    cv::ml::KNearest* m_knn;
+    cv::Ptr<cv::ml::KNearest> m_knn;
 };
 #endif

@@ -84,10 +84,12 @@ void end_frame(RobotInstance *rb, SDL_Renderer *renderer)
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
     SDL_RenderPresent(renderer);
 
-    for(const auto& pair : rb->getTextures())
+    for(const auto &it : rb->getTextures())
     {
-        SDL_DestroyTexture(pair.second);
+        SDL_DestroyTexture(it.second);
     }
+
+    rb->getTextures().clear();
 }
 
 void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
@@ -121,8 +123,6 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
 
             if(ImGui::BeginTabItem("Sensor Debug"))
             {
-                cv::Mat m = rb->getLeftCameraMat();
-                cv::Mat m2 = rb->getRightCameraMat();
 
                 for(const auto& pair : rb->getTextures())
                 {
@@ -145,11 +145,35 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 ImGui::EndTabItem();
             }
 
-            if(ImGui::BeginTabItem("KNN Trainer") && rb->getKNN())
+            if(ImGui::BeginTabItem("KNN Trainer"))
             {
+                for(const auto& pair : rb->getTextures())
+                {
+                    ImGui::Text("%s", pair.first.c_str());
+                    ImGui::Image((void*)pair.second, ImVec2(256, 256));
+                }
+
+                const char classifications[5] = {'H', 'S', 'U', '1', '2'};
+                const char* classification_names[5] = {"Harmed", "Stable", "Unharmed", "1", "2"};
+                static int idx = 0;
+
+                ImGui::Combo("Classification", &idx, classification_names, 5);
+
+                if(ImGui::Button("Add Left Image"))
+                {
+                    rb->add_training_data("L", classifications[idx]);
+                }
+
+                ImGui::SameLine();
+
+                if(ImGui::Button("Add Right Image"))
+                {
+                    rb->add_training_data("R", classifications[idx]);
+                }
+
                 if(ImGui::Button("Save to File"))
                 {
-                    rb->getKNN()->save("knn.yml");
+                    rb->save_training_data();
                 }
 
                 ImGui::EndTabItem();

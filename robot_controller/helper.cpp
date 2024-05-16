@@ -50,7 +50,7 @@ std::string pointToString(const pdd& point)
     return std::string("(") + std::to_string(point.first) + ", " + std::to_string(point.second) + ")";
 }
 
-SDL_Texture *  getTextureFromMat(SDL_Renderer *r, const cv::Mat& mat, SDL_PixelFormatEnum f)
+SDL_Texture *  getTextureFromMat(SDL_Renderer *r, cv::Mat mat, SDL_PixelFormatEnum f)
 {
     int width = mat.size().width;
     int height = mat.size().height;

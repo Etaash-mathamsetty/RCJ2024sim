@@ -39,6 +39,6 @@ double inputModulus(double input, double minimumInput, double maximumInput);
 pdd r2d(pdd point);
 void printPoint(const pdd& point);
 std::string pointToString(const pdd& point);
-SDL_Texture *getTextureFromMat(SDL_Renderer *r, const cv::Mat& mat, SDL_PixelFormatEnum f);
+SDL_Texture *getTextureFromMat(SDL_Renderer *r, cv::Mat mat, SDL_PixelFormatEnum f);
 
 #endif
