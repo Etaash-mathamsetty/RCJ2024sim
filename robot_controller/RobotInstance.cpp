@@ -648,6 +648,7 @@ void RobotInstance::lookForLetter()
                     std::cout << "emitting" << std::endl;
                     delay(1);
                     m_emitter->send(message, sizeof(message));
+                    step();
                     isFollowingVictim = false;
                     reporting = false;
                 }
@@ -705,6 +706,7 @@ void RobotInstance::lookForLetter()
                         std::cout << "emitting" << std::endl;
                         delay(1);
                         m_emitter->send(message, sizeof(message));
+                        step();
                         isFollowingVictim = false;
                         reporting = false;
                     }
