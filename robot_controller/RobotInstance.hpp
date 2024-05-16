@@ -145,6 +145,11 @@ public:
     webots::Lidar *getLidar() { return m_lidar; }
 
     webots::InertialUnit *getIMU() { return m_imu; }
+    webots::Robot* getRB() { return m_robot; };
+    webots::Emitter* getEmitter() { return m_emitter; };
+    webots::Camera* getColorSensor() { return m_color; };
+    webots::Motor* RobotInstance::getRM() { return m_rm; };
+    webots::Motor* RobotInstance::getLM() { return m_lm; };
 
     std::map<std::string, SDL_Texture*>& getTextures() { return m_tex; }
 
@@ -234,5 +239,7 @@ private:
     std::map<std::string, SDL_Texture*> m_tex;
 
     cv::Ptr<cv::ml::KNearest> m_knn;
+
 };
+std::map<std::pair<std::pair<pdd, std::string>, double>, char> getVictims();
 #endif

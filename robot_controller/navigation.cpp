@@ -745,6 +745,17 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     return currentPoint;
 }
 
+bool isTraversable(const pdd& pos, const vector<pdd>& points, double robotRadius)
+{
+    bool traversable = 1;
+    for (int i = 0; i < points.size(); i++)
+    {
+        if (getDist(pos, points[i]) < robotRadius)
+            return 0;
+    }
+    return 1;
+}
+
 // int main()
 // {
 //     vector<pdd> traversable;

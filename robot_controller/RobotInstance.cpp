@@ -19,6 +19,8 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+std::map<std::pair<std::pair<pdd, std::string>, double>, char> victims;
+
 static RobotInstance* instance = NULL;
 
 inline cv::Mat getCv2Mat(webots::Camera *cam)
@@ -568,7 +570,13 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     memcpy(&message[0], &xPos, 4);
     memcpy(&message[4], &zPos, 4);
     message[8] = ch;
-
+    if (!victims.count(std::make_pair(std::make_pair(pdd(position[0], position[2]), side), m_imu->getRollPitchYaw()[2])))
+    {
+        delay(1);
+        victims[(std::make_pair(std::make_pair(pdd(position[0], position[2]), side), m_imu->getRollPitchYaw()[2]))] = message[8];
+        std::cout << message[8] << " found @" << xPos << " " << zPos << getVictims()[(std::make_pair(std::make_pair(pdd(position[0], position[2]), side), m_imu->getRollPitchYaw()[2]))] << std::endl;
+        m_emitter->send(message, 9);
+    }
     std::cout << message[8] << " found on side " << side << std::endl;
     return true;
 }
@@ -918,4 +926,9 @@ void RobotInstance::run_callbacks()
 REGION* RobotInstance::get_current_region()
 {
     return get_region(m_gps);
+}
+
+std::map<std::pair<std::pair<pdd, std::string>, double>, char> getVictims()
+{
+    return victims;
 }

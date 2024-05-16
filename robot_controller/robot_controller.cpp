@@ -15,6 +15,7 @@
 #include "RobotInstance.hpp"
 #include "helper.hpp"
 #include "map.h"
+#include "mapping.h"
 #include <filesystem>
 
 #include <SDL.h>
@@ -295,7 +296,24 @@ int main(int argc, char **argv) {
 
     // Main loop:
     // - perform simulation steps until Webots is stopping the controller
+
+    bool getStartpos = 0;
+    double init = rb->getRB()->getTime();
+    pdd startpos;
     while (rb->step() != -1 && running && !rb->isFinished()) {
+        while (!getStartpos)
+        {
+            double pos[3];
+            memcpy(pos, rb->getGPS()->getValues(), 3 * sizeof(double));
+            if (abs(pos[0]) < 500)
+            {
+                startpos = pdd(pos[0], -pos[2]);
+                getStartpos = 1;
+            }
+            else rb->step();
+        }
+        if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), startpos, -1);
+        else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), startpos, 1);
         rb->updateTargetPos();
         rb->moveToNextPos();
     }

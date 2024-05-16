@@ -35,5 +35,6 @@ pdd chooseMove(RobotInstance *rb, double currentRotation);
 const std::set<pdd>& getVisited();
 const std::deque<pdd>& getToVisit();
 const std::stack<pdd>& getBfsPath();
+bool isTraversable(const pdd& pos, const std::vector<pdd>& points, double robotRadius);
 
 #endif
