@@ -513,7 +513,8 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
     for(auto it = contours.begin(); it != contours.end(); it++)
     {
         double area = cv::contourArea(*it);
-        if(area >= 400 && area <= 2500)
+        auto rect = cv::boundingRect(*it);
+        if(area >= 400 && area <= 2500 && rect.height / (double)rect.width >= 0.5 && rect.height / (double)rect.width <= 2.0)
         {
             if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
                 best_contour = *it;

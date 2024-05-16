@@ -99,7 +99,7 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points)
 {
     for (const pdd& pt : points)
     {
-        if (getDist(pos, pt) < 0.042)
+        if (getDist(pos, pt) < 0.043)
             return false;
     }
     return true;
@@ -123,7 +123,7 @@ bool isTraversableOpt(const pdd& pos, double rad)
 
 bool isTraversableOpt(const pdd& pos)
 {
-    return isTraversableOpt(pos, 0.042);
+    return isTraversableOpt(pos, 0.043);
 }
 
 double minDist(pdd a, pdd b, pdd p)
@@ -619,7 +619,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             }
             nextPoint = r2d(bfsResult.top());
         }
-        else if((!isTraversableOpt(nextPoint) || !midpoint_check(currentPoint, nextPoint)) && !toVisit.empty())
+        else if(!midpoint_check(currentPoint, nextPoint) && !toVisit.empty())
         {
             bfsResult = toVisitBfs(currentPoint, getMinMax(getLidarPoints()));
             if(!bfsResult.empty())
@@ -747,8 +747,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
 
 bool isTraversable(const pdd& pos, const vector<pdd>& points, double robotRadius)
 {
-    bool traversable = 1;
-    for (int i = 0; i < points.size(); i++)
+    for (size_t i = 0; i < points.size(); i++)
     {
         if (getDist(pos, points[i]) < robotRadius)
             return 0;

@@ -300,6 +300,7 @@ int main(int argc, char **argv) {
     while (rb->step() != -1 && running && !rb->isFinished()) {
         if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), -1);
         else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
+        
         rb->updateTargetPos();
         rb->moveToNextPos();
     }
