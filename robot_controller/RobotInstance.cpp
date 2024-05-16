@@ -449,6 +449,17 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         std::cout << "black detected" << std::endl;
         pdd cur = getRawGPSPosition();
         addLidarPoint(r2d(pointTo(cur, this->getYaw(), 0.03)));
+        addLidarPoint(r2d(target));
+        pdd adjacents[4] = {
+            pdd(target.first - 0.01, target.second),
+            pdd(target.first + 0.01, target.second),
+            pdd(target.first, target.second - 0.01),
+            pdd(target.first, target.second + 0.01)
+        };
+        for (const pdd& adjacent : adjacents)
+        {
+            addLidarPoint(r2d(adjacent));
+        }
         updateVisited();
         resetPosition();
 
@@ -590,7 +601,43 @@ void RobotInstance::lookForLetter()
                 double thetaFromRobot = -M_PI / 2 + thetaFromCenter;
                 if (thetaFromRobot < 0)
                 {
-                    thetaFromRobot += 2 * M_PI;
+                    double offset = rectCenterX - frameL.cols / 2;
+                    double percent = offset / (frameL.cols / 2);
+                    double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
+                    double thetaFromRobot = -M_PI / 2 + thetaFromCenter;
+                    if (thetaFromRobot < 0)
+                    {
+                        thetaFromRobot += 2 * M_PI;
+                    }
+                    int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
+                    pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
+                    bool ret = addVictim(point);
+                    if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) || reporting)
+                    {
+                        stopMotors();
+                        std::cout << "emitting" << std::endl;
+                        delay(1);
+                        m_emitter->send(message, sizeof(message));
+                        isFollowingVictim = false;
+                        reporting = false;
+                    }
+                    // else if(ret && !reporting)
+                    // {
+                    //     if (!isFollowingVictim)
+                    //     {
+                    //         std::cout << "following victim" << std::endl;
+                    //         stopMotors();
+                    //         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
+                    //         isFollowingVictim = true;
+                    //         moveToPoint(this, nearest);
+                    //         pdd cur = getRawGPSPosition();
+                    //         turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
+                    //         isFollowingVictim = false;
+                    //         reporting = true;
+                    //         std::cout << "done following victim" << std::endl;
+                    //     }
+                    // }
+                    return;
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
@@ -640,7 +687,44 @@ void RobotInstance::lookForLetter()
                 double thetaFromRobot = M_PI / 2 + thetaFromCenter;
                 if (thetaFromRobot < 0)
                 {
-                    thetaFromRobot += 2 * M_PI;
+                    double offset = rectCenterX - frameR.cols / 2;
+                    double percent = offset / (frameR.cols / 2);
+                    double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
+                    double thetaFromRobot = M_PI / 2 + thetaFromCenter;
+                    if (thetaFromRobot < 0)
+                    {
+                        thetaFromRobot += 2 * M_PI;
+                    }
+                    int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
+                    pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
+                    bool ret = addVictim(point);
+                    // std::cout << getCurrentGPSPosition().first <<" " << getCurrentGPSPosition().second << " " << point.first << " " << point.second << std::endl;
+                    if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) || reporting)
+                    {
+                        stopMotors();
+                        std::cout << "emitting" << std::endl;
+                        delay(1);
+                        m_emitter->send(message, sizeof(message));
+                        isFollowingVictim = false;
+                        reporting = false;
+                    }
+                    // else if(ret && !reporting)
+                    // {
+                    //     if (!isFollowingVictim)
+                    //     {
+                    //         std::cout << "following victim" << std::endl;
+                    //         stopMotors();
+                    //         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
+                    //         isFollowingVictim = true;
+                    //         moveToPoint(this, nearest);
+                    //         pdd cur = getRawGPSPosition();
+                    //         turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
+                    //         isFollowingVictim = false;
+                    //         reporting = true;
+                    //         std::cout << "done following victim" << std::endl;
+                    //     }
+                    // }
+                    return;
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;

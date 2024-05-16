@@ -481,13 +481,31 @@ stack<pdd> toVisitBfs(pdd current, pair<pdd, pdd> minMax)
         return stack<pdd>();
     }
 
-    stack<pdd> res = pointBfs(current, toVisit.back(), minMax, false);
-    for(auto it = toVisit.rbegin(); it != toVisit.rend() && res.empty(); it++)
+    double radius = 0.15;
+    pair<pdd, pdd> localMinMax = make_pair(
+        pdd(current.first - radius, current.second - radius),
+        pdd(current.first + radius, current.second + radius));
+
+    
+    stack<pdd> res = pointBfs(current, current, localMinMax, true);
+    if (!res.empty())
     {
-        res = pointBfs(current, *it, minMax, false);
+        return res;
+    }
+
+    if (toVisit.empty())
+    {
+        res = pointBfs(current, current, minMax, true);
+        return res;
+    }
+
+    res = {};
+    for(; !toVisit.empty() && res.empty();)
+    {
+        res = pointBfs(current, toVisit.back(), minMax, false);
         if(res.empty())
         {
-            removeToVisit(*it);
+            toVisit.pop_back();
         }
     }
     return res;
