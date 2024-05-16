@@ -558,7 +558,7 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
 
     std::cout << "ret: " << ret << " dist: " << dist << std::endl;
 
-    if(dist > 5000000)
+    if(dist > 4500000)
     {
         return false;
     }
