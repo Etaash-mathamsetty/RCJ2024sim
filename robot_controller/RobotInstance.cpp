@@ -497,6 +497,8 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
 
     std::vector<cv::Point> best_contour;
 
+    addTexture(name + " Threshold", frame2, SDL_PIXELFORMAT_RGB332);
+
     if(contours.size() == 0)
         return best_contour;
 
@@ -519,9 +521,6 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
             addTexture(name, frame3, SDL_PIXELFORMAT_RGB888);
         }
     }
-
-    addTexture(name + " Threshold", frame2, SDL_PIXELFORMAT_RGB332);
-
     return best_contour;
 }
 
