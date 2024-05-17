@@ -306,8 +306,8 @@ int main(int argc, char **argv) {
         if (rb->getTimeLeft() < 2) send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
     }
 
+    send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
     // Enter here exit cleanup code.
-    rb->endSimulation();
     if(!rb->getDisableGUI())
         delete_gui(window, renderer);
     rb->destroyInstance();

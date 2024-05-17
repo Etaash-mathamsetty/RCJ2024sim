@@ -237,8 +237,10 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
     emitter->send(message, flattened.size() + 8); // Send map data
     char msg = 'M'; // Send map evaluate request
     emitter->send(&msg, sizeof(msg));
+    rb->step(rb->getBasicTimeStep());
     msg = 'E'; // Send an Exit message to get Map Bonus
     emitter->send(&msg, sizeof(msg));
+    rb->step(rb->getBasicTimeStep());
 }
 void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* imu, const pdd &startpos, int sign)
 {
