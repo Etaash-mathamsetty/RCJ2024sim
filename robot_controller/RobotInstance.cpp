@@ -19,7 +19,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-std::map<std::pair<std::pair<pdd, std::string>, double>, char> victims;
+std::map<std::pair<std::pair<pdd, std::string>, double>, char> victimMap;
 
 static RobotInstance* instance = NULL;
 
@@ -292,8 +292,6 @@ void RobotInstance::turnTo(double speed, double target_angle)
 {
     target_angle = inputModulus(target_angle, -M_PI, M_PI);
     double current = m_imu->getRollPitchYaw()[2];
-
-    std::cout << "turning to: " << target_angle << std::endl;
 
     //std::cout << "current: " << current << std::endl;
 
@@ -609,75 +607,38 @@ void RobotInstance::lookForLetter()
                 double thetaFromRobot = -M_PI / 2 + thetaFromCenter;
                 if (thetaFromRobot < 0)
                 {
-                    double offset = rectCenterX - frameL.cols / 2;
-                    double percent = offset / (frameL.cols / 2);
-                    double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
-                    double thetaFromRobot = -M_PI / 2 + thetaFromCenter;
-                    if (thetaFromRobot < 0)
-                    {
-                        thetaFromRobot += 2 * M_PI;
-                    }
-                    int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
-                    pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
-                    bool ret = addVictim(point);
-                    if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) && !victims.count(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2])))
-                    {
-                        stopMotors();
-                        std::cout << "emitting" << std::endl;
-                        victims[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = message[8];
-                        delay(1);
-                        m_emitter->send(message, sizeof(message));
-                        isFollowingVictim = false;
-                        reporting = false;
-                    }
-                    // else if(ret && !reporting)
-                    // {
-                    //     if (!isFollowingVictim)
-                    //     {
-                    //         std::cout << "following victim" << std::endl;
-                    //         stopMotors();
-                    //         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
-                    //         isFollowingVictim = true;
-                    //         moveToPoint(this, nearest);
-                    //         pdd cur = getRawGPSPosition();
-                    //         turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
-                    //         isFollowingVictim = false;
-                    //         reporting = true;
-                    //         std::cout << "done following victim" << std::endl;
-                    //     }
-                    // }
-                    return;
+                    thetaFromRobot += 2 * M_PI;
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
                 bool ret = addVictim(point);
-                if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) && !victims.count(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2])))
+                if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) && !victimMap.count(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2])))
                 {
                     stopMotors();
                     std::cout << "emitting" << std::endl;
-                    victims[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = message[8];
+                    victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = message[8];
                     delay(1);
                     m_emitter->send(message, sizeof(message));
                     step();
                     isFollowingVictim = false;
                     reporting = false;
                 }
-                // else
-                // {
-                //     if (!isFollowingVictim)
-                //     {
-                //         std::cout << "following victim" << std::endl;
-                //         stopMotors();
-                //         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
-                //         isFollowingVictim = true;
-                //         moveToPoint(this, nearest);
-                //         pdd cur = getRawGPSPosition();
-                //         turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
-                //         isFollowingVictim = false;
-                //         reporting = true;
-                //         std::cout << "done following victim" << std::endl;
-                //     }
-                // }
+                else
+                {
+                    if (!isFollowingVictim)
+                    {
+                        std::cout << "following victim" << std::endl;
+                        stopMotors();
+                        pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
+                        isFollowingVictim = true;
+                        moveToPoint(this, nearest);
+                        pdd cur = getRawGPSPosition();
+                        turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
+                        isFollowingVictim = false;
+                        reporting = true;
+                        std::cout << "done following victim" << std::endl;
+                    }
+                }
                 return;
             }
         }
@@ -698,76 +659,39 @@ void RobotInstance::lookForLetter()
                 double thetaFromRobot = M_PI / 2 + thetaFromCenter;
                 if (thetaFromRobot < 0)
                 {
-                    double offset = rectCenterX - frameR.cols / 2;
-                    double percent = offset / (frameR.cols / 2);
-                    double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
-                    double thetaFromRobot = M_PI / 2 + thetaFromCenter;
-                    if (thetaFromRobot < 0)
-                    {
-                        thetaFromRobot += 2 * M_PI;
-                    }
-                    int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
-                    pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
-                    bool ret = addVictim(point);
-                    // std::cout << getCurrentGPSPosition().first <<" " << getCurrentGPSPosition().second << " " << point.first << " " << point.second << std::endl;
-                    if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) && !victims.count(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2])))
-                    {
-                        stopMotors();
-                        std::cout << "emitting" << std::endl;
-                        victims[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = message[8];
-                        delay(1);
-                        m_emitter->send(message, sizeof(message));
-                        step();
-                        isFollowingVictim = false;
-                        reporting = false;
-                    }
-                    // else if(ret && !reporting)
-                    // {
-                    //     if (!isFollowingVictim)
-                    //     {
-                    //         std::cout << "following victim" << std::endl;
-                    //         stopMotors();
-                    //         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
-                    //         isFollowingVictim = true;
-                    //         moveToPoint(this, nearest);
-                    //         pdd cur = getRawGPSPosition();
-                    //         turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
-                    //         isFollowingVictim = false;
-                    //         reporting = true;
-                    //         std::cout << "done following victim" << std::endl;
-                    //     }
-                    // }
-                    return;
+                    thetaFromRobot += 2 * M_PI;
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
                 bool ret = addVictim(point);
                 // std::cout << getCurrentGPSPosition().first <<" " << getCurrentGPSPosition().second << " " << point.first << " " << point.second << std::endl;
-                if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) && !victims.count(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2])))
+                if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) && !victimMap.count(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2])))
                 {
                     stopMotors();
                     std::cout << "emitting" << std::endl;
-                    victims[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = message[8];
+                    victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = message[8];
                     delay(1);
                     m_emitter->send(message, sizeof(message));
+                    step();
                     isFollowingVictim = false;
                     reporting = false;
                 }
                 else
                 {
-                    // if (!isFollowingVictim)
-                    // {
-                    //     std::cout << "following victim" << std::endl;
-                    //     stopMotors();
-                    //     pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
-                    //     isFollowingVictim = true;
-                    //     moveToPoint(this, nearest);
-                    //     pdd cur = getRawGPSPosition();
-                    //     turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
-                    //     isFollowingVictim = false;
-                    //     reporting = true;
-                    //     std::cout << "done following victim" << std::endl;
-                    // }
+                    if (!isFollowingVictim)
+                    {
+                        std::cout << "following victim" << std::endl;
+                        stopMotors();
+                        pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
+                        printPoint(nearest);
+                        isFollowingVictim = true;
+                        moveToPoint(this, nearest);
+                        pdd cur = getRawGPSPosition();
+                        turnTo(4, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
+                        isFollowingVictim = false;
+                        reporting = true;
+                        std::cout << "done following victim" << std::endl;
+                    }
                 }
                 return;
             }
@@ -935,5 +859,5 @@ REGION* RobotInstance::get_current_region()
 
 std::map<std::pair<std::pair<pdd, std::string>, double>, char>& getVictims()
 {
-    return victims;
+    return victimMap;
 }

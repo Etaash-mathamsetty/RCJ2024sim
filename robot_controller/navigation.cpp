@@ -254,7 +254,7 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
     {
         pdd node = r2d(q.front());
         q.pop();
-        if (visited.count(node) > 0 || !isTraversableOpt(node) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
+        if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
             continue;
         }

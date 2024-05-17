@@ -192,7 +192,6 @@ bool addVictim(pdd point)
     {
         return false;
     }
-    victims.insert(point);
     return true;
 }
 
