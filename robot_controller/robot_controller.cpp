@@ -300,9 +300,10 @@ int main(int argc, char **argv) {
     while (rb->step() != -1 && running && !rb->isFinished()) {
         if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), -1);
         else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
-        if (rb->getTimeLeft() < 2) send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
         rb->updateTargetPos();
         rb->moveToNextPos();
+
+        if (rb->getTimeLeft() < 2) send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
     }
 
     // Enter here exit cleanup code.
