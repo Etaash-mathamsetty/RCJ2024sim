@@ -615,7 +615,7 @@ void RobotInstance::lookForLetter()
                 {
                     stopMotors();
                     std::cout << "emitting " << sizeof(message) << std::endl;
-                    delay(2);
+                    delay(1.5);
                     addVictim(point);
                     victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = message[8];
                     m_emitter->send(message, sizeof(message));
@@ -667,7 +667,7 @@ void RobotInstance::lookForLetter()
                 {
                     stopMotors();
                     std::cout << "emitting " << sizeof(message) << std::endl;
-                    delay(2);
+                    delay(1.5);
                     victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = message[8];
                     addVictim(point);
                     m_emitter->send(message, sizeof(message));
