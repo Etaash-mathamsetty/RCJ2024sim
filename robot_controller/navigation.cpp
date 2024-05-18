@@ -261,7 +261,7 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
         visited.insert(node);
         if (isTraversableOpt(node) && canSee(cur, node))
         {
-            cout << "nearest traversable found" << endl;
+            // cout << "nearest traversable found" << endl;
             return node;
         }
         else
@@ -356,11 +356,11 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
             route.push(pindex);
             pindex = r2d(parent[pindex]);
         }
-        cout << "!!!!! successful bfs route length: " << route.size() << endl;
+        // cout << "!!!!! successful bfs route length: " << route.size() << endl;
         route.push(cur);
         route = optimizeRoute(route);
         route.pop();
-        cout << "!!!!! optimized bfs route length: " << route.size() << endl;
+        // cout << "!!!!! optimized bfs route length: " << route.size() << endl;
         return route;
     }
 
@@ -557,7 +557,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
 
     if(!isTraversableOpt(currentPoint))
     {
-        std::cout << "current point is not traversable!" << std::endl;
+        // std::cout << "current point is not traversable!" << std::endl;
         clearBfsResult();
         //look for a nearby traversable point
         pdd nextPoint = currentPoint;
@@ -589,7 +589,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 {
                     printPoint(ret);
                     nextPoint = ret;
-                    cout << "turning to " << i << endl;
+                    // cout << "turning to " << i << endl;
                     i = 8;
                     break;
                 }
@@ -638,7 +638,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
             }
         }
         isBfs = true;
-        cout << pointToString(rb->getRawGPSPosition()) << " --> " << pointToString(nextPoint) << endl;
+        // cout << pointToString(rb->getRawGPSPosition()) << " --> " << pointToString(nextPoint) << endl;
         return nextPoint;
     }
     for (int i = 0; i <= 2; i++)
@@ -673,7 +673,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                     && isTraversableOpt(target))
                 {
                     printPoint(target);
-                    std::cout << "visited" << isVisited(target) << std::endl;
+                    // std::cout << "visited" << isVisited(target) << std::endl;
                     isBfs = false;
                     return target;
                 }
@@ -709,7 +709,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 {
                     printPoint(ret);
                     nextPoint = ret;
-                    cout << "turning to " << i << endl;
+                    // cout << "turning to " << i << endl;
                     i = 8;
                 }
                 farRet = r2d(farRet);
@@ -719,7 +719,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 {
                     printPoint(farRet);
                     nextPoint = farRet;
-                    cout << "turning to " << i << endl;
+                    // cout << "turning to " << i << endl;
                     i = 8;
                 }
             }

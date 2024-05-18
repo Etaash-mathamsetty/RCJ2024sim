@@ -38,7 +38,7 @@ inline double ceil_to(double value, const double precision = 0.01)
 std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
 std::vector<pdd> vecCameraPoints;
-std::set<pdd> victims;
+std::vector<pdd> victims;
 
 std::pair<pdd, pdd> lidarToPoint(GPS* gps, double dist, double absAngle)
 {
@@ -185,14 +185,18 @@ void addLidarPoint(pdd point)
     }
 }
 
-bool addVictim(pdd point)
+void addVictim(pdd point)
 {
-    point = r2d(point);
-    if(victims.find(point) != victims.end())
+    if (find(victims.begin(), victims.end(), point) == victims.end())
     {
-        return false;
+        victims.push_back(point);
     }
-    return true;
+}
+
+bool notBeenDetected(pdd victim)
+{
+    std::cout << victims.size() << " " << isTraversable(victim, victims, hypot(0.011, 0.011)) << std::endl;
+    return isTraversable(victim, victims, hypot(0.011, 0.011));
 }
 
 ImPlotPoint getPointFromMap(int idx, void *_map)
@@ -219,9 +223,7 @@ ImPlotPoint getVisitedPlotPt(int idx, void *param)
 
 ImPlotPoint getVictimPoint(int idx, void *param)
 {
-    auto it = victims.begin();
-    std::advance(it, idx);
-    return {it->first, it->second};
+    return {victims[idx].first, victims[idx].second};
 }
 
 size_t getCount()

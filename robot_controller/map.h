@@ -19,7 +19,8 @@ std::pair<std::pair<double, double>, pdd> lidarToPoint(webots::GPS *gps, double 
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
 void addLidarPoint(std::pair<double, double> point);
-bool addVictim(std::pair<double, double> point);
+void addVictim(std::pair<double, double> point);
+bool notBeenDetected(pdd victim);
 size_t getCount();
 void clearPointCloud();
 double clampAngle(double theta);

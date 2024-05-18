@@ -146,7 +146,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
         auto contour = getContour(frame);
         if(contour.size() == 0)
         {
-            std::cout << "no contour found!" << std::endl;
+            // std::cout << "no contour found!" << std::endl;
             return;
         }
 
@@ -172,7 +172,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
         auto contour = getContour(frame);
         if(contour.size() == 0)
         {
-            std::cout << "no contour found!" << std::endl;
+            // std::cout << "no contour found!" << std::endl;
             return;
         }
 
@@ -418,7 +418,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     {
         if (!isTraversableOpt(target))
         {
-            std::cout << "path to target is not traversable!" << std::endl;
+            // std::cout << "path to target is not traversable!" << std::endl;
             clearBfsResult();
             return false;
         }
@@ -543,8 +543,6 @@ void RobotInstance::addTexture(std::string name, cv::Mat m, SDL_PixelFormatEnum 
         m_tex[name] = getTextureFromMat(renderer, m, f);
 }
 
-char message[9];
-
 bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const double* position) //"l" or "r"
 {
     if(!m_knn->isTrained())
@@ -564,7 +562,7 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     char ch = (char)ret;
     float dist = dists[0];
 
-    std::cout << "ret: " << ret << " dist: " << dist << std::endl;
+    // std::cout << "ret: " << ret << " dist: " << dist << std::endl;
 
     if(dist > 4500000)
     {
@@ -573,10 +571,11 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
 
     int xPos = (int)(position[0] * 100);
     int zPos = (int)(position[2] * 100);
-    memcpy(&message[0], &xPos, 4);
-    memcpy(&message[4], &zPos, 4);
+    int victim_pos[2] = {xPos, zPos};
+    memcpy(message, victim_pos, sizeof(victim_pos));
     message[8] = ch;
     std::cout << message[8] << " found on side " << side << std::endl;
+    // std::cout << std::string(message) << std::endl;
     return true;
 }
 
@@ -612,13 +611,13 @@ void RobotInstance::lookForLetter()
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
-                addVictim(point);
-                if (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
+                if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
-                    std::cout << "emitting" << std::endl;
+                    std::cout << "emitting " << sizeof(message) << std::endl;
+                    delay(2);
+                    addVictim(point);
                     victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = message[8];
-                    delay(1);
                     m_emitter->send(message, sizeof(message));
                     step();
                     isFollowingVictim = false;
@@ -626,7 +625,7 @@ void RobotInstance::lookForLetter()
                 }
                 else
                 {
-                    if (!isFollowingVictim)
+                    if (!isFollowingVictim && notBeenDetected(point))
                     {
                         std::cout << "following victim" << std::endl;
                         stopMotors();
@@ -664,13 +663,13 @@ void RobotInstance::lookForLetter()
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
-                addVictim(point);
-                if (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
+                if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
-                    std::cout << "emitting" << std::endl;
+                    std::cout << "emitting " << sizeof(message) << std::endl;
+                    delay(2);
                     victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = message[8];
-                    delay(1);
+                    addVictim(point);
                     m_emitter->send(message, sizeof(message));
                     step();
                     isFollowingVictim = false;
@@ -678,7 +677,7 @@ void RobotInstance::lookForLetter()
                 }
                 else
                 {
-                    if (!isFollowingVictim)
+                    if (!isFollowingVictim && notBeenDetected(point))
                     {
                         std::cout << "following victim" << std::endl;
                         stopMotors();
@@ -720,7 +719,7 @@ void RobotInstance::detectVictims()
 pdd RobotInstance::calcNextPos()
 {
     pdd ret = r2d(chooseMove(this, m_imu->getRollPitchYaw()[2]));
-    std::cout << "traversable: " << isTraversableOpt(ret) << std::endl;
+    // std::cout << "traversable: " << isTraversableOpt(ret) << std::endl;
     return ret;
 }
 
@@ -730,7 +729,7 @@ void RobotInstance::moveToPos(pdd pos)
 
     if(compPts(curPos, pos))
     {
-        std::cout << "already at position!" << std::endl;
+        // std::cout << "already at position!" << std::endl;
         return;
     }
 

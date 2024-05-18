@@ -194,6 +194,7 @@ private:
 
     bool isFollowingVictim;
     bool reporting;
+    char message[9];
     void lookForLetter();
 
     RobotInstance();
