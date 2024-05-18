@@ -609,7 +609,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     if (!bfsResult.empty())
     {
         pdd nextPoint = r2d(bfsResult.top());
-        if(currentPoint == nextPoint && midpoint_check(currentPoint, nextPoint) && isTraversableOpt(nextPoint))
+        if(currentPoint == nextPoint && midpoint_check(currentPoint, nextPoint))
         {
             bfsResult.pop();
             if(bfsResult.empty())
@@ -733,7 +733,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     if (toVisit.empty())
     {
         printPoint(currentPoint);
-        bfsResult = pointBfs(currentPoint, pdd(0, 0), getMinMax(getLidarPoints()), true);
+        bfsResult = pointBfs(currentPoint, rb->getStartPos(), getMinMax(getLidarPoints()), true);
         if (!bfsResult.empty())
         {
             pdd nextPoint = bfsResult.top();

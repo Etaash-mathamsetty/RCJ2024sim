@@ -43,27 +43,19 @@ std::vector<pdd> victims;
 std::pair<pdd, pdd> lidarToPoint(GPS* gps, double dist, double absAngle)
 {
     double pos[3];
-    double pos_rounded[3];
     memcpy(pos, gps->getValues(), 3 * sizeof(double));
     pos[2] *= -1;
     //force single floor for now
     pos[1] = 0;
-    pos_rounded[1] = floor_to(pos[1], region_size);
+    pdd region_pos;
 
-    double x = dist*sin(absAngle) + pos[0];
-    double y = dist*cos(absAngle) + pos[2];
+    double x = floor_to(dist*sin(absAngle) + pos[0]);
+    double y = floor_to(dist*cos(absAngle) + pos[2]);
 
-    pos_rounded[2] = floor_to(y, region_size);
-    pos_rounded[0] = floor_to(x, region_size);
+    region_pos.second = floor_to(y, region_size);
+    region_pos.first = floor_to(x, region_size);
 
-    x = floor_to(x);
-    y = floor_to(y);
-
-    //addition causes rounding errors
-    pos_rounded[0] = r2d(pos_rounded[0]);
-    pos_rounded[2] = r2d(pos_rounded[2]);
-
-    return std::make_pair(pdd(x, y), std::make_pair(pos_rounded[0], pos_rounded[2]));
+    return std::make_pair(pdd(x, y), r2d(region_pos));
 }
 
 //theta is in radians

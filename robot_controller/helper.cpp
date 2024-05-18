@@ -7,7 +7,7 @@
 
 double r2d(double decimal)
 {
-    return std::round(decimal * 100) / 100;
+    return std::round(decimal * 100) / 100.0;
 }
 
 double r3d(double decimal)
