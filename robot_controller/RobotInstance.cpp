@@ -611,8 +611,8 @@ void RobotInstance::lookForLetter()
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
-                bool ret = addVictim(point);
-                if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) && !victimMap.count(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2])))
+                addVictim(point);
+                if (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
                     std::cout << "emitting" << std::endl;
@@ -663,9 +663,8 @@ void RobotInstance::lookForLetter()
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
-                bool ret = addVictim(point);
-                // std::cout << getCurrentGPSPosition().first <<" " << getCurrentGPSPosition().second << " " << point.first << " " << point.second << std::endl;
-                if ((ret && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE) && !victimMap.count(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2])))
+                addVictim(point);
+                if (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
                     std::cout << "emitting" << std::endl;
