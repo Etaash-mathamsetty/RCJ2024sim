@@ -459,10 +459,10 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         pdd cur = getRawGPSPosition();
         addLidarPoint(r2d(pointTo(cur, this->getYaw(), 0.03)));
         addLidarPoint(r2d(target));
-        double x = target.first - 0.02, y = target.second - 0.02;
-        for(; x <= target.first + 0.02; x += 0.009)
+        double x = target.first - 0.01, y = target.second - 0.01;
+        for(; x <= target.first + 0.01; x += 0.009)
         {
-            for(y = target.second - 0.02; y <= target.second + 0.02; y += 0.009)
+            for(y = target.second - 0.01; y <= target.second + 0.01; y += 0.009)
             {
                 addLidarPoint(r2d(pdd(x, y)));
                 removeToVisit(r2d(pdd(x, y)));

@@ -259,7 +259,7 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
             continue;
         }
         visited.insert(node);
-        if (isTraversableOpt(node) && canSee(cur, node))
+        if (isTraversableOpt(node, 0.039) && canSee(cur, node))
         {
             // cout << "nearest traversable found" << endl;
             return node;
