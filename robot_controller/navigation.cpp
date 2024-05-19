@@ -99,7 +99,7 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points)
 {
     for (const pdd& pt : points)
     {
-        if (getDist(pos, pt) < 0.0425)
+        if (getDist(pos, pt) < 0.043)
             return false;
     }
     return true;
@@ -123,7 +123,7 @@ bool isTraversableOpt(const pdd& pos, double rad)
 
 bool isTraversableOpt(const pdd& pos)
 {
-    return isTraversableOpt(pos, 0.0425);
+    return isTraversableOpt(pos, 0.043);
 }
 
 double minDist(pdd a, pdd b, pdd p)
