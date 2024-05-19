@@ -20,6 +20,7 @@ std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
 void addLidarPoint(std::pair<double, double> point);
 void addVictim(std::pair<double, double> point);
+void reportVictim(std::pair<double, double> point);
 bool notBeenDetected(pdd victim);
 size_t getCount();
 void clearPointCloud();

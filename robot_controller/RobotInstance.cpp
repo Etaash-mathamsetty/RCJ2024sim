@@ -420,6 +420,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         {
             // std::cout << "path to target is not traversable!" << std::endl;
             clearBfsResult();
+            removeToVisit(target);
             return false;
         }
         detectVictims();
@@ -611,12 +612,13 @@ void RobotInstance::lookForLetter()
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
+                addVictim(point);
                 if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
                     std::cout << "emitting " << sizeof(message) << std::endl;
                     delay(1.5);
-                    addVictim(point);
+                    reportVictim(point);
                     victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = message[8];
                     m_emitter->send(message, sizeof(message));
                     step();
@@ -663,13 +665,14 @@ void RobotInstance::lookForLetter()
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
+                addVictim(point);
                 if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
                     std::cout << "emitting " << sizeof(message) << std::endl;
                     delay(1.5);
                     victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = message[8];
-                    addVictim(point);
+                    reportVictim(point);
                     m_emitter->send(message, sizeof(message));
                     step();
                     isFollowingVictim = false;
