@@ -39,6 +39,7 @@ std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
 std::vector<pdd> vecCameraPoints;
 std::vector<pdd> victims;
+std::vector<pdd> reportedVictims;
 
 std::pair<pdd, pdd> lidarToPoint(GPS* gps, double dist, double absAngle)
 {
@@ -185,10 +186,18 @@ void addVictim(pdd point)
     }
 }
 
+void reportVictim(pdd point)
+{
+    if (find(reportedVictims.begin(), reportedVictims.end(), point) == reportedVictims.end())
+    {
+        reportedVictims.push_back(point);
+    }
+}
+
 bool notBeenDetected(pdd victim)
 {
-    std::cout << victims.size() << " " << isTraversable(victim, victims, hypot(0.011, 0.011)) << std::endl;
-    return isTraversable(victim, victims, hypot(0.011, 0.011));
+    std::cout << reportedVictims.size() << " " << isTraversable(victim, reportedVictims, hypot(0.011, 0.011)) << std::endl;
+    return isTraversable(victim, reportedVictims, hypot(0.011, 0.011));
 }
 
 ImPlotPoint getPointFromMap(int idx, void *_map)
