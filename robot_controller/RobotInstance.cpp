@@ -416,7 +416,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     double angle = std::atan2(target.first - start.first, target.second - start.second);
     while(traveled <= ticks && step() != -1)
     {
-        if (!isTraversableOpt(target))
+        if (!isTraversable(target, getLidarPoints()))
         {
             // std::cout << "path to target is not traversable!" << std::endl;
             clearBfsResult();
@@ -457,7 +457,6 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     {
         std::cout << "black detected" << std::endl;
         pdd cur = getRawGPSPosition();
-        addLidarPoint(r2d(pointTo(cur, this->getYaw(), 0.03)));
         addLidarPoint(r2d(target));
         double x = target.first - 0.01, y = target.second - 0.01;
         for(; x <= target.first + 0.01; x += 0.009)

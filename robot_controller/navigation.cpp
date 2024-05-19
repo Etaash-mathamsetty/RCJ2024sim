@@ -259,7 +259,7 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
             continue;
         }
         visited.insert(node);
-        if (isTraversableOpt(node, 0.041) && canSee(cur, node))
+        if (isTraversableOpt(node, 0.043) && canSee(cur, node))
         {
             // cout << "nearest traversable found" << endl;
             return node;
@@ -313,23 +313,23 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
         if (!compPts(node, tar) || (isBlind && isVisited(node)))
         {
             //north: +y, east: +x, south: -y, west: -x; 
-            // pdd adjacentNodes[8] = {
-            //     r2d(pdd(node.f, node.s - 0.01)),
-            //     r2d(pdd(node.f, node.s + 0.01)),
-            //     r2d(pdd(node.f + 0.01, node.s)),
-            //     r2d(pdd(node.f - 0.01, node.s)),
-            //     r2d(pdd(node.f - 0.01, node.s - 0.01)),
-            //     r2d(pdd(node.f + 0.01, node.s + 0.01)),
-            //     r2d(pdd(node.f + 0.01, node.s - 0.01)),
-            //     r2d(pdd(node.f - 0.01, node.s + 0.01))
-            // };
-
-            pdd adjacentNodes[4] = {
+            pdd adjacentNodes[8] = {
+                r2d(pdd(node.f, node.s - 0.01)),
                 r2d(pdd(node.f, node.s + 0.01)),
                 r2d(pdd(node.f + 0.01, node.s)),
-                r2d(pdd(node.f, node.s - 0.01)),
-                r2d(pdd(node.f - 0.01, node.s))
+                r2d(pdd(node.f - 0.01, node.s)),
+                r2d(pdd(node.f - 0.01, node.s - 0.01)),
+                r2d(pdd(node.f + 0.01, node.s + 0.01)),
+                r2d(pdd(node.f + 0.01, node.s - 0.01)),
+                r2d(pdd(node.f - 0.01, node.s + 0.01))
             };
+
+            // pdd adjacentNodes[4] = {
+            //     r2d(pdd(node.f, node.s + 0.01)),
+            //     r2d(pdd(node.f + 0.01, node.s)),
+            //     r2d(pdd(node.f, node.s - 0.01)),
+            //     r2d(pdd(node.f - 0.01, node.s))
+            // };
 
             for (const pdd& adjacent : adjacentNodes)
             {
