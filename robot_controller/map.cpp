@@ -170,6 +170,8 @@ void addLidarPoint(pdd point)
     rcoord.first = floor_to(rcoord.first, region_size);
     rcoord.second = floor_to(rcoord.second, region_size);
 
+    rcoord = r2d(rcoord);
+
     if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
     {
         vecLidarPoints.push_back(point);
