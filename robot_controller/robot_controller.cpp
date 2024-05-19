@@ -16,6 +16,7 @@
 #include "helper.hpp"
 #include "map.h"
 #include "mapping.h"
+#include "navigation.h"
 #include <filesystem>
 
 #include <SDL.h>
@@ -307,6 +308,16 @@ int main(int argc, char **argv) {
         if (rb->getTimeLeft() < 2) {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;
+        }
+        if (getToVisit().size() == 0)
+        {
+            stack<pdd> bfsResult = pointBfs(rb->getCurrentGPSPosition(), rb->getStartPos(), getMinMax(getLidarPoints()), false);
+            if (bfsResult.size() == 0)
+            {
+                send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
+                sent = true;
+                running = false;
+            }
         }
     }
 
