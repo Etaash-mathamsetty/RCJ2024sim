@@ -420,6 +420,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         {
             // std::cout << "path to target is not traversable!" << std::endl;
             clearBfsResult();
+            removeToVisit(target);
             return false;
         }
         detectVictims();
