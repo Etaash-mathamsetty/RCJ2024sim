@@ -370,7 +370,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
     return stack<pdd>();
 }
 
-bool isOnWall(pdd point)
+bool isOnWall(pdd node)
 {
     pdd adjacents[8] = {
         r2d(pdd(node.f, node.s - 0.01)),
@@ -384,7 +384,7 @@ bool isOnWall(pdd point)
     };
     for (const pdd& adjacent : adjacents)
     {
-        if (!isTraversable(adjacent))
+        if (!isTraversableOpt(adjacent))
         {
             return true;
         }
