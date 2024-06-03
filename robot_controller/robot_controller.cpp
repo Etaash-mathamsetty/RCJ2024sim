@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
         else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
         rb->updateTargetPos();
         rb->moveToNextPos();
-
+        show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
         if (rb->getTimeLeft() < 2) {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;

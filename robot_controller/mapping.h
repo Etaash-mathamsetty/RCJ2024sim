@@ -16,3 +16,4 @@
 void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* imu, const pdd& startpos, int sign);
 void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos, webots::Robot* rb);
 void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos, webots::Robot* rb);
+void insert_tile(std::string type, webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* imu, const pdd& startpos);

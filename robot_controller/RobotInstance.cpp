@@ -1,5 +1,6 @@
 #include "RobotInstance.hpp"
 #include <math.h>
+#include <mapping.h>
 #include <algorithm>
 #include <string.h>
 #include <unordered_map>
@@ -16,6 +17,7 @@
 
 
 #include "map.h"
+#include "mapping.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
 
@@ -456,6 +458,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     if(blackDetected())
     {
         std::cout << "black detected" << std::endl;
+        insert_tile("2", m_color, m_gps, m_imu, m_startPos);
         pdd cur = getRawGPSPosition();
         addLidarPoint(r2d(target));
         double x = target.first - 0.01, y = target.second - 0.01;
