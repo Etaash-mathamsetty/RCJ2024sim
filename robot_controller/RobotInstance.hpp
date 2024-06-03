@@ -192,6 +192,8 @@ private:
 
     bool determineLetter(const cv::Mat& roi, std::string side, const double* position);
 
+    char checkHsv(const cv::Mat& roi, std::string side);
+
     bool isFollowingVictim;
     bool reporting;
     char message[9];

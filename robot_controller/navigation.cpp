@@ -244,12 +244,9 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
     queue<pdd> q;
     set<pdd> visited;
-    parent.clear();
-    parent.reserve(10000);
     point = r2d(point);
     cur = r2d(cur);
     q.push(point);
-    parent[point] = pdd(DBL_MAX, DBL_MAX);
     while (!q.empty())
     {
         pdd node = r2d(q.front());
@@ -281,7 +278,6 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
                 if (!visited.count(adjacent))
                 {
                     q.push(adjacent);
-                    parent[adjacent] = node;
                 }
             }
         }
@@ -374,13 +370,17 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
     return stack<pdd>();
 }
 
-bool isOnWall(RobotInstance* rb, pdd point)
+bool isOnWall(pdd node)
 {
-    pdd adjacents[4] = {
-       pdd(point.f - 0.01, point.s),
-       pdd(point.f + 0.01, point.s),
-       pdd(point.f, point.s - 0.01),
-       pdd(point.f, point.s + 0.01)
+    pdd adjacents[8] = {
+        r2d(pdd(node.f, node.s - 0.01)),
+        r2d(pdd(node.f, node.s + 0.01)),
+        r2d(pdd(node.f + 0.01, node.s)),
+        r2d(pdd(node.f - 0.01, node.s)),
+        r2d(pdd(node.f - 0.01, node.s - 0.01)),
+        r2d(pdd(node.f + 0.01, node.s + 0.01)),
+        r2d(pdd(node.f + 0.01, node.s - 0.01)),
+        r2d(pdd(node.f - 0.01, node.s + 0.01))
     };
     for (const pdd& adjacent : adjacents)
     {
@@ -390,6 +390,50 @@ bool isOnWall(RobotInstance* rb, pdd point)
         }
     }
     return false;
+}
+
+pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation)
+{
+    pdd min = r2d(minMax.f), max = r2d(minMax.s);
+    queue<pdd> q;
+    set<pdd> visited;
+    cur = r2d(cur);
+    q.push(cur);
+    while (!q.empty())
+    {
+        pdd node = r2d(q.front());
+        q.pop();
+        if (visited.count(node) > 0 || !isTraversableOpt(cur) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
+        {
+            continue;
+        }
+        visited.insert(node);
+        if (isOnWall(cur))
+        {
+            return node;
+        }
+        else
+        {
+            pdd adjacentNodes[8] = {
+                r2d(pdd(node.f, node.s - 0.01)),
+                r2d(pdd(node.f, node.s + 0.01)),
+                r2d(pdd(node.f + 0.01, node.s)),
+                r2d(pdd(node.f - 0.01, node.s)),
+                r2d(pdd(node.f - 0.01, node.s - 0.01)),
+                r2d(pdd(node.f + 0.01, node.s + 0.01)),
+                r2d(pdd(node.f + 0.01, node.s - 0.01)),
+                r2d(pdd(node.f - 0.01, node.s + 0.01))
+            };
+            for (const pdd& adjacent : adjacentNodes)
+            {
+                if (!visited.count(adjacent))
+                {
+                    q.push(adjacent);
+                }
+            }
+        }
+    }
+    return cur;
 }
 
 deque<pdd> toVisit;
