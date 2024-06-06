@@ -18,7 +18,7 @@
 #include "mapping.h"
 #include "navigation.h"
 #include <filesystem>
-
+#include <time.h>
 #include <SDL.h>
 
 #include "imgui/imgui.h"
@@ -299,6 +299,8 @@ int main(int argc, char **argv) {
     // - perform simulation steps until Webots is stopping the controller
 
     bool sent = false;
+    int startingtime = time(0), seconds = 0, realseconds = 600;
+    const int buffertime = 10;
     while (rb->step() != -1 && running && !rb->isFinished()) {
         if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), -1);
         else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
@@ -319,6 +321,20 @@ int main(int argc, char **argv) {
                 sent = true;
                 running = false;
             }
+        }
+        int dummy = seconds + 1;
+        seconds = difftime(time(0), startingtime);
+        if (seconds == dummy)
+        {
+            dummy = seconds + 1;
+            printf("real seconds: %d \n", seconds);
+            printf("%d \n", seconds >= (realseconds - buffertime));
+        }
+        if (seconds >= (realseconds - buffertime))
+        {
+            send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
+            sent = true;
+            running = false;
         }
     }
 

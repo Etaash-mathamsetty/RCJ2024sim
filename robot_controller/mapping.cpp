@@ -255,7 +255,7 @@ void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* im
     pdd coords = pdd(pos[0] - 0.035 * sin(angle) * sign, -pos[2] + 0.035 * cos(angle) * sign);
 
     pii coords_int = pii(int(round((coords.first - startpos.first) / 0.12)), -int(round((coords.second - startpos.second) / 0.12)));
-    std::cout << coords_int.first << " " << coords_int.second << std::endl;
+    //std::cout << coords_int.first << " " << coords_int.second << std::endl;
     minXrelativetostart = std::min(coords_int.first, minXrelativetostart);
     minYrelativetostart = std::min(coords_int.second, minYrelativetostart);
     maxXrelativetostart = std::max(coords_int.first, maxXrelativetostart);
