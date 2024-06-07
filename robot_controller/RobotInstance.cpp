@@ -308,7 +308,7 @@ void RobotInstance::turnTo(double speed, double target_angle)
             target_angle = M_PI;
     }
 
-    while(step() != -1 && abs(current - target_angle) > 0.005)
+    while(step() != -1 && abs(current - target_angle) > 0.01)
     {
         current = m_imu->getRollPitchYaw()[2];
 
@@ -793,17 +793,19 @@ void RobotInstance::moveToPos(pdd pos)
 
     if(compPts(curPos, pos))
     {
-        // std::cout << "already at position!" << std::endl;
+        std::cout << "already at position!" << std::endl;
         return;
     }
 
-    double dist = getDist(curPos, pos); 
-    if(dist <= 0.02)
+    double dist = getDist(curPos, pos);
+
+    if(dist <= 0.001)
     {
-        dist *= 0.95; //prevent overshooting
+        return;
     }
+
     double angle = -std::atan2(pos.first - curPos.first, pos.second - curPos.second);
-    
+
     turnTo(MAX_VELOCITY, angle);
     forwardTicks(MAX_VELOCITY, dist, pos);
     // if (!isFollowingBfs() && dist > 0.012)
