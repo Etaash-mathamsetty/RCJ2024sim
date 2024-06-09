@@ -392,9 +392,11 @@ bool isOnWall(pdd node)
     return false;
 }
 
+// rotation already multiplied by -1
 pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation)
 {
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
+    rotation = clampAngle(round(rotation / (M_PI / 2)) * M_PI / 2);
     queue<pdd> q;
     set<pdd> visited;
     cur = r2d(cur);
@@ -403,27 +405,38 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation)
     {
         pdd node = r2d(q.front());
         q.pop();
-        if (visited.count(node) > 0 || !isTraversableOpt(cur) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
+        if (visited.count(node) > 0 || !isTraversableOpt(node) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
             continue;
         }
         visited.insert(node);
-        if (isOnWall(cur))
+        if (isOnWall(node))
         {
             return node;
         }
         else
         {
+            // prioritizing forward
             pdd adjacentNodes[8] = {
-                r2d(pdd(node.f, node.s - 0.01)),
-                r2d(pdd(node.f, node.s + 0.01)),
-                r2d(pdd(node.f + 0.01, node.s)),
-                r2d(pdd(node.f - 0.01, node.s)),
-                r2d(pdd(node.f - 0.01, node.s - 0.01)),
-                r2d(pdd(node.f + 0.01, node.s + 0.01)),
-                r2d(pdd(node.f + 0.01, node.s - 0.01)),
-                r2d(pdd(node.f - 0.01, node.s + 0.01))
+                pointTo(node, rotation),
+                pointTo(node, rotation - M_PI / 4),
+                pointTo(node, rotation + M_PI / 4),
+                pointTo(node, rotation + M_PI / 2),
+                pointTo(node, rotation - M_PI / 2),
+                pointTo(node, rotation - 3 * M_PI / 4),
+                pointTo(node, rotation + 3 * M_PI / 4),
+                pointTo(node, rotation + M_PI)
             };
+            // pdd adjacentNodes[8] = {
+            //     r2d(pdd(node.f, node.s - 0.01)),
+            //     r2d(pdd(node.f, node.s + 0.01)),
+            //     r2d(pdd(node.f + 0.01, node.s)),
+            //     r2d(pdd(node.f - 0.01, node.s)),
+            //     r2d(pdd(node.f - 0.01, node.s - 0.01)),
+            //     r2d(pdd(node.f + 0.01, node.s + 0.01)),
+            //     r2d(pdd(node.f + 0.01, node.s - 0.01)),
+            //     r2d(pdd(node.f - 0.01, node.s + 0.01))
+            // };
             for (const pdd& adjacent : adjacentNodes)
             {
                 if (!visited.count(adjacent))
