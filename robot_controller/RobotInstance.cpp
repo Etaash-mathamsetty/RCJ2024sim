@@ -463,15 +463,15 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         insert_tile("2", m_color, m_gps, m_imu, m_startPos);
         pdd cur = getRawGPSPosition();
         addLidarPoint(r2d(target));
-        double x = target.first - 0.01, y = target.second - 0.01;
-        for(; x <= target.first + 0.01; x += 0.009)
-        {
-            for(y = target.second - 0.01; y <= target.second + 0.01; y += 0.009)
-            {
-                addLidarPoint(r2d(pdd(x, y)));
-                removeToVisit(r2d(pdd(x, y)));
-            }
-        }
+        // double x = target.first - 0.01, y = target.second - 0.01;
+        // for(; x <= target.first + 0.01; x += 0.009)
+        // {
+        //     for(y = target.second - 0.01; y <= target.second + 0.01; y += 0.009)
+        //     {
+        //         addLidarPoint(r2d(pdd(x, y)));
+        //         removeToVisit(r2d(pdd(x, y)));
+        //     }
+        // }
         updateVisited();
         resetPosition();
 
@@ -848,7 +848,7 @@ void RobotInstance::updateVisited()
                 {
                     if(getDist(cur, point) <= 0.05)
                     {
-                        addVisited(point);
+                        // addVisited(point);
                     }
                     else if(!isInToVisit(point))
                     {
@@ -862,6 +862,14 @@ void RobotInstance::updateVisited()
                 else if(!traversable)
                 {
                     removeToVisit(point);
+                }
+                if(isOnWall(point))
+                {
+                    addOnWall(point);
+                }
+                else
+                {
+                    removeOnWall(point);
                 }
             }
         }

@@ -38,6 +38,7 @@ inline double ceil_to(double value, const double precision = 0.01)
 std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
 std::vector<pdd> vecCameraPoints;
+std::set<pdd> cameraToVisit;
 std::vector<pdd> victims;
 std::vector<pdd> reportedVictims;
 
@@ -83,6 +84,7 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         if(regions[rcoord].points.count(coord2) == 0 || !regions[rcoord].points[coord2].wall)
         {
             vecLidarPoints.push_back(coord2);
+            cameraToVisit.insert(coord2);
             regions[rcoord].points[coord2].wall = true;
         }
     }
@@ -149,6 +151,7 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
         if (regions[rcoord].points.count(coord2) == 0 || !regions[rcoord].points[coord2].camera)
         {
             vecCameraPoints.push_back(coord2);
+            cameraToVisit.erase(coord2);
             regions[rcoord].points[coord2].camera = true;
         }
     }
@@ -162,6 +165,11 @@ std::vector<std::pair<double, double>>& getLidarPoints()
 std::vector<std::pair<double, double>>& getCameraPoints()
 {
     return vecCameraPoints;
+}
+
+std::set<pdd>& getCameraToVisit()
+{
+    return cameraToVisit;
 }
 
 void addLidarPoint(pdd point)
@@ -215,6 +223,13 @@ ImPlotPoint getCameraPointFromMap(int idx, void *_map)
 ImPlotPoint getToVisitPoint(int idx, void* idontcare)
 {
     return { getToVisit()[idx].first, getToVisit()[idx].second };
+}
+
+ImPlotPoint getOnWallPoint(int idx, void* doesntmatter)
+{
+    auto it = getOnWall().begin();
+    std::advance(it, idx);
+    return {it->first, it->second};
 }
 
 ImPlotPoint getVisitedPlotPt(int idx, void *param)
@@ -277,7 +292,7 @@ void plotPoints(RobotInstance *rb, int w, int h)
         ImPlot::PlotScatterG("Lidar Points", getPointFromMap, nullptr, getCount(), ImPlotItemFlags_NoFit);
         ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
         ImPlot::SetNextMarkerStyle(ImPlotMarker_Plus);
-        ImPlot::PlotScatterG("Camera Points", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
+        // ImPlot::PlotScatterG("Camera Points", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Cross, 4);
             ImPlot::PlotScatterG("Visited", getVisitedPlotPt, nullptr, getVisited().size(), ImPlotItemFlags_NoFit);
@@ -285,6 +300,10 @@ void plotPoints(RobotInstance *rb, int w, int h)
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 3);
             ImPlot::PlotScatterG("To Visit", getToVisitPoint, nullptr, getToVisit().size(), ImPlotItemFlags_NoFit);
+        }
+        {
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 4);
+            ImPlot::PlotScatterG("On Wall", getOnWallPoint, nullptr, getOnWall().size(), ImPlotItemFlags_NoFit);
         }
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Diamond, 4);

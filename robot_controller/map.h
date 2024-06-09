@@ -18,6 +18,7 @@ void update_camera_map(webots::GPS *gps, const float *lidar_image, webots::Camer
 std::pair<std::pair<double, double>, pdd> lidarToPoint(webots::GPS *gps, double dist, double absAngle);
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
+std::set<pdd>& getCameraToVisit();
 void addLidarPoint(std::pair<double, double> point);
 void addVictim(std::pair<double, double> point);
 void reportVictim(std::pair<double, double> point);
