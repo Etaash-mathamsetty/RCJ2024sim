@@ -292,7 +292,7 @@ void plotPoints(RobotInstance *rb, int w, int h)
         ImPlot::PlotScatterG("Lidar Points", getPointFromMap, nullptr, getCount(), ImPlotItemFlags_NoFit);
         ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
         ImPlot::SetNextMarkerStyle(ImPlotMarker_Plus);
-        // ImPlot::PlotScatterG("Camera Points", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
+        ImPlot::PlotScatterG("Camera Points", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Cross, 4);
             ImPlot::PlotScatterG("Visited", getVisitedPlotPt, nullptr, getVisited().size(), ImPlotItemFlags_NoFit);

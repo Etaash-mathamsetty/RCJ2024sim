@@ -311,16 +311,11 @@ int main(int argc, char **argv) {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;
         }
-        if (getToVisit().size() == 0)
+        if (isAllDone() && rb->getCurrentGPSPosition() == rb->getStartPos())
         {
-            stack<pdd> bfsResult = pointBfs(rb->getCurrentGPSPosition(), rb->getStartPos(), getMinMax(getLidarPoints()), false);
-            // stack<pdd> blindBfs = pointBfs(rb->getCurrentGPSPosition(), rb->getCurrentGPSPosition(), getMinMax(getLidarPoints()), true);
-            if (bfsResult.size() == 0 && rb->getCurrentGPSPosition() == rb->getStartPos())
-            {
-                send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
-                sent = true;
-                running = false;
-            }
+            send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
+            sent = true;
+            running = false;
         }
         int dummy = seconds + 1;
         seconds = difftime(time(0), startingtime);

@@ -817,19 +817,21 @@ void RobotInstance::moveToPos(pdd pos)
 
 void RobotInstance::moveToNextPos()
 {
-    moveToPos(getTargetPos());
+    // moveToPos(getTargetPos());
+    moveToPoint(this, getTargetPos());
     
 }
 
 void RobotInstance::updateVisited()
 {
     pdd cur = getCurrentGPSPosition();
-    if(!isVisited(cur))
-    {
-        addVisited(cur);
-    }
+    double rotation = m_imu->getRollPitchYaw()[2] * -1;
+    addVisited(cur);
+    addVisited(pointTo(cur, rotation + M_PI / 2));
+    addVisited(pointTo(cur, rotation - M_PI / 2));
     if(cur != m_lastPos)
     {
+        bfsAddOnWall(cur, 0.08);
         const double radius = 0.08;
 
         double x = cur.first - radius, y = cur.second - radius;
@@ -862,15 +864,17 @@ void RobotInstance::updateVisited()
                 else if(!traversable)
                 {
                     removeToVisit(point);
-                }
-                if(isOnWall(point))
-                {
-                    addOnWall(point);
-                }
-                else
-                {
                     removeOnWall(point);
+                    removeVisited(point);
                 }
+                // if(isOnWall(point) && !visited && canSee(cur, point))
+                // {
+                //     addOnWall(point);
+                // }
+                // else
+                // {
+                //     removeOnWall(point);
+                // }
             }
         }
     }
