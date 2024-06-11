@@ -712,7 +712,7 @@ void moveToPoint(RobotInstance *rb, pdd point)
     while(!bfsResult.empty())
     {
         pdd next = bfsResult.top();
-        // if(!canSee(point, next))
+        // if(!midpoint_check(point, next))
         // {
         //     clearBfsResult();
         //     return;
@@ -737,6 +737,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
         cout << "no move found" << endl;
         allDone = true;
         moveToPoint(rb, rb->getStartPos());
+        return rb->getStartPos();
     }
     return nearestOnWall;
     if (getDist(cur, nearestOnWall) < getDist(cur, nearestUnseen))
