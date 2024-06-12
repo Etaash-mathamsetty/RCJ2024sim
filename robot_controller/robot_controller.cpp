@@ -295,10 +295,17 @@ int main(int argc, char **argv) {
 
     rb->update_lidar_cloud();
 
-    // Main loop:
-    // - perform simulation steps until Webots is stopping the controller
 
     bool sent = false;
+    rb->add_step_callback([&rb, &sent](){
+        if (rb->getTimeLeft() < 2) {
+            send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
+            sent = true;
+        }
+    });
+
+    // Main loop:
+    // - perform simulation steps until Webots is stopping the controller
     int startingtime = time(0), seconds = 0, realseconds = 600;
     const int buffertime = 10;
     while (rb->step() != -1 && running && !rb->isFinished()) {
@@ -307,10 +314,6 @@ int main(int argc, char **argv) {
         rb->updateTargetPos();
         rb->moveToNextPos();
         show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
-        if (rb->getTimeLeft() < 2) {
-            send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
-            sent = true;
-        }
         if (isAllDone() && rb->getCurrentGPSPosition() == rb->getStartPos())
         {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
