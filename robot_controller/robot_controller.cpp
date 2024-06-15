@@ -309,8 +309,10 @@ int main(int argc, char **argv) {
     int startingtime = time(0), seconds = 0, realseconds = 600;
     const int buffertime = 10;
     while (rb->step() != -1 && running && !rb->isFinished()) {
-        if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), -1);
-        else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
+        rb->add_step_callback([rb]() {
+            if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), -1);
+            else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
+           });
         rb->updateTargetPos();
         rb->moveToNextPos();
         show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
@@ -328,12 +330,12 @@ int main(int argc, char **argv) {
             printf("real seconds: %d \n", seconds);
             printf("%d \n", seconds >= (realseconds - buffertime));
         }
-        if (seconds >= (realseconds - buffertime))
+        /*if (seconds >= (realseconds - buffertime))
         {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;
             running = false;
-        }
+        }*/
     }
 
     if (!sent)
