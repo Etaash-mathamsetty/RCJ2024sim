@@ -888,6 +888,23 @@ void RobotInstance::updateVisited()
     m_lastPos = r2d(getCurrentGPSPosition());
 }
 
+std::vector<std::pair<char, SDL_Texture*>> RobotInstance::get_training_images()
+{
+    std::vector<std::pair<char, SDL_Texture*>> ret;
+
+    for(size_t i = 0; i < output.size(); i++)
+    {
+        cv::Mat img = training_data.row(i).clone();
+        cv::Mat img2;
+        img.convertTo(img2, CV_8U);
+        img2 = img2.reshape(1, 20);
+        SDL_Texture *tex = getTextureFromMat(renderer, img2.clone(), SDL_PIXELFORMAT_RGB332);
+        ret.push_back(std::make_pair((char)output[i], tex));
+    }
+
+    return ret;
+}
+
 bool RobotInstance::blackDetected()
 {
     const uint8_t* colors = m_color->getImage();

@@ -171,6 +171,8 @@ public:
 
     void add_training_data(std::string side, char classification);
 
+    std::vector<std::pair<char, SDL_Texture*>> get_training_images();
+
     bool& getDisableEmit() { return m_disableEmit; }
 
 private:

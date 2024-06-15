@@ -80,6 +80,8 @@ void init_frame(SDL_Renderer *renderer)
     ImGui::NewFrame();
 }
 
+std::vector<std::pair<char, SDL_Texture*>> image_map;
+
 void end_frame(RobotInstance *rb, SDL_Renderer *renderer)
 {
     ImGui::Render();
@@ -91,7 +93,13 @@ void end_frame(RobotInstance *rb, SDL_Renderer *renderer)
         SDL_DestroyTexture(it.second);
     }
 
+    for(const auto &it : image_map)
+    {
+        SDL_DestroyTexture(it.second);
+    }
+
     rb->getTextures().clear();
+    image_map.clear();
 }
 
 void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
@@ -177,6 +185,21 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 if(ImGui::Button("Save to File"))
                 {
                     rb->save_training_data();
+                }
+
+                ImGui::EndTabItem();
+            }
+
+            if(ImGui::BeginTabItem("Training Image Viewer"))
+            {
+
+                image_map = rb->get_training_images();
+
+                int i = 0;
+                for(const auto& pair : image_map)
+                {
+                    ImGui::Text("%c: index %d", pair.first, i++);
+                    ImGui::Image((void*)pair.second, ImVec2(256, 256));
                 }
 
                 ImGui::EndTabItem();
