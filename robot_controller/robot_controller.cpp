@@ -143,6 +143,7 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             if(ImGui::BeginTabItem("Debug Controls"))
             {
                 ImGui::Checkbox("Stop Movement", &rb->getStopMovement());
+                ImGui::Checkbox("Disable Emit", &rb->getDisableEmit());
 
                 ImGui::EndTabItem();
             }
