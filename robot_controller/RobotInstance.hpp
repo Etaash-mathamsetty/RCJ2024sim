@@ -171,6 +171,8 @@ public:
 
     void add_training_data(std::string side, char classification);
 
+    bool& getDisableEmit() { return m_disableEmit; }
+
 private:
 
     //DOES NOT AFFECT POSITION SENSOR
@@ -237,6 +239,7 @@ private:
     pdd m_startPos;
 
     bool m_disabledGUI;
+    bool m_disableEmit;
 
     std::vector<std::function<void()>> m_callbacks;
     std::map<std::string, SDL_Texture*> m_tex;
