@@ -134,16 +134,40 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             if(ImGui::BeginTabItem("Sensor Debug"))
             {
 
+                float color[3] = {rb->getColor()[0] / 255.0f, rb->getColor()[1] / 255.0f, rb->getColor()[2] / 255.0f};
+
+                ImGui::Text("Color Sensor: ");
+                ImGui::ColorEdit3("", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoInputs);
+
+                std::array<double, 512> xs = {0};
+                std::array<double, 512> ys = {0};
+
+                const float *image = rb->getLidar()->getRangeImage() + 512;
+
+                for(int i = 0; i < 512; i++)
+                {
+                    double dist = image[i];
+
+                    if(std::isinf(dist))
+                        continue;
+
+                    double angle = 2 * M_PI * i / 512.0;
+                    xs[i] = dist * sin(angle);
+                    ys[i] = dist * cos(angle);
+                }
+
+                if(ImPlot::BeginPlot("Lidar", ImVec2(-1, 0), ImPlotAxisFlags_AutoFit))
+                {
+                    ImPlot::PlotScatter("", xs.data(), ys.data(), 512);
+
+                    ImPlot::EndPlot();
+                }
+
                 for(const auto& pair : rb->getTextures())
                 {
                     ImGui::Text("%s", pair.first.c_str());
                     ImGui::Image((void*)pair.second, ImVec2(256, 256));
                 }
-
-                float color[3] = {rb->getColor()[0] / 255.0f, rb->getColor()[1] / 255.0f, rb->getColor()[2] / 255.0f};
-
-                ImGui::Text("Color Sensor: ");
-                ImGui::ColorEdit3("", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoInputs);
 
                 ImGui::EndTabItem();
             }
