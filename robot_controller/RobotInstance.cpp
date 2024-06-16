@@ -159,6 +159,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
         cv::Mat roi = _roi.clone();
         cv::Mat roi3;
         cv::resize(roi, roi3, cv::Size(20, 20));
+        cv::threshold(roi3, roi3, 127, 255, cv::THRESH_BINARY);
         cv::Mat roi4;
         roi3.convertTo(roi4, CV_32FC1);
         cv::Mat roi2 = roi4.reshape(1, 1);
@@ -185,6 +186,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
         cv::Mat roi = _roi.clone();
         cv::Mat roi3;
         cv::resize(roi, roi3, cv::Size(20, 20));
+        cv::threshold(roi3, roi3, 127, 255, cv::THRESH_BINARY);
         cv::Mat roi4;
         roi3.convertTo(roi4, CV_32FC1);
         cv::Mat roi2 = roi4.reshape(1, 1);
@@ -613,6 +615,7 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     cv::adaptiveThreshold(roi2, roi2, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 2.0);
     cv::Mat Roi1D;
     cv::resize(roi2, Roi1D, cv::Size(20, 20));
+    cv::threshold(Roi1D, Roi1D, 127, 255, cv::THRESH_BINARY);
     cv::Mat Roi1D3;
     Roi1D.convertTo(Roi1D3, CV_32F);
     cv::Mat Roi1D2 = Roi1D3.reshape(1, 1);

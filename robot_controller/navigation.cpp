@@ -532,7 +532,7 @@ pdd bfsWallTrace(RobotInstance* rb, pdd cur)
     pdd min = r2d({cur.f - wtRadius, cur.s - wtRadius}), max = r2d({cur.f + wtRadius, cur.s + wtRadius});
     queue<wallNode> q;
     set<pdd> visited;
-    q.push({cur, 0});
+    q.push({cur, rb->getYaw() * -1});
     while (!q.empty())
     {
         wallNode node = q.front();
@@ -567,7 +567,7 @@ pdd bfsWallTrace(RobotInstance* rb, pdd cur)
     return nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, cur);
 }
 
-bool isVisited(pdd point)
+bool isVisited(const pdd& point)
 {
     return visitedPoints.count(point) > 0;
 }
@@ -795,6 +795,17 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     rotation *= -1;
     pdd cur = rb->getCurrentGPSPosition();
     // pdd nearestOnWall = nearestIsOnWall(cur, getMinMax(getLidarPoints()), rotation, rb->getStartPos());
+
+    for(auto it = onWall.begin(); it != onWall.end(); it++)
+    {
+        pdd point = *it;
+        if(!isTraversableOpt(point) || isVisited(point))
+        {
+            removeOnWall(point);
+            it--;
+        }
+    }
+
     pdd bfsTarget = bfsWallTrace(rb, cur);
     // pdd nearestUnseen = getClosestHeuristic(getCameraToVisit(), cur, rb->getStartPos());
     if (bfsTarget == cur)

@@ -24,7 +24,7 @@ pdd nearestTraversable(pdd point, pdd cur, std::pair<pdd, pdd> minMax);
 std::stack<pdd> pointBfs(pdd cur, pdd tar, std::pair<pdd, pdd> minMax, bool isBlind);
 bool isOnWall(pdd node);
 void removeVisited(pdd point);
-bool isVisited(pdd point);
+bool isVisited(const pdd& point);
 void addVisited(pdd pt);
 void addToVisit(pdd point);
 void removeToVisit(pdd point);
