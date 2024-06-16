@@ -80,6 +80,8 @@ void init_frame(SDL_Renderer *renderer)
     ImGui::NewFrame();
 }
 
+std::vector<std::pair<char, SDL_Texture*>> image_map;
+
 void end_frame(RobotInstance *rb, SDL_Renderer *renderer)
 {
     ImGui::Render();
@@ -91,7 +93,13 @@ void end_frame(RobotInstance *rb, SDL_Renderer *renderer)
         SDL_DestroyTexture(it.second);
     }
 
+    for(const auto &it : image_map)
+    {
+        SDL_DestroyTexture(it.second);
+    }
+
     rb->getTextures().clear();
+    image_map.clear();
 }
 
 void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
@@ -126,16 +134,40 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             if(ImGui::BeginTabItem("Sensor Debug"))
             {
 
+                float color[3] = {rb->getColor()[0] / 255.0f, rb->getColor()[1] / 255.0f, rb->getColor()[2] / 255.0f};
+
+                ImGui::Text("Color Sensor: ");
+                ImGui::ColorEdit3("", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoInputs);
+
+                std::array<double, 512> xs = {0};
+                std::array<double, 512> ys = {0};
+
+                const float *image = rb->getLidar()->getRangeImage() + 512;
+
+                for(int i = 0; i < 512; i++)
+                {
+                    double dist = image[i];
+
+                    if(std::isinf(dist))
+                        continue;
+
+                    double angle = 2 * M_PI * i / 512.0;
+                    xs[i] = dist * sin(angle);
+                    ys[i] = dist * cos(angle);
+                }
+
+                if(ImPlot::BeginPlot("Lidar", ImVec2(-1, 0), ImPlotAxisFlags_AutoFit))
+                {
+                    ImPlot::PlotScatter("", xs.data(), ys.data(), 512);
+
+                    ImPlot::EndPlot();
+                }
+
                 for(const auto& pair : rb->getTextures())
                 {
                     ImGui::Text("%s", pair.first.c_str());
                     ImGui::Image((void*)pair.second, ImVec2(256, 256));
                 }
-
-                float color[3] = {rb->getColor()[0] / 255.0f, rb->getColor()[1] / 255.0f, rb->getColor()[2] / 255.0f};
-
-                ImGui::Text("Color Sensor: ");
-                ImGui::ColorEdit3("", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoInputs);
 
                 ImGui::EndTabItem();
             }
@@ -143,6 +175,7 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             if(ImGui::BeginTabItem("Debug Controls"))
             {
                 ImGui::Checkbox("Stop Movement", &rb->getStopMovement());
+                ImGui::Checkbox("Disable Emit", &rb->getDisableEmit());
 
                 ImGui::EndTabItem();
             }
@@ -176,6 +209,21 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 if(ImGui::Button("Save to File"))
                 {
                     rb->save_training_data();
+                }
+
+                ImGui::EndTabItem();
+            }
+
+            if(ImGui::BeginTabItem("Training Image Viewer"))
+            {
+
+                image_map = rb->get_training_images();
+
+                int i = 0;
+                for(const auto& pair : image_map)
+                {
+                    ImGui::Text("%c: index %d", pair.first, i++);
+                    ImGui::Image((void*)pair.second, ImVec2(256, 256));
                 }
 
                 ImGui::EndTabItem();
@@ -295,22 +343,29 @@ int main(int argc, char **argv) {
 
     rb->update_lidar_cloud();
 
-    // Main loop:
-    // - perform simulation steps until Webots is stopping the controller
 
     bool sent = false;
-    int startingtime = time(0), seconds = 0, realseconds = 600;
-    const int buffertime = 10;
-    while (rb->step() != -1 && running && !rb->isFinished()) {
-        if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), -1);
-        else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
-        rb->updateTargetPos();
-        rb->moveToNextPos();
-        show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
+    rb->add_step_callback([&rb, &sent](){
         if (rb->getTimeLeft() < 2) {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;
         }
+    });
+
+    // Main loop:
+    // - perform simulation steps until Webots is stopping the controller
+    int startingtime = time(0), seconds = 0, realseconds = 600;
+    const int buffertime = 10;
+
+    rb->add_step_callback([&rb]() {
+    if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), -1);
+    else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
+    });
+
+    while (rb->step() != -1 && running && !rb->isFinished()) {
+        rb->updateTargetPos();
+        rb->moveToNextPos();
+        show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
         if (isAllDone() && rb->getCurrentGPSPosition() == rb->getStartPos())
         {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
@@ -325,12 +380,12 @@ int main(int argc, char **argv) {
             printf("real seconds: %d \n", seconds);
             printf("%d \n", seconds >= (realseconds - buffertime));
         }
-        if (seconds >= (realseconds - buffertime))
+        /*if (seconds >= (realseconds - buffertime))
         {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;
             running = false;
-        }
+        }*/
     }
 
     if (!sent)

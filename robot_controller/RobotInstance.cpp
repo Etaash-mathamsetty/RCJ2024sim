@@ -154,7 +154,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
 
         cv::Rect boundRect = boundingRect(contour);
         cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-        cv::adaptiveThreshold(frame, frame, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY_INV, 11, 2.0);
+        cv::adaptiveThreshold(frame, frame, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 2.0);
         cv::Mat _roi(frame, boundRect);
         cv::Mat roi = _roi.clone();
         cv::Mat roi3;
@@ -180,7 +180,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
 
         cv::Rect boundRect = boundingRect(contour);
         cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-        cv::adaptiveThreshold(frame, frame, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY_INV, 11, 2.0);
+        cv::adaptiveThreshold(frame, frame, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 2.0);
         cv::Mat _roi(frame, boundRect);
         cv::Mat roi = _roi.clone();
         cv::Mat roi3;
@@ -241,6 +241,7 @@ RobotInstance::RobotInstance()
 
     isFollowingVictim = false;
     reporting = false;
+    m_disableEmit = false;
 
     int res = m_robot->step(m_timestep);
 
@@ -502,7 +503,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
 {
     cv::Mat frame2;
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
-    cv::adaptiveThreshold(frame2, frame2, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY_INV, 11, 2.0);
+    cv::adaptiveThreshold(frame2, frame2, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 2.0);
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
     cv::findContours(frame2, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
@@ -609,7 +610,7 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     cv::Mat roi2 = roi.clone();
     cv::cvtColor(roi2, roi2, cv::COLOR_BGR2GRAY);
     addTexture("BW " + side, roi2.clone(), SDL_PIXELFORMAT_RGB332);
-    cv::adaptiveThreshold(roi2, roi2, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY_INV, 11, 2.0);
+    cv::adaptiveThreshold(roi2, roi2, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 2.0);
     cv::Mat Roi1D;
     cv::resize(roi2, Roi1D, cv::Size(20, 20));
     cv::Mat Roi1D3;
@@ -680,14 +681,17 @@ void RobotInstance::lookForLetter()
                     delay(1.5);
                     reportVictim(point);
                     victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = message[8];
-                    m_emitter->send(message, sizeof(message));
-                    step();
+                    if(!m_disableEmit)
+                    {
+                        m_emitter->send(message, sizeof(message));
+                        step();
+                    }
                     isFollowingVictim = false;
                     reporting = false;
                 }
                 else
                 {
-                    if (!isFollowingVictim && notBeenDetected(point))
+                    if (!isFollowingVictim && notBeenDetected(point) && !m_disableEmit)
                     {
                         std::cout << "following victim" << std::endl;
                         stopMotors();
@@ -695,7 +699,7 @@ void RobotInstance::lookForLetter()
                         isFollowingVictim = true;
                         moveToPoint(this, nearest);
                         pdd cur = getRawGPSPosition();
-                        turnTo(MAX_VELOCITY, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
+                        //turnTo(MAX_VELOCITY, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
                         isFollowingVictim = false;
                         reporting = true;
                         std::cout << "done following victim" << std::endl;
@@ -734,14 +738,17 @@ void RobotInstance::lookForLetter()
                     delay(1.5);
                     victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = message[8];
                     reportVictim(point);
-                    m_emitter->send(message, sizeof(message));
-                    step();
+                    if(!m_disableEmit)
+                    {
+                        m_emitter->send(message, sizeof(message));
+                        step();
+                    }
                     isFollowingVictim = false;
                     reporting = false;
                 }
                 else
                 {
-                    if (!isFollowingVictim && notBeenDetected(point))
+                    if (!isFollowingVictim && notBeenDetected(point) && !m_disableEmit)
                     {
                         std::cout << "following victim" << std::endl;
                         stopMotors();
@@ -750,7 +757,7 @@ void RobotInstance::lookForLetter()
                         isFollowingVictim = true;
                         moveToPoint(this, nearest);
                         pdd cur = getRawGPSPosition();
-                        turnTo(MAX_VELOCITY, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
+                        //turnTo(MAX_VELOCITY, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
                         isFollowingVictim = false;
                         reporting = true;
                         std::cout << "done following victim" << std::endl;
@@ -879,6 +886,23 @@ void RobotInstance::updateVisited()
         }
     }
     m_lastPos = r2d(getCurrentGPSPosition());
+}
+
+std::vector<std::pair<char, SDL_Texture*>> RobotInstance::get_training_images()
+{
+    std::vector<std::pair<char, SDL_Texture*>> ret;
+
+    for(size_t i = 0; i < output.size(); i++)
+    {
+        cv::Mat img = training_data.row(i).clone();
+        cv::Mat img2;
+        img.convertTo(img2, CV_8U);
+        img2 = img2.reshape(1, 20);
+        SDL_Texture *tex = getTextureFromMat(renderer, img2.clone(), SDL_PIXELFORMAT_RGB332);
+        ret.push_back(std::make_pair((char)output[i], tex));
+    }
+
+    return ret;
 }
 
 bool RobotInstance::blackDetected()

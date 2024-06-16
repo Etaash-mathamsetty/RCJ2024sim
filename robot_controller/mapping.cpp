@@ -139,10 +139,10 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         }
 
     }
-    if (r4passage.first != -1000)
+    if (r4passage.first != -1000&&!room4.empty())
     {
         //flood fill
-        pii tile = r4passage;
+        pii tile = *room4.begin();
         std::queue<pii> q;
         std::map<pii, bool> bfsvisited;
         q.push(tile);
@@ -252,7 +252,7 @@ void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* im
     double angle = imu->getRollPitchYaw()[2];
     //pdd coords = pdd(pos[0]-0.06*sin(angle)-getMinMax(pList).first.first, pos[2] - 0.06 * cos(angle)- getMinMax(pList).first.second);
     //pii coords_int = pii(int(floor(coords.first / 0.12)), int(ceil(coords.second / 0.12)));
-    pdd coords = pdd(pos[0] - 0.035 * sin(angle) * sign, -pos[2] + 0.035 * cos(angle) * sign);
+    pdd coords = pdd(pos[0] - 0.02 * sin(angle) * sign, -pos[2] + 0.02 * cos(angle) * sign);
 
     pii coords_int = pii(int(round((coords.first - startpos.first) / 0.12)), -int(round((coords.second - startpos.second) / 0.12)));
     //std::cout << coords_int.first << " " << coords_int.second << std::endl;
@@ -375,6 +375,7 @@ void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* im
 
 void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos, webots::Robot* rb)
 {
+    std::cout << "room: " << room << std::endl;
     double minX = getMinMax(pList).first.first, minY = getMinMax(pList).first.second, maxX = getMinMax(pList).second.first, maxY = getMinMax(pList).second.second;
     double w = maxX - minX, h = maxY - minY;
     int arrW = int(round(w / 0.12)) * 4 + 1, arrH = int(round(h / 0.12)) * 4 + 1;
@@ -384,48 +385,48 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
     int sx = int(round(startX / 0.12)), sy = int(round(startY / 0.12));
     int worldH = int(round(h / 0.12)), worldW = int(round(w / 0.12));
     //bounds checking
-    if ( startTileX < 0 ) startTileX = 0;
-    if ( startTileY < 0 ) startTileY = 0;
-    if ( startTileX > arrW - 5 ) startTileX = arrW - 5;
-    if ( startTileY > arrH - 5 ) startTileY = arrH - 5;
+    if (startTileX < 0) startTileX = 0;
+    if (startTileY < 0) startTileY = 0;
+    if (startTileX > arrW - 5) startTileX = arrW - 5;
+    if (startTileY > arrH - 5) startTileY = arrH - 5;
     std::cout << "min x:" << minX << " " << "min y:" << minY << std::endl;
     std::cout << "max x:" << maxX << " " << "max y:" << maxY << std::endl;
     std::cout << "start x:" << startpos.first << " " << "start y:" << startpos.second << std::endl;
-    for ( int i = 0; i < worldH; i++ )
+    for (int i = 0; i < worldH; i++)
     {
-        for ( int j = 0; j < worldW; j++ )
+        for (int j = 0; j < worldW; j++)
         {
-            for ( int y = 0; y < 5; y++ )
+            for (int y = 0; y < 5; y++)
             {
-                for ( int x = 0; x < 5; x++ )
+                for (int x = 0; x < 5; x++)
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
                     double checkX = minX + 0.12 * j + x * 0.03, checkY = maxY - 0.12 * i - y * 0.03;
-                    if ( !isTraversable(pdd(checkX, checkY), pList, 0.015) ) map[ yidx ][ xidx ] = "1";
+                    if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
                 }
             }
         }
     }
-    for ( const auto& tile : tilemap )
+    for (const auto& tile : tilemap)
     {
         pii pos = pii(tile.first.first, tile.first.second);
-        int y = ( pos.second + startTileY / 4 ) * 4, x = ( pos.first + startTileX / 4 ) * 4;
-        if ( x < 0 ) x = 0;
-        if ( y < 0 ) y = 0;
-        if ( x > arrW - 5 ) x = arrW - 5;
-        if ( y > arrH - 5 ) y = arrH - 5;
+        int y = (pos.second + startTileY / 4) * 4, x = (pos.first + startTileX / 4) * 4;
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (x > arrW - 5) x = arrW - 5;
+        if (y > arrH - 5) y = arrH - 5;
         std::string val = tile.second;
-        map[ y + 1 ][ x + 1 ] = val;
-        map[ y + 1 ][ x + 3 ] = val;
-        map[ y + 3 ][ x + 1 ] = val;
-        map[ y + 3 ][ x + 3 ] = val;
-        map[ y + 1 ][ x + 2 ] = "0";
-        map[ y + 2 ][ x + 1 ] = "0";
-        map[ y + 2 ][ x + 2 ] = "0";
-        map[ y + 2 ][ x + 3 ] = "0";
-        map[ y + 3 ][ x + 2 ] = "0";
+        map[y + 1][x + 1] = val;
+        map[y + 1][x + 3] = val;
+        map[y + 3][x + 1] = val;
+        map[y + 3][x + 3] = val;
+        map[y + 1][x + 2] = "0";
+        map[y + 2][x + 1] = "0";
+        map[y + 2][x + 2] = "0";
+        map[y + 2][x + 3] = "0";
+        map[y + 3][x + 2] = "0";
     }
-    for ( const auto& v : getVictims() )
+    for (const auto& v : getVictims())
     {
         //(std::make_pair(std::make_pair(pdd(position[0], position[2]), side), m_imu->getRollPitchYaw()[2]))
         //first.first.first - x
@@ -433,126 +434,126 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         //first.second - side
         //second - angle
         double victimXPos = v.first.first.first.first, victimYPos = -v.first.first.first.second;
-        if ( v.first.first.second == "r" )
+        if (v.first.first.second == "r")
         {
             victimXPos += cos(v.first.second) * 0.06;
             victimYPos += sin(v.first.second) * 0.06;
         }
-        if ( v.first.first.second == "l" )
+        if (v.first.first.second == "l")
         {
             victimXPos -= cos(v.first.second) * 0.06;
             victimYPos -= sin(v.first.second) * 0.06;
         }
-        int victimX = int(round(( ( victimXPos - minX ) / 0.03 ))), victimY = int(round(( ( maxY - victimYPos ) / 0.03 )));
+        int victimX = int(round(((victimXPos - minX) / 0.03))), victimY = int(round(((maxY - victimYPos) / 0.03)));
         std::cout << victimXPos << victimYPos << std::endl;
         std::cout << victimX << victimY << std::endl;
-        map[ victimY ][ victimX ] = v.second;
+        map[victimY][victimX] = v.second;
     }
-    for ( pii tile : room4 )
+    for (pii tile : room4)
     {
-        int y = ( tile.second + startTileY / 4 ) * 4, x = ( tile.first + startTileX / 4 ) * 4;
-        if ( x < 0 ) x = 0;
-        if ( y < 0 ) y = 0;
-        if ( x > arrW - 5 ) x = arrW - 5;
-        if ( y > arrH - 5 ) y = arrH - 5;
+        int y = (tile.second + startTileY / 4) * 4, x = (tile.first + startTileX / 4) * 4;
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (x > arrW - 5) x = arrW - 5;
+        if (y > arrH - 5) y = arrH - 5;
         //std::cout << x << " " << y << std::endl;
-        if ( map[ y + 1 ][ x + 1 ] != "8" && map[ y + 1 ][ x + 1 ] != "9" && map[ y + 1 ][ x + 1 ] != "o" )
+        if (map[y + 1][x + 1] != "8" && map[y + 1][x + 1] != "9" && map[y + 1][x + 1] != "o")
         {
-            for ( int i = 0; i < 5; i++ )
+            for (int i = 0; i < 5; i++)
             {
-                for ( int j = 0; j < 5; j++ )
+                for (int j = 0; j < 5; j++)
                 {
-                    map[ y + i ][ x + j ] = "*";
+                    map[y + i][x + j] = "*";
                 }
             }
         }
 
     }
-    if ( r4passage.first != -1000 )
+    if (r4passage.first != -1000 && !room4.empty())
     {
         //flood fill
-        pii tile = r4passage;
+        pii tile = *room4.begin();
         std::queue<pii> q;
         std::map<pii, bool> bfsvisited;
         q.push(tile);
-        bfsvisited[ tile ] = 1;
-        while ( !q.empty() )
+        bfsvisited[tile] = 1;
+        while (!q.empty())
         {
             tile = q.front();
             std::cout << "front: " << tile.first << " " << tile.second << std::endl;
             q.pop();
             //add stars to map array
-            int y = ( tile.second + startTileY / 4 ) * 4, x = ( tile.first + startTileX / 4 ) * 4;
-            if ( x < 0 ) x = 0;
-            if ( y < 0 ) y = 0;
-            if ( x > arrW - 5 ) x = arrW - 5;
-            if ( y > arrH - 5 ) y = arrH - 5;
-            if ( map[ y + 1 ][ x + 1 ] != "8" && map[ y + 1 ][ x + 1 ] != "9" && map[ y + 1 ][ x + 1 ] != "o" )
+            int y = (tile.second + startTileY / 4) * 4, x = (tile.first + startTileX / 4) * 4;
+            if (x < 0) x = 0;
+            if (y < 0) y = 0;
+            if (x > arrW - 5) x = arrW - 5;
+            if (y > arrH - 5) y = arrH - 5;
+            if (map[y + 1][x + 1] != "8" && map[y + 1][x + 1] != "9" && map[y + 1][x + 1] != "o")
             {
-                for ( int i = 0; i < 5; i++ )
+                for (int i = 0; i < 5; i++)
                 {
-                    for ( int j = 0; j < 5; j++ )
+                    for (int j = 0; j < 5; j++)
                     {
-                        map[ y + i ][ x + j ] = "*";
+                        map[y + i][x + j] = "*";
                     }
                 }
             }
             //push viable neighbors to queue
             //right
-            if ( tile.first < maxXrelativetostart && ( !roommap.count(pii(tile.first + 1, tile.second)) || ( roommap.count(pii(tile.first + 1, tile.second)) && roommap[ pii(tile.first + 1, tile.second) ] == 4 ) ) )
+            if (tile.first < maxXrelativetostart && (!roommap.count(pii(tile.first + 1, tile.second)) || (roommap.count(pii(tile.first + 1, tile.second)) && roommap[pii(tile.first + 1, tile.second)] == 4)))
             {
-                if ( !bfsvisited.count(pii(tile.first + 1, tile.second)) )
+                if (!bfsvisited.count(pii(tile.first + 1, tile.second)))
                 {
                     q.push(pii(tile.first + 1, tile.second));
-                    bfsvisited[ pii(tile.first + 1, tile.second) ] = 1;
+                    bfsvisited[pii(tile.first + 1, tile.second)] = 1;
                 }
             }
             //up
-            if ( tile.second > minYrelativetostart && ( !roommap.count(pii(tile.first, tile.second - 1)) || ( roommap.count(pii(tile.first, tile.second - 1)) && roommap[ pii(tile.first, tile.second - 1) ] == 4 ) ) )
+            if (tile.second > minYrelativetostart && (!roommap.count(pii(tile.first, tile.second - 1)) || (roommap.count(pii(tile.first, tile.second - 1)) && roommap[pii(tile.first, tile.second - 1)] == 4)))
             {
-                if ( !bfsvisited.count(pii(tile.first, tile.second - 1)) )
+                if (!bfsvisited.count(pii(tile.first, tile.second - 1)))
                 {
                     q.push(pii(tile.first, tile.second - 1));
-                    bfsvisited[ pii(tile.first, tile.second - 1) ] = 1;
+                    bfsvisited[pii(tile.first, tile.second - 1)] = 1;
                 }
             }
             //down
-            if ( tile.second < maxYrelativetostart && ( !roommap.count(pii(tile.first, tile.second + 1)) || ( roommap.count(pii(tile.first, tile.second + 1)) && roommap[ pii(tile.first, tile.second + 1) ] == 4 ) ) )
+            if (tile.second < maxYrelativetostart && (!roommap.count(pii(tile.first, tile.second + 1)) || (roommap.count(pii(tile.first, tile.second + 1)) && roommap[pii(tile.first, tile.second + 1)] == 4)))
             {
-                if ( !bfsvisited.count(pii(tile.first, tile.second + 1)) )
+                if (!bfsvisited.count(pii(tile.first, tile.second + 1)))
                 {
                     q.push(pii(tile.first, tile.second + 1));
-                    bfsvisited[ pii(tile.first, tile.second + 1) ] = 1;
+                    bfsvisited[pii(tile.first, tile.second + 1)] = 1;
                 }
             }
             //left
-            if ( tile.first > minXrelativetostart && ( !roommap.count(pii(tile.first - 1, tile.second)) || ( roommap.count(pii(tile.first - 1, tile.second)) && roommap[ pii(tile.first - 1, tile.second) ] == 4 ) ) )
+            if (tile.first > minXrelativetostart && (!roommap.count(pii(tile.first - 1, tile.second)) || (roommap.count(pii(tile.first - 1, tile.second)) && roommap[pii(tile.first - 1, tile.second)] == 4)))
             {
-                if ( !bfsvisited.count(pii(tile.first - 1, tile.second)) )
+                if (!bfsvisited.count(pii(tile.first - 1, tile.second)))
                 {
                     q.push(pii(tile.first - 1, tile.second));
-                    bfsvisited[ pii(tile.first - 1, tile.second) ] = 1;
+                    bfsvisited[pii(tile.first - 1, tile.second)] = 1;
                 }
             }
         }
 
     }
-    map[ startTileY + 1 ][ startTileX + 1 ] = "5";
-    map[ startTileY + 1 ][ startTileX + 3 ] = "5";
-    map[ startTileY + 3 ][ startTileX + 1 ] = "5";
-    map[ startTileY + 3 ][ startTileX + 3 ] = "5";
-    map[ startTileY + 1 ][ startTileX + 2 ] = "0";
-    map[ startTileY + 2 ][ startTileX + 1 ] = "0";
-    map[ startTileY + 2 ][ startTileX + 2 ] = "0";
-    map[ startTileY + 2 ][ startTileX + 3 ] = "0";
-    map[ startTileY + 3 ][ startTileX + 2 ] = "0";
+    map[startTileY + 1][startTileX + 1] = "5";
+    map[startTileY + 1][startTileX + 3] = "5";
+    map[startTileY + 3][startTileX + 1] = "5";
+    map[startTileY + 3][startTileX + 3] = "5";
+    map[startTileY + 1][startTileX + 2] = "0";
+    map[startTileY + 2][startTileX + 1] = "0";
+    map[startTileY + 2][startTileX + 2] = "0";
+    map[startTileY + 2][startTileX + 3] = "0";
+    map[startTileY + 3][startTileX + 2] = "0";
     std::cout << "come and get it" << std::endl;
     std::string flattened = "";
     //int width = map[0].size(),height=map.size();
-    for ( int i = 0; i < arrH; i++ ) {
-        for ( int j = 0; j < arrW; j++ ) {
-            std::cout << map[ i ][ j ] + ",";
-            flattened += map[ i ][ j ] + ","; // Flatten the array with comma separators
+    for (int i = 0; i < arrH; i++) {
+        for (int j = 0; j < arrW; j++) {
+            std::cout << map[i][j] + ",";
+            flattened += map[i][j] + ","; // Flatten the array with comma separators
         }
         std::cout << std::endl;
     }
