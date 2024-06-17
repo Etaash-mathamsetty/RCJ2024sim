@@ -501,7 +501,7 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
             }
         }
     }
-    return cur;
+    return start;
 }
 
 struct wallNode
@@ -521,6 +521,20 @@ pdd bfsWallTrace(RobotInstance* rb, pdd cur)
         pdd temp = nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, cur);
         if (temp == cur)
         {
+            static stack<pdd> bfsResult{};
+            if(bfsResult.empty())
+            {
+                removeVisited(rb->getStartPos());
+                bfsResult = pointBfs(cur, rb->getStartPos(), getMinMax(getLidarPoints()), false);
+            }
+
+            if(!bfsResult.empty())
+            {
+                pdd pt = bfsResult.top();
+                bfsResult.pop();
+                return pt;
+            }
+
             return cur;
         }
         cur = temp;
@@ -564,7 +578,7 @@ pdd bfsWallTrace(RobotInstance* rb, pdd cur)
         }
     }
     cout << "no traceable wall found" << endl;
-    return nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, cur);
+    return nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, rb->getStartPos());
 }
 
 bool isVisited(const pdd& point)
@@ -811,9 +825,12 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     if (bfsTarget == cur)
     {
         cout << "no move found" << endl;
-        // allDone = true;
-        // moveToPoint(rb, rb->getStartPos());
-        // return rb->getStartPos();
+
+       if(cur == rb->getStartPos())
+       {
+            allDone = true;
+            return cur;
+       }
     }
     return bfsTarget;
 }
