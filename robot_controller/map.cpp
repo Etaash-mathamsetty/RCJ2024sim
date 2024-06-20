@@ -206,8 +206,9 @@ void reportVictim(pdd point)
 
 bool notBeenDetected(pdd victim)
 {
-    std::cout << reportedVictims.size() << " " << isTraversable(victim, reportedVictims, hypot(0.011, 0.011)) << std::endl;
-    return isTraversable(victim, reportedVictims, hypot(0.02, 0.01));
+    const double dist = hypot(0.02, 0.01);
+    std::cout << reportedVictims.size() << " " << isTraversable(victim, reportedVictims, dist) << std::endl;
+    return isTraversable(victim, reportedVictims, dist);
 }
 
 ImPlotPoint getPointFromMap(int idx, void *_map)
