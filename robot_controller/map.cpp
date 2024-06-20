@@ -38,7 +38,7 @@ inline double ceil_to(double value, const double precision = 0.01)
 std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
 std::vector<pdd> vecCameraPoints;
-std::set<pdd> cameraToVisit;
+std::unordered_set<pdd, pair_hash_combiner<double>> cameraToVisit;
 std::vector<pdd> victims;
 std::vector<pdd> reportedVictims;
 
@@ -167,7 +167,7 @@ std::vector<std::pair<double, double>>& getCameraPoints()
     return vecCameraPoints;
 }
 
-std::set<pdd>& getCameraToVisit()
+std::unordered_set<pdd, pair_hash_combiner<double>>& getCameraToVisit()
 {
     return cameraToVisit;
 }

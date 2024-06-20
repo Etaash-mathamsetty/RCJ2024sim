@@ -182,12 +182,6 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
 
             if(ImGui::BeginTabItem("KNN Trainer"))
             {
-                for(const auto& pair : rb->getTextures())
-                {
-                    ImGui::Text("%s", pair.first.c_str());
-                    ImGui::Image((void*)pair.second, ImVec2(256, 256));
-                }
-
                 const char classifications[5] = {'H', 'S', 'U', 'P', 'C'};
                 const char* classification_names[5] = {"Harmed", "Stable", "Unharmed", "Poision", "Corrosive"};
                 static int idx = 0;
@@ -209,6 +203,12 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 if(ImGui::Button("Save to File"))
                 {
                     rb->save_training_data();
+                }
+
+                for(const auto& pair : rb->getTextures())
+                {
+                    ImGui::Text("%s", pair.first.c_str());
+                    ImGui::Image((void*)pair.second, ImVec2(256, 256));
                 }
 
                 ImGui::EndTabItem();
@@ -365,7 +365,7 @@ int main(int argc, char **argv) {
     while (rb->step() != -1 && running && !rb->isFinished()) {
         rb->updateTargetPos();
         rb->moveToNextPos();
-        show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
+        //show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
         if (isAllDone() && rb->getCurrentGPSPosition() == rb->getStartPos())
         {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());

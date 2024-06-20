@@ -8,6 +8,7 @@
 #include <string>
 #include <climits>
 #include <set>
+#include <unordered_set>
 #include <algorithm>
 #include <webots/GPS.hpp>
 #include <webots/Lidar.hpp>
@@ -244,7 +245,7 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
 {
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
     queue<pdd> q;
-    set<pdd> visited;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
     point = r2d(point);
     cur = r2d(cur);
     q.push(point);
@@ -291,7 +292,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
     parent.clear();
     parent.reserve(10000);
-    set<pdd> visited;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
     queue<pdd> q;
     cur = r2d(cur);
     tar = r2d(tar);
@@ -381,11 +382,11 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
 }
 
 deque<pdd> toVisit;
-set<pdd> visitedPoints;
+unordered_set<pdd, pair_hash_combiner<double>> visitedPoints;
 stack<pdd> bfsResult = {};
-set<pdd> onWall;
+unordered_set<pdd, pair_hash_combiner<double>> onWall;
 
-pdd getClosestHeuristic(set<pdd> points, pdd cur, pdd start)
+pdd getClosestHeuristic(const unordered_set<pdd, pair_hash_combiner<double>>& points, pdd cur, pdd start)
 {
     pdd closest = cur;
     double minDist = DBL_MAX;
@@ -446,7 +447,7 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
     rotation = clampAngle(round(rotation / (M_PI / 2)) * M_PI / 2);
     queue<pdd> q;
-    set<pdd> visited;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
     cur = r2d(cur);
     q.push(cur);
     while (!q.empty())
@@ -545,7 +546,7 @@ pdd bfsWallTrace(RobotInstance* rb, pdd cur)
     cout << (rangeImage[hr * 3 / 4] < rangeImage[hr / 4] ? "left" : "right") << endl;
     pdd min = r2d({cur.f - wtRadius, cur.s - wtRadius}), max = r2d({cur.f + wtRadius, cur.s + wtRadius});
     queue<wallNode> q;
-    set<pdd> visited;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
     q.push({cur, rb->getYaw() * -1});
     while (!q.empty())
     {
@@ -614,7 +615,7 @@ void addVisited(pdd point)
     }
 }
 
-const set<pdd>& getVisited()
+const unordered_set<pdd, pair_hash_combiner<double>>& getVisited()
 {
     return visitedPoints;
 }
@@ -649,7 +650,7 @@ void bfsAddOnWall(pdd cur, double radius)
     pdd min = {cur.f - radius, cur.s - radius};
     pdd max = {cur.f + radius, cur.s + radius};
     queue<pdd> q;
-    set<pdd> visited;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
     cur = r2d(cur);
     q.push(cur);
     while (!q.empty())
@@ -717,7 +718,7 @@ const std::deque<pdd>& getToVisit()
     return toVisit;
 }
 
-const std::set<pdd>& getOnWall()
+const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall()
 {
     return onWall;
 }
@@ -810,13 +811,16 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     pdd cur = rb->getCurrentGPSPosition();
     // pdd nearestOnWall = nearestIsOnWall(cur, getMinMax(getLidarPoints()), rotation, rb->getStartPos());
 
-    for(auto it = onWall.begin(); it != onWall.end(); it++)
+    for(auto it = onWall.begin(); it != onWall.end();)
     {
         pdd point = *it;
         if(!isTraversableOpt(point) || isVisited(point))
         {
-            removeOnWall(point);
-            it--;
+            it = onWall.erase(it);
+        }
+        else
+        {
+            it++;
         }
     }
 

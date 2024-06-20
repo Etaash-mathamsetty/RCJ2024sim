@@ -1,5 +1,6 @@
 #include <stack>
 #include <vector>
+#include <unordered_set>
 #include "constants.h"
 #include <webots/GPS.hpp>
 #include <webots/Lidar.hpp>
@@ -37,9 +38,9 @@ bool isAllDone();
 void clearBfsResult();
 void moveToPoint(RobotInstance *rb, pdd point);
 pdd chooseMove(RobotInstance *rb, double currentRotation);
-const std::set<pdd>& getVisited();
+const std::unordered_set<pdd, pair_hash_combiner<double>>& getVisited();
 const std::deque<pdd>& getToVisit();
-const std::set<pdd>& getOnWall();
+const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall();
 const std::stack<pdd>& getBfsPath();
 bool isTraversable(const pdd& pos, const std::vector<pdd>& points, double robotRadius);
 
