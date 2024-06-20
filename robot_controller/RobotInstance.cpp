@@ -796,7 +796,7 @@ void RobotInstance::detectVictims()
 
 pdd RobotInstance::calcNextPos()
 {
-    pdd ret = r2d(chooseMove(this, -m_imu->getRollPitchYaw()[2]));
+    pdd ret = r2d(chooseMove(this, getYaw()));
     // std::cout << "traversable: " << isTraversableOpt(ret) << std::endl;
     return ret;
 }
@@ -855,41 +855,27 @@ void RobotInstance::updateVisited()
             for(y = cur.second - radius; y <= cur.second + radius; y += 0.008)
             {
                 pdd point = r2d(pdd(x, y));
-//                if(point == pointTo(cur, m_imu->getRollPitchYaw()[2]))
-//                {
-//                    continue;
-//                }
                 bool visited = isVisited(point);
                 bool traversable = isTraversableOpt(point);
                 if(!visited && traversable && canSee(cur, point))
                 {
-                    if(getDist(cur, point) <= 0.05)
-                    {
-                        // addVisited(point);
-                    }
-                    else if(!isInToVisit(point))
+                    if(!isInToVisit(point))
                     {
                         addToVisit(point);
                     }
                 }
-                // else if(visited && !traversable)
-                // {
-                //     removeVisited(point);
-                // }
                 else if(!traversable)
                 {
                     removeToVisit(point);
                     removeOnWall(point);
                     removeVisited(point);
                 }
-                // if(isOnWall(point) && !visited && canSee(cur, point))
-                // {
-                //     addOnWall(point);
-                // }
-                // else
-                // {
-                //     removeOnWall(point);
-                // }
+                if (checkNearbyVisited(point))
+                {
+                    addPseudoVisited(point);
+                    removeOnWall(point);
+                    removeToVisit(point);
+                }
             }
         }
     }
