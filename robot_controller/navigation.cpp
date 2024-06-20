@@ -399,8 +399,6 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         std::cout << "target is not traversable!" << std::endl;
         std::cout << "target: " << pointToString(tar) << std::endl;
         removeOnWall(tar);
-        removeToVisit(tar);
-        removeVisited(tar);
         return stack<pdd>();
     }
 
@@ -421,7 +419,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         }
         if (wall && !isOnWall(node))
         {
-            continue;
+            // continue;
         }
         visited.insert(node);
         if (!compPts(node, tar) || (isBlind && (isVisited(node) || isPseudoVisited(node))))
@@ -483,8 +481,6 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     removeOnWall(tar);
     bfsRemoveOnWall(tar, 0.05);
-    removeToVisit(tar);
-    removeVisited(tar);
     cout << "Route not found:" << endl;
     printPoint(cur);
     printPoint(tar);
@@ -649,6 +645,10 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
             }
         }
     }
+    if (!onWall.empty())
+    {
+        return getClosestHeuristic(onWall, cur, start);
+    }
     return start;
 }
 
@@ -682,7 +682,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
     if (!isOnWall(cur))
     {
         pdd temp = nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), cur);
-        if (temp == cur)
+        if (temp == rb->getStartPos())
         {
             static stack<pdd> bfsResult{};
             if(bfsResult.empty())
@@ -695,6 +695,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
             {
                 return bfsResult;
             }
+            cout << "path to start not found" << endl;
             return stack<pdd>();
         }
         cur = temp;
@@ -925,7 +926,6 @@ void bfsRemoveOnWall(pdd cur, double radius)
         if (isOnWall(node))
         {
             removeOnWall(node);
-            removeToVisit(node);
         }
         pdd adjacentNodes[8] = {
             r2d(pdd(node.f, node.s - 0.01)),
@@ -1053,8 +1053,6 @@ void moveToPoint(RobotInstance *rb, pdd point, bool wall)
     {
         removeOnWall(point);
         bfsRemoveOnWall(point, 0.05);
-        removeToVisit(point);
-        removeVisited(point);
         return;
     }
     // cout << "done" << endl;

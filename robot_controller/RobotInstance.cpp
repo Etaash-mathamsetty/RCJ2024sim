@@ -833,7 +833,7 @@ void RobotInstance::moveToNextPos()
         updateTargetPos();
     }
 
-    moveToPoint(this, getTargetPos(), true);
+    moveToPoint(this, getTargetPos(), false);
     
 }
 
