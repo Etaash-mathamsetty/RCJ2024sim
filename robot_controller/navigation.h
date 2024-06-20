@@ -1,5 +1,6 @@
 #include <stack>
 #include <vector>
+#include <unordered_set>
 #include "constants.h"
 #include <webots/GPS.hpp>
 #include <webots/Lidar.hpp>
@@ -21,8 +22,8 @@ pdd pointTo(pdd point, double dir, double dist);
 bool midpoint_check(pdd a, pdd b);
 std::pair<pdd, pdd> getMinMax(const std::vector<pdd>& list);
 pdd nearestTraversable(pdd point, pdd cur, std::pair<pdd, pdd> minMax);
-std::stack<pdd> pointBfs(pdd cur, pdd tar, std::pair<pdd, pdd> minMax, bool isBlind);
-bool isOnWall(pdd node);
+std::stack<pdd> pointBfs(pdd cur, pdd tar, std::pair<pdd, pdd> minMax, bool isBlind, bool wall=false);
+bool isOnWall(pdd node, double rad = 0.043);
 void removeVisited(pdd point);
 bool isVisited(const pdd& point);
 void addVisited(pdd pt);
@@ -35,11 +36,11 @@ void bfsAddOnWall(pdd cur, double radius);
 bool isFollowingBfs();
 bool isAllDone();
 void clearBfsResult();
-void moveToPoint(RobotInstance *rb, pdd point);
+void moveToPoint(RobotInstance *rb, pdd point, bool wall = false);
 pdd chooseMove(RobotInstance *rb, double currentRotation);
-const std::set<pdd>& getVisited();
+const std::unordered_set<pdd, pair_hash_combiner<double>>& getVisited();
 const std::deque<pdd>& getToVisit();
-const std::set<pdd>& getOnWall();
+const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall();
 const std::stack<pdd>& getBfsPath();
 bool isTraversable(const pdd& pos, const std::vector<pdd>& points, double robotRadius);
 

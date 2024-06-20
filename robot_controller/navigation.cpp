@@ -8,6 +8,7 @@
 #include <string>
 #include <climits>
 #include <set>
+#include <unordered_set>
 #include <algorithm>
 #include <webots/GPS.hpp>
 #include <webots/Lidar.hpp>
@@ -48,10 +49,10 @@ bool compPts(pdd pt1, pdd pt2)
 
 pair<pdd, pdd> getMinMax(const vector<pdd>& list)
 {
-    double minx = 10000;
-    double maxx = -10000;
-    double miny = 10000;
-    double maxy = -10000;
+    double minx = 100000;
+    double maxx = -100000;
+    double miny = 100000;
+    double maxy = -100000;
     for (size_t i = 0; i < list.size(); i++)
     {
         if (list[i].f < minx) minx = list[i].f;
@@ -240,11 +241,69 @@ stack<pdd> optimizeRoute(stack<pdd> route)
     return rev_ret;
 }
 
+bool isNearWall(pdd pt)
+{
+    for(REGION* r : get_neighboring_regions(pt))
+    {
+        if(r)
+        {
+            for(const auto& p : r->points)
+            {
+                if(getDist(pt, p.first) <= 0.053)
+                    return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+stack<pdd> optimizeRouteOnWall(stack<pdd> route)
+{
+    if (route.empty())
+    {
+        return route;
+    }
+    stack<pdd> ret;
+
+    while (!route.empty())
+    {
+        pdd cur = r2d(route.top());
+        route.pop();
+        ret.push(cur);
+    }
+
+    pdd last_pt = ret.top();
+
+    //flip the path again (cuz this stack class sucks)
+    stack<pdd> rev_ret;
+    while (!ret.empty())
+    {
+        pdd cur = ret.top();
+        ret.pop();
+        if (rev_ret.size() > 0 && midpoint_check(rev_ret.top(), cur) && isNearWall(rev_ret.top()))
+        {
+            last_pt = cur;
+            continue;
+        }
+        rev_ret.push(last_pt);
+        last_pt = cur;
+    }
+
+    //ensure the last point is added
+    if(rev_ret.size() == 0 || rev_ret.top() != last_pt)
+    {
+        rev_ret.push(last_pt);
+    }
+
+    return rev_ret;
+}
+
 pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
 {
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
     queue<pdd> q;
-    set<pdd> visited;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
     point = r2d(point);
     cur = r2d(cur);
     q.push(point);
@@ -286,12 +345,12 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
     return cur;
 }
 
-stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
+stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool wall)
 {
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
     parent.clear();
     parent.reserve(10000);
-    set<pdd> visited;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
     queue<pdd> q;
     cur = r2d(cur);
     tar = r2d(tar);
@@ -312,6 +371,10 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
             {
                 continue;
             }
+        }
+        if (wall && !isOnWall(node))
+        {
+            continue;
         }
         visited.insert(node);
         if (!compPts(node, tar) || (isBlind && isVisited(node)))
@@ -362,7 +425,10 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
         }
         cout << "!!!!! successful bfs route length: " << route.size() << endl;
         route.push(cur);
-        route = optimizeRoute(route);
+        if (!wall)
+            route = optimizeRoute(route);
+        else 
+            route = optimizeRouteOnWall(route);
         route.pop();
         cout << "!!!!! optimized bfs route length: " << route.size() << endl;
         return route;
@@ -381,11 +447,11 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind)
 }
 
 deque<pdd> toVisit;
-set<pdd> visitedPoints;
+unordered_set<pdd, pair_hash_combiner<double>> visitedPoints;
 stack<pdd> bfsResult = {};
-set<pdd> onWall;
+unordered_set<pdd, pair_hash_combiner<double>> onWall;
 
-pdd getClosestHeuristic(set<pdd> points, pdd cur, pdd start)
+pdd getClosestHeuristic(const unordered_set<pdd, pair_hash_combiner<double>>& points, pdd cur, pdd start)
 {
     pdd closest = cur;
     double minDist = DBL_MAX;
@@ -401,7 +467,7 @@ pdd getClosestHeuristic(set<pdd> points, pdd cur, pdd start)
     return closest;
 }
 
-bool isOnWall(pdd node)
+bool isOnWall(pdd node, double rad)
 {
     if (onWall.find(node) != onWall.end())
     {
@@ -431,7 +497,7 @@ bool isOnWall(pdd node)
 
     for (const pdd& adjacent : adjacents)
     {
-        if (!isTraversableOpt(adjacent) || !isTraversable(adjacent, getLidarPoints()))
+        if (!isTraversableOpt(adjacent, rad) || !isTraversable(adjacent, getLidarPoints(), rad))
         {
             return true;
         }
@@ -446,7 +512,7 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
     rotation = clampAngle(round(rotation / (M_PI / 2)) * M_PI / 2);
     queue<pdd> q;
-    set<pdd> visited;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
     cur = r2d(cur);
     q.push(cur);
     while (!q.empty())
@@ -518,14 +584,14 @@ pdd dfsWallTrace(RobotInstance* rb, pdd cur)
     cur = r2d(cur);
     if (!isOnWall(cur))
     {
-        pdd temp = nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, cur);
+        pdd temp = nearestIsOnWall(cur, get_lidar_minmax_opt(), -rb->getYaw(), cur);
         if (temp == cur)
         {
             static stack<pdd> bfsResult{};
             if(bfsResult.empty())
             {
                 removeVisited(rb->getStartPos());
-                bfsResult = pointBfs(cur, rb->getStartPos(), getMinMax(getLidarPoints()), false);
+                bfsResult = pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false);
             }
 
             if(!bfsResult.empty())
@@ -547,7 +613,7 @@ pdd dfsWallTrace(RobotInstance* rb, pdd cur)
     stack<wallNode> stack;
     parent.clear();
     parent.reserve(10000);
-    set<pdd> visited;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
     stack.push({cur, 0});
     bool isFound = false;
     while (!stack.empty() && !isFound)
@@ -592,7 +658,7 @@ pdd dfsWallTrace(RobotInstance* rb, pdd cur)
 
     }
     cout << "no traceable wall found" << endl;
-    return pointBfs(cur, nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, rb->getStartPos()), getMinMax(getLidarPoints), false);
+    return nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, rb->getStartPos());
 }
 
 bool isVisited(const pdd& point)
@@ -628,7 +694,7 @@ void addVisited(pdd point)
     }
 }
 
-const set<pdd>& getVisited()
+const unordered_set<pdd, pair_hash_combiner<double>>& getVisited()
 {
     return visitedPoints;
 }
@@ -663,7 +729,7 @@ void bfsAddOnWall(pdd cur, double radius)
     pdd min = {cur.f - radius, cur.s - radius};
     pdd max = {cur.f + radius, cur.s + radius};
     queue<pdd> q;
-    set<pdd> visited;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
     cur = r2d(cur);
     q.push(cur);
     while (!q.empty())
@@ -731,7 +797,7 @@ const std::deque<pdd>& getToVisit()
     return toVisit;
 }
 
-const std::set<pdd>& getOnWall()
+const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall()
 {
     return onWall;
 }
@@ -796,10 +862,15 @@ const stack<pdd>& getBfsPath()
     return bfsResult;
 }
 
-void moveToPoint(RobotInstance *rb, pdd point)
+void moveToPoint(RobotInstance *rb, pdd point, bool wall)
 {
     point = r2d(point);
-    bfsResult = pointBfs(rb->getCurrentGPSPosition(), point, getMinMax(getLidarPoints()), false);
+    bfsResult = pointBfs(rb->getCurrentGPSPosition(), point, get_lidar_minmax_opt(), false, wall);
+    if(wall && bfsResult.empty())
+    {
+        //fallback
+        bfsResult = pointBfs(rb->getCurrentGPSPosition(), point, get_lidar_minmax_opt(), false);
+    }
     // cout << "done" << endl;
     while(!bfsResult.empty())
     {
@@ -820,17 +891,19 @@ void moveToPoint(RobotInstance *rb, pdd point)
 
 pdd chooseMove(RobotInstance *rb, double rotation)
 {
-    rotation *= -1;
     pdd cur = rb->getCurrentGPSPosition();
     // pdd nearestOnWall = nearestIsOnWall(cur, getMinMax(getLidarPoints()), rotation, rb->getStartPos());
 
-    for(auto it = onWall.begin(); it != onWall.end(); it++)
+    for(auto it = onWall.begin(); it != onWall.end();)
     {
         pdd point = *it;
         if(!isTraversableOpt(point) || isVisited(point))
         {
-            removeOnWall(point);
-            it--;
+            it = onWall.erase(it);
+        }
+        else
+        {
+            it++;
         }
     }
 

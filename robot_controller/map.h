@@ -3,6 +3,7 @@
 #include <webots/Camera.hpp>
 #include <webots/InertialUnit.hpp>
 #include <iostream>
+#include <unordered_set>
 #include <map>
 #include <optional>
 #include "helper.hpp"
@@ -18,7 +19,7 @@ void update_camera_map(webots::GPS *gps, const float *lidar_image, webots::Camer
 std::pair<std::pair<double, double>, pdd> lidarToPoint(webots::GPS *gps, double dist, double absAngle);
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
-std::set<pdd>& getCameraToVisit();
+std::unordered_set<pdd, pair_hash_combiner<double>>& getCameraToVisit();
 void addLidarPoint(std::pair<double, double> point);
 void addVictim(std::pair<double, double> point);
 void reportVictim(std::pair<double, double> point);
@@ -26,6 +27,7 @@ bool notBeenDetected(pdd victim);
 size_t getCount();
 void clearPointCloud();
 double clampAngle(double theta);
+std::pair<pdd, pdd> get_lidar_minmax_opt();
 
 struct POINT_TYPE {
   bool wall : 4;

@@ -13,6 +13,7 @@
 #include <string>
 #include <cstring>
 #include <set>
+#include <unordered_set>
 #include <map>
 #include <queue>
 
@@ -27,7 +28,7 @@ void otherdelay(int ms, webots::Robot* rb)
 }
 std::map<pii, std::string> tilemap;
 std::map<pii, int> roommap;
-std::set<pii> room4;
+std::unordered_set<pii, pair_hash_combiner<int>> room4;
 pii r4passage = pii(-1000, -1000);
 int minXrelativetostart = 0, minYrelativetostart = 0, maxXrelativetostart = 0, maxYrelativetostart = 0;
 int room = 1;

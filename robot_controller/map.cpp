@@ -38,7 +38,7 @@ inline double ceil_to(double value, const double precision = 0.01)
 std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
 std::vector<pdd> vecCameraPoints;
-std::set<pdd> cameraToVisit;
+std::unordered_set<pdd, pair_hash_combiner<double>> cameraToVisit;
 std::vector<pdd> victims;
 std::vector<pdd> reportedVictims;
 
@@ -167,7 +167,7 @@ std::vector<std::pair<double, double>>& getCameraPoints()
     return vecCameraPoints;
 }
 
-std::set<pdd>& getCameraToVisit()
+std::unordered_set<pdd, pair_hash_combiner<double>>& getCameraToVisit()
 {
     return cameraToVisit;
 }
@@ -206,8 +206,9 @@ void reportVictim(pdd point)
 
 bool notBeenDetected(pdd victim)
 {
-    std::cout << reportedVictims.size() << " " << isTraversable(victim, reportedVictims, hypot(0.011, 0.011)) << std::endl;
-    return isTraversable(victim, reportedVictims, hypot(0.02, 0.01));
+    const double dist = hypot(0.02, 0.01);
+    std::cout << reportedVictims.size() << " " << isTraversable(victim, reportedVictims, dist) << std::endl;
+    return isTraversable(victim, reportedVictims, dist);
 }
 
 ImPlotPoint getPointFromMap(int idx, void *_map)
@@ -383,6 +384,37 @@ REGION* get_region(webots::GPS *gps)
   return nullptr;
 }
 
+std::pair<pdd, pdd> get_lidar_minmax_opt()
+{
+    double minx = 100000;
+    double maxx = -100000;
+    double miny = 100000;
+    double maxy = -100000;
+    for(const auto& r : regions)
+    {
+        if(maxx < r.first.first)
+        {
+            maxx = r.first.first;
+        }
+
+        if(maxy < r.first.second)
+        {
+            maxy = r.first.second;
+        }
+
+        if(minx > r.first.first)
+        {
+            minx = r.first.first;
+        }
+
+        if(miny > r.first.second)
+        {
+            miny = r.first.second;
+        }
+    }
+
+    return make_pair(pdd(minx, miny), pdd(maxx, maxy));
+}
 
 std::vector<REGION*> ret;
 

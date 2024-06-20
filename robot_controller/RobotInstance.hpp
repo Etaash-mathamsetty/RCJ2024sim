@@ -175,6 +175,8 @@ public:
 
     bool& getDisableEmit() { return m_disableEmit; }
 
+    time_t getRealTime() { return realtime; }
+
 private:
 
     //DOES NOT AFFECT POSITION SENSOR
@@ -242,6 +244,9 @@ private:
 
     bool m_disabledGUI;
     bool m_disableEmit;
+
+    time_t starttime;
+    time_t realtime;
 
     std::vector<std::function<void()>> m_callbacks;
     std::map<std::string, SDL_Texture*> m_tex;
