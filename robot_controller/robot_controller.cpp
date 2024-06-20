@@ -142,11 +142,12 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 std::array<double, 512> xs = {0};
                 std::array<double, 512> ys = {0};
 
-                const float *image = rb->getLidar()->getRangeImage() + 512;
+                const float *image = rb->getLidar()->getRangeImage() + 1024;
 
                 for(int i = 0; i < 512; i++)
                 {
                     double dist = image[i];
+                    dist *= cos(LIDAR_TILT_ANGLE);
 
                     if(std::isinf(dist))
                         continue;

@@ -68,11 +68,16 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
     for(int i = 0; i < 512; i++)
     {
         float dist = lidar_image[i];
+
         if(std::isinf(dist))
             continue;
-        if(dist > 0.4) //gets noisy after 0.4
+
+        dist *= cos(LIDAR_TILT_ANGLE);
+
+        if(dist > 0.3)
             continue;
-        const float angle = i/512.0 * 2.0 * M_PI;
+
+        const double angle = i/512.0 * 2.0 * M_PI;
 
         const auto coord = lidarToPoint(gps, dist, angle - theta);
         const pdd coord2 = coord.first;
@@ -135,6 +140,7 @@ void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float
     for (int i = 0; i < 512; i++)
     {
         float dist = lidar_image[i];
+        dist *= cos(LIDAR_TILT_ANGLE);
         if (std::isinf(dist))
             continue;
         const float angle = clampAngle(i / 512.0 * 2.0 * M_PI);
@@ -417,8 +423,6 @@ std::pair<pdd, pdd> get_lidar_minmax_opt()
     return make_pair(pdd(minx, miny), pdd(maxx, maxy));
 }
 
-std::vector<REGION*> ret;
-
 std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt)
 {
     double pos_rounded[3];
@@ -426,7 +430,8 @@ std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt
     pos_rounded[0] = floor_to(pt.first - region_size, region_size);
     pos_rounded[2] = floor_to(pt.second - region_size, region_size);
 
-    ret.clear();
+    std::vector<REGION*> ret;
+
     ret.reserve(9);
 
     for(int i = 0; i < 3; i++)
