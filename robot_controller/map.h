@@ -27,6 +27,7 @@ bool notBeenDetected(pdd victim);
 size_t getCount();
 void clearPointCloud();
 double clampAngle(double theta);
+std::pair<pdd, pdd> get_lidar_minmax_opt();
 
 struct POINT_TYPE {
   bool wall : 4;

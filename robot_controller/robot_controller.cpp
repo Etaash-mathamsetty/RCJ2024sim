@@ -116,7 +116,7 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
         {
             if(ImGui::BeginTabItem("Map Debug", nullptr))
             {
-                ImGui::Text("Lidar points: %ld  Score: %f  Time: %d", getCount(), rb->getScore(), rb->getTimeLeft());
+                ImGui::Text("Lidar points: %ld  Score: %f  Time: %d  RealTime: %ld", getCount(), rb->getScore(), rb->getTimeLeft(), rb->getRealTime());
                 ImGui::Text("IsTraversable%s: %d", pointToString(rb->getCurrentGPSPosition()).c_str(),
                                 isTraversableOpt(rb->getCurrentGPSPosition()));
 
@@ -346,20 +346,15 @@ int main(int argc, char **argv) {
 
     bool sent = false;
     rb->add_step_callback([&rb, &sent](){
-        if (rb->getTimeLeft() < 2) {
+        if (rb->getTimeLeft() < 2 || rb->getRealTime() >= 599) {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;
         }
     });
 
-    // Main loop:
-    // - perform simulation steps until Webots is stopping the controller
-    int startingtime = time(0), seconds = 0, realseconds = 600;
-    const int buffertime = 10;
-
     rb->add_step_callback([&rb]() {
-    if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), -1);
-    else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
+        if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), -1);
+        else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
     });
 
     while (rb->step() != -1 && running && !rb->isFinished()) {
@@ -372,14 +367,7 @@ int main(int argc, char **argv) {
             sent = true;
             running = false;
         }
-        int dummy = seconds + 1;
-        seconds = difftime(time(0), startingtime);
-        if (seconds == dummy)
-        {
-            dummy = seconds + 1;
-            printf("real seconds: %d \n", seconds);
-            printf("%d \n", seconds >= (realseconds - buffertime));
-        }
+
         /*if (seconds >= (realseconds - buffertime))
         {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());

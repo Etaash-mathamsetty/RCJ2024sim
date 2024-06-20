@@ -247,6 +247,8 @@ RobotInstance::RobotInstance()
 
     int res = m_robot->step(m_timestep);
 
+    starttime = time(0);
+
     if(res == -1)
     {
         std::cout << "failed to step!" << std::endl;
@@ -370,6 +372,8 @@ int RobotInstance::step() {
             this->m_receiver->nextPacket();
         }
     }
+
+    realtime = difftime(time(0), starttime);
 
     return ret;
 }
@@ -528,7 +532,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
         }
     }
 
-    cv::Mat frame3(frame);
+    cv::Mat frame3 = frame.clone();
     if(best_contour.size() > 0)
     {
         cv::drawContours(frame3, std::vector<std::vector<cv::Point>>{best_contour}, -1, cv::Scalar(255, 0, 0));
@@ -698,7 +702,7 @@ void RobotInstance::lookForLetter()
                     {
                         std::cout << "following victim" << std::endl;
                         stopMotors();
-                        pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
+                        pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
                         isFollowingVictim = true;
                         moveToPoint(this, nearest);
                         pdd cur = getRawGPSPosition();
@@ -755,7 +759,7 @@ void RobotInstance::lookForLetter()
                     {
                         std::cout << "following victim" << std::endl;
                         stopMotors();
-                        pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), getMinMax(getLidarPoints()));
+                        pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
                         printPoint(nearest);
                         isFollowingVictim = true;
                         moveToPoint(this, nearest);
@@ -792,7 +796,7 @@ void RobotInstance::detectVictims()
 
 pdd RobotInstance::calcNextPos()
 {
-    pdd ret = r2d(chooseMove(this, m_imu->getRollPitchYaw()[2]));
+    pdd ret = r2d(chooseMove(this, -m_imu->getRollPitchYaw()[2]));
     // std::cout << "traversable: " << isTraversableOpt(ret) << std::endl;
     return ret;
 }
@@ -808,12 +812,6 @@ void RobotInstance::moveToPos(pdd pos)
     }
 
     double dist = getDist(curPos, pos);
-
-    if(dist <= 0.001)
-    {
-        return;
-    }
-
     double angle = -std::atan2(pos.first - curPos.first, pos.second - curPos.second);
 
     turnTo(MAX_VELOCITY, angle);
@@ -828,14 +826,14 @@ void RobotInstance::moveToPos(pdd pos)
 void RobotInstance::moveToNextPos()
 {
     // moveToPos(getTargetPos());
-    moveToPoint(this, getTargetPos());
+    moveToPoint(this, getTargetPos(), true);
     
 }
 
 void RobotInstance::updateVisited()
 {
     pdd cur = getCurrentGPSPosition();
-    double rotation = m_imu->getRollPitchYaw()[2] * -1;
+    double rotation = -m_imu->getRollPitchYaw()[2];
     addVisited(cur);
     addVisited(pointTo(cur, rotation + M_PI / 2));
     addVisited(pointTo(cur, rotation - M_PI / 2));
@@ -910,7 +908,7 @@ std::vector<std::pair<char, SDL_Texture*>> RobotInstance::get_training_images()
 
 bool RobotInstance::blackDetected()
 {
-    const uint8_t* colors = m_color->getImage();
+    const uint8_t* colors = getColor();
 
     // std::cout << "R: " << (int)colors[0] << " G: " << (int)colors[1] << " B: " << (int)colors[2] << std::endl;
 

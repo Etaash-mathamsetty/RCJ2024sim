@@ -384,6 +384,37 @@ REGION* get_region(webots::GPS *gps)
   return nullptr;
 }
 
+std::pair<pdd, pdd> get_lidar_minmax_opt()
+{
+    double minx = 100000;
+    double maxx = -100000;
+    double miny = 100000;
+    double maxy = -100000;
+    for(const auto& r : regions)
+    {
+        if(maxx < r.first.first)
+        {
+            maxx = r.first.first;
+        }
+
+        if(maxy < r.first.second)
+        {
+            maxy = r.first.second;
+        }
+
+        if(minx > r.first.first)
+        {
+            minx = r.first.first;
+        }
+
+        if(miny > r.first.second)
+        {
+            miny = r.first.second;
+        }
+    }
+
+    return make_pair(pdd(minx, miny), pdd(maxx, maxy));
+}
 
 std::vector<REGION*> ret;
 
