@@ -577,14 +577,39 @@ struct wallNode
 };
 
 const double wtRadius = 0.05;
+bool isLeft = true;
 
-pdd dfsWallTrace(RobotInstance* rb, pdd cur)
+void checkSide(const float* rangeImage, int hr)
+{
+    cout << rangeImage[hr * 3 / 4] << " " << rangeImage[hr / 4] << endl;
+    double threshold = 0.03;
+    if (isLeft && rangeImage[hr / 4] + threshold < rangeImage[hr * 3 / 4] && !isinf(rangeImage[hr * 3 / 4]))
+    {
+        isLeft = false;
+    }
+    else if (!isLeft && rangeImage[hr * 3 / 4] + threshold < rangeImage[hr / 4] && !isinf(rangeImage[hr / 4]))
+    {
+        isLeft = true;
+    }
+}
+
+#include "imgui/imgui.h"
+#include "imgui/implot.h"
+
+pdd wallpoint;
+
+pair<double*, double*> getWallPoint()
+{
+    return {&wallpoint.f, &wallpoint.s};
+}
+
+stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
 {
     isWallTracing = true;
     cur = r2d(cur);
     if (!isOnWall(cur))
     {
-        pdd temp = nearestIsOnWall(cur, get_lidar_minmax_opt(), -rb->getYaw(), cur);
+        pdd temp = nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), cur);
         if (temp == cur)
         {
             static stack<pdd> bfsResult{};
@@ -596,69 +621,84 @@ pdd dfsWallTrace(RobotInstance* rb, pdd cur)
 
             if(!bfsResult.empty())
             {
-                pdd pt = bfsResult.top();
-                bfsResult.pop();
-                return pt;
+                return bfsResult;
             }
-
-            return cur;
+            return stack<pdd>();
         }
         cur = temp;
     }
-    const float* rangeImage = rb->getLidar()->getRangeImage() + 512;
-    int hr = rb->getLidar()->getHorizontalResolution();
-    double offset = rangeImage[hr * 3 / 4] < rangeImage[hr / 4] ? M_PI / 2 : -M_PI / 2;
-    cout << (rangeImage[hr * 3 / 4] < rangeImage[hr / 4] ? "left" : "right") << endl;
+    checkSide(rb->getLidar()->getRangeImage() + 1024, rb->getLidar()->getHorizontalResolution());
+    double offset = isLeft ? -M_PI / 2 : M_PI / 2;
+    cout << (isLeft ? "left" : "right") << endl;
     pdd min = r2d({cur.f - wtRadius, cur.s - wtRadius}), max = r2d({cur.f + wtRadius, cur.s + wtRadius});
-    stack<wallNode> stack;
+    stack<wallNode> st;
     parent.clear();
     parent.reserve(10000);
     unordered_set<pdd, pair_hash_combiner<double>> visited;
-    stack.push({cur, 0});
+    st.push({cur, 0});
     bool isFound = false;
-    while (!stack.empty() && !isFound)
+    pdd tar;
+    while (!st.empty() && !isFound)
     {
-        wallNode node = stack.top();
+        wallNode node = st.top();
         pdd point = node.point;
         double rotation = node.direction;
-        stack.pop();
+        st.pop();
         if (isOnWall(point) && (point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s))
         {
             isFound = true;
+            tar = point;
             break;
         }
         if (visited.count(point) > 0 || !isOnWall(point) || (isVisited(point) && point != cur) || point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s)
         {
             continue;
         }
+        if (abs(rotation) > M_PI / 4 + 0.05)
+        {
+            isFound = true;
+            tar = point;
+            break;
+        }
         visited.insert(point);
-        double directions[8] = {
+        double directions[8] = { // in order of priority
             rotation + offset,
-            rotation + offset / 2,
             rotation,
+            rotation + offset / 2,
             rotation + offset * 3 / 2,
             rotation + M_PI,
             rotation - offset,
             rotation - offset / 2,
             rotation - offset * 3 / 2
         };
-        reverse(begin(directions), end(directions));
-        for (const double& direction : directions)
+        for (int i = 7; i >= 0; i--)
         {
-            pdd temp = pointTo(point, clampAngle(direction));
-            if (isOnWall(temp))
+            pdd temp = pointTo(point, clampAngle(rb->getYaw() + directions[i]));
+            if (i == 0)
             {
-                stack.push({temp, clampAngle(direction)});
+                wallpoint = temp;
+            }
+            if (visited.count(temp) == 0)
+            {
+                st.push({temp, directions[i]});
                 parent[temp] = point;
             }
         }
     }
     if (isFound)
     {
-
+        pdd pindex = tar;
+        stack<pdd> res;
+        while (pindex != cur)
+        {
+            res.push(pindex);
+            pindex = parent[pindex];
+        }
+        optimizeRoute(res);
+        return res;
     }
     cout << "no traceable wall found" << endl;
-    return nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, rb->getStartPos());
+    return pointBfs(cur, nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw() * -1, rb->getStartPos()), get_lidar_minmax_opt(), false);
 }
 
 bool isVisited(const pdd& point)
@@ -889,6 +929,8 @@ void moveToPoint(RobotInstance *rb, pdd point, bool wall)
     }
 }
 
+stack<pdd> wallTracePath;
+
 pdd chooseMove(RobotInstance *rb, double rotation)
 {
     pdd cur = rb->getCurrentGPSPosition();
@@ -907,19 +949,31 @@ pdd chooseMove(RobotInstance *rb, double rotation)
         }
     }
 
-    pdd bfsTarget = dfsWallTrace(rb, cur);
     // pdd nearestUnseen = getClosestHeuristic(getCameraToVisit(), cur, rb->getStartPos());
-    if (bfsTarget == cur)
+
+    if (!wallTracePath.empty())
+    {
+        if (compPts(rb->getRawGPSPosition(), wallTracePath.top()))
+        {
+            wallTracePath.pop();
+        }
+        if (!wallTracePath.empty())
+        {
+            return wallTracePath.top();
+        }
+    }
+    wallTracePath = dfsWallTrace(rb, cur);
+    if (wallTracePath.empty())
     {
         cout << "no move found" << endl;
 
-       if(cur == rb->getStartPos())
-       {
+        if(cur == rb->getStartPos())
+        {
             allDone = true;
             return cur;
-       }
+        }
     }
-    return bfsTarget;
+    return wallTracePath.top();
 }
 
 // pdd chooseMove(RobotInstance *rb, double rotation)
