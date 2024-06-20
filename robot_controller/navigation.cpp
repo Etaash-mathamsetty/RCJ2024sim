@@ -614,7 +614,7 @@ pdd dfsWallTrace(RobotInstance* rb, pdd cur)
     parent.clear();
     parent.reserve(10000);
     unordered_set<pdd, pair_hash_combiner<double>> visited;
-    stack.push({cur, 0});
+    stack.push({cur, -rb->getYaw()});
     bool isFound = false;
     while (!stack.empty() && !isFound)
     {
@@ -642,7 +642,7 @@ pdd dfsWallTrace(RobotInstance* rb, pdd cur)
             rotation - offset / 2,
             rotation - offset * 3 / 2
         };
-        reverse(begin(directions), end(directions));
+        reverse(directions, directions + 8);
         for (const double& direction : directions)
         {
             pdd temp = pointTo(point, clampAngle(direction));
@@ -658,7 +658,7 @@ pdd dfsWallTrace(RobotInstance* rb, pdd cur)
 
     }
     cout << "no traceable wall found" << endl;
-    return nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, rb->getStartPos());
+    return nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw() * -1, rb->getStartPos());
 }
 
 bool isVisited(const pdd& point)
