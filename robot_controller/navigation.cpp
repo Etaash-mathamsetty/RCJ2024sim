@@ -512,7 +512,7 @@ struct wallNode
 
 const double wtRadius = 0.05;
 
-pdd bfsWallTrace(RobotInstance* rb, pdd cur)
+pdd dfsWallTrace(RobotInstance* rb, pdd cur)
 {
     isWallTracing = true;
     cur = r2d(cur);
@@ -544,18 +544,22 @@ pdd bfsWallTrace(RobotInstance* rb, pdd cur)
     double offset = rangeImage[hr * 3 / 4] < rangeImage[hr / 4] ? M_PI / 2 : -M_PI / 2;
     cout << (rangeImage[hr * 3 / 4] < rangeImage[hr / 4] ? "left" : "right") << endl;
     pdd min = r2d({cur.f - wtRadius, cur.s - wtRadius}), max = r2d({cur.f + wtRadius, cur.s + wtRadius});
-    queue<wallNode> q;
+    stack<wallNode> stack;
+    parent.clear();
+    parent.reserve(10000);
     set<pdd> visited;
-    q.push({cur, rb->getYaw() * -1});
-    while (!q.empty())
+    stack.push({cur, 0});
+    bool isFound = false;
+    while (!stack.empty() && !isFound)
     {
-        wallNode node = q.front();
+        wallNode node = stack.top();
         pdd point = node.point;
         double rotation = node.direction;
-        q.pop();
+        stack.pop();
         if (isOnWall(point) && (point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s))
         {
-            return point;
+            isFound = true;
+            break;
         }
         if (visited.count(point) > 0 || !isOnWall(point) || (isVisited(point) && point != cur) || point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s)
         {
@@ -572,13 +576,23 @@ pdd bfsWallTrace(RobotInstance* rb, pdd cur)
             rotation - offset / 2,
             rotation - offset * 3 / 2
         };
+        reverse(begin(directions), end(directions));
         for (const double& direction : directions)
         {
-            q.push({pointTo(point, clampAngle(direction)), clampAngle(direction)});
+            pdd temp = pointTo(point, clampAngle(direction));
+            if (isOnWall(temp))
+            {
+                stack.push({temp, clampAngle(direction)});
+                parent[temp] = point;
+            }
         }
     }
+    if (isFound)
+    {
+
+    }
     cout << "no traceable wall found" << endl;
-    return nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, rb->getStartPos());
+    return pointBfs(cur, nearestIsOnWall(cur, getMinMax(getLidarPoints()), rb->getYaw() * -1, rb->getStartPos()), getMinMax(getLidarPoints), false);
 }
 
 bool isVisited(const pdd& point)
@@ -820,7 +834,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
         }
     }
 
-    pdd bfsTarget = bfsWallTrace(rb, cur);
+    pdd bfsTarget = dfsWallTrace(rb, cur);
     // pdd nearestUnseen = getClosestHeuristic(getCameraToVisit(), cur, rb->getStartPos());
     if (bfsTarget == cur)
     {
