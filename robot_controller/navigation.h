@@ -23,7 +23,7 @@ bool midpoint_check(pdd a, pdd b);
 std::pair<pdd, pdd> getMinMax(const std::vector<pdd>& list);
 pdd nearestTraversable(pdd point, pdd cur, std::pair<pdd, pdd> minMax);
 std::stack<pdd> pointBfs(pdd cur, pdd tar, std::pair<pdd, pdd> minMax, bool isBlind, bool wall=false);
-bool isOnWall(pdd node, double rad = 0.043);
+bool isOnWall(pdd node, double rad = TRAVERSABLE_RADIUS);
 bool checkNearbyVisited(pdd point);
 void removeVisited(pdd point);
 bool isVisited(const pdd& point);

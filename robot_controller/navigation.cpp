@@ -100,7 +100,7 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points)
 {
     for (const pdd& pt : points)
     {
-        if (getDist(pos, pt) < 0.043)
+        if (getDist(pos, pt) < TRAVERSABLE_RADIUS)
             return false;
     }
     return true;
@@ -124,7 +124,7 @@ bool isTraversableOpt(const pdd& pos, double rad)
 
 bool isTraversableOpt(const pdd& pos)
 {
-    return isTraversableOpt(pos, 0.043);
+    return isTraversableOpt(pos, TRAVERSABLE_RADIUS);
 }
 
 double minDist(pdd a, pdd b, pdd p)
@@ -315,7 +315,7 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
             continue;
         }
         visited.insert(node);
-        if (isTraversableOpt(node, 0.043) && canSee(cur, node))
+        if (isTraversableOpt(node, TRAVERSABLE_RADIUS) && canSee(cur, node))
         {
             // cout << "nearest traversable found" << endl;
             return node;
