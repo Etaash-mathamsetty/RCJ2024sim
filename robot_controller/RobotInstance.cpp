@@ -698,19 +698,19 @@ void RobotInstance::lookForLetter()
                 }
                 else
                 {
-                    // if (!isFollowingVictim && notBeenDetected(point) && !m_disableEmit)
-                    // {
-                    //     std::cout << "following victim" << std::endl;
-                    //     stopMotors();
-                    //     pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
-                    //     isFollowingVictim = true;
-                    //     moveToPoint(this, nearest);
-                    //     pdd cur = getRawGPSPosition();
-                    //     //turnTo(MAX_VELOCITY, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
-                    //     isFollowingVictim = false;
-                    //     reporting = true;
-                    //     std::cout << "done following victim" << std::endl;
-                    // }
+                    if (!isFollowingVictim && notBeenDetected(point) && !m_disableEmit)
+                    {
+                        std::cout << "following victim" << std::endl;
+                        stopMotors();
+                        pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
+                        isFollowingVictim = true;
+                        moveToPoint(this, nearest);
+                        pdd cur = getRawGPSPosition();
+                        //turnTo(MAX_VELOCITY, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
+                        isFollowingVictim = false;
+                        reporting = true;
+                        std::cout << "done following victim" << std::endl;
+                    }
                 }
                 return;
             }
@@ -755,20 +755,20 @@ void RobotInstance::lookForLetter()
                 }
                 else
                 {
-                    // if (!isFollowingVictim && notBeenDetected(point) && !m_disableEmit)
-                    // {
-                    //     std::cout << "following victim" << std::endl;
-                    //     stopMotors();
-                    //     pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
-                    //     printPoint(nearest);
-                    //     isFollowingVictim = true;
-                    //     moveToPoint(this, nearest);
-                    //     pdd cur = getRawGPSPosition();
-                    //     //turnTo(MAX_VELOCITY, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
-                    //     isFollowingVictim = false;
-                    //     reporting = true;
-                    //     std::cout << "done following victim" << std::endl;
-                    // }
+                    if (!isFollowingVictim && notBeenDetected(point) && !m_disableEmit)
+                    {
+                        std::cout << "following victim" << std::endl;
+                        stopMotors();
+                        pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
+                        printPoint(nearest);
+                        isFollowingVictim = true;
+                        moveToPoint(this, nearest);
+                        pdd cur = getRawGPSPosition();
+                        //turnTo(MAX_VELOCITY, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
+                        isFollowingVictim = false;
+                        reporting = true;
+                        std::cout << "done following victim" << std::endl;
+                    }
                 }
                 return;
             }
@@ -870,12 +870,12 @@ void RobotInstance::updateVisited()
                     removeOnWall(point);
                     removeVisited(point);
                 }
-                if (checkNearbyVisited(point))
-                {
-                    addPseudoVisited(point);
-                    removeOnWall(point);
-                    removeToVisit(point);
-                }
+                // if (checkNearbyVisited(point))
+                // {
+                //     addPseudoVisited(point);
+                //     removeOnWall(point);
+                //     removeToVisit(point);
+                // }
             }
         }
     }
