@@ -51,8 +51,8 @@ std::pair<pdd, pdd> lidarToPoint(GPS* gps, double dist, double absAngle)
     pos[1] = 0;
     pdd region_pos;
 
-    double x = floor_to(dist*sin(absAngle) + pos[0]);
-    double y = floor_to(dist*cos(absAngle) + pos[2]);
+    double x = round_to(dist*sin(absAngle) + pos[0], 0.02);
+    double y = round_to(dist*cos(absAngle) + pos[2], 0.02);
 
     region_pos.second = floor_to(y, region_size);
     region_pos.first = floor_to(x, region_size);
