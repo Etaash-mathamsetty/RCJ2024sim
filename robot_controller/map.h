@@ -20,7 +20,7 @@ std::pair<std::pair<double, double>, pdd> lidarToPoint(webots::GPS *gps, double 
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
 std::unordered_set<pdd, pair_hash_combiner<double>>& getCameraToVisit();
-void addLidarPoint(std::pair<double, double> point);
+void addLidarPoint(std::pair<double, double> point, bool checkMidpoints = true);
 void addVictim(std::pair<double, double> point);
 void reportVictim(std::pair<double, double> point);
 bool notBeenDetected(pdd victim);

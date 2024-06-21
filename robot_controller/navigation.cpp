@@ -399,6 +399,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         std::cout << "target is not traversable!" << std::endl;
         std::cout << "target: " << pointToString(tar) << std::endl;
         removeOnWall(tar);
+        addVisited(tar);
         return stack<pdd>();
     }
 
@@ -481,6 +482,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     removeOnWall(tar);
     bfsRemoveOnWall(tar, 0.05);
+    addVisited(tar);
     cout << "Route not found:" << endl;
     printPoint(cur);
     printPoint(tar);
@@ -926,6 +928,7 @@ void bfsRemoveOnWall(pdd cur, double radius)
         if (isOnWall(node))
         {
             removeOnWall(node);
+            addVisited(node);
         }
         pdd adjacentNodes[8] = {
             r2d(pdd(node.f, node.s - 0.01)),
@@ -1053,6 +1056,7 @@ void moveToPoint(RobotInstance *rb, pdd point, bool wall)
     {
         removeOnWall(point);
         bfsRemoveOnWall(point, 0.05);
+        addVisited(point);
         return;
     }
     // cout << "done" << endl;

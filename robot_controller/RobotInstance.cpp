@@ -454,7 +454,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
             forward(vel + err * turn_kp, vel - err * turn_kp);
         }
         pdd cur = getRawGPSPosition();
-        if (m_robot->getTime() > startTime + 5)
+        if (m_robot->getTime() > startTime + 3)
         {
             break;
         }
@@ -466,10 +466,12 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 
     if(blackDetected())
     {
+        runCallbacks = false;
         std::cout << "black detected" << std::endl;
         insert_tile("2", m_color, m_gps, m_imu, m_startPos);
         pdd cur = getRawGPSPosition();
-        addLidarPoint(r2d(target));
+        target = r2d(target);
+        addLidarPoint(pointTo(target, -std::atan2(target.first - cur.first, target.second - cur.second), 0.03), false);
         // double x = target.first - 0.01, y = target.second - 0.01;
         // for(; x <= target.first + 0.01; x += 0.009)
         // {
@@ -490,12 +492,10 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         }
 
         clearBfsResult();
-
         stopMotors();
-
+        runCallbacks = true;
         return false;
     }
-
     return true;
 }
 
@@ -844,6 +844,8 @@ void RobotInstance::updateVisited()
     addVisited(cur);
     addVisited(pointTo(cur, rotation + M_PI / 2));
     addVisited(pointTo(cur, rotation - M_PI / 2));
+    addVisited(pointTo(cur, rotation + M_PI / 2, 0.02));
+    addVisited(pointTo(cur, rotation - M_PI / 2, 0.02));
     if(cur != m_lastPos)
     {
         bfsAddOnWall(cur, 0.08);
@@ -868,7 +870,7 @@ void RobotInstance::updateVisited()
                 {
                     removeToVisit(point);
                     removeOnWall(point);
-                    removeVisited(point);
+                    addVisited(point);
                 }
                 // if (checkNearbyVisited(point))
                 // {
@@ -945,6 +947,10 @@ void RobotInstance::update_lidar_cloud()
 
 void RobotInstance::run_callbacks()
 {
+    if (!runCallbacks)
+    {
+        return;
+    }
     for(const auto& callback : m_callbacks)
     {
         callback();

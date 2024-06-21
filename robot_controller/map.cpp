@@ -88,9 +88,8 @@ void update_regions_map(GPS *gps, const float *lidar_image, float theta)
         //std::cout << "x: " << x << " y: " << y << std::endl;
         if(regions[rcoord].points.count(coord2) == 0 || !regions[rcoord].points[coord2].wall)
         {
-            vecLidarPoints.push_back(coord2);
+            addLidarPoint(coord2, true);
             cameraToVisit.insert(coord2);
-            regions[rcoord].points[coord2].wall = true;
         }
     }
 }
@@ -178,7 +177,7 @@ std::unordered_set<pdd, pair_hash_combiner<double>>& getCameraToVisit()
     return cameraToVisit;
 }
 
-void addLidarPoint(pdd point)
+void addLidarPoint(pdd point, bool checkMidpoints)
 {
     point = r2d(point);
     auto rcoord = point;
@@ -191,6 +190,23 @@ void addLidarPoint(pdd point)
     {
         vecLidarPoints.push_back(point);
         regions[rcoord].points[point].wall = true;
+        if (checkMidpoints)
+        {
+            for (double angle = 0; angle < 2 * M_PI; angle += M_PI / 2)
+            {
+                if (std::find(vecLidarPoints.begin(), vecLidarPoints.end(), r2d(pointTo(point, angle, 0.02))) != vecLidarPoints.end())
+                {
+                    addLidarPoint(pointTo(point, angle), false);
+                }
+            }
+            // for (double angle = M_PI / 4; angle < 2 * M_PI; angle += M_PI / 2)
+            // {
+            //     if (std::find(vecLidarPoints.begin(), vecLidarPoints.end(), r2d(pointTo(point, angle, std::hypot(0.02, 0.02)))) != vecLidarPoints.end())
+            //     {
+            //         addLidarPoint(pointTo(point, angle, hypot(0.01, 0.01)), false);
+            //     }
+            // }
+        }
     }
 }
 
@@ -212,7 +228,7 @@ void reportVictim(pdd point)
 
 bool notBeenDetected(pdd victim)
 {
-    const double dist = hypot(0.02, 0.01);
+    const double dist = 0.03;
     std::cout << reportedVictims.size() << " " << isTraversable(victim, reportedVictims, dist) << std::endl;
     return isTraversable(victim, reportedVictims, dist);
 }

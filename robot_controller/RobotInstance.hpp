@@ -248,6 +248,7 @@ private:
     time_t starttime;
     time_t realtime;
 
+    bool runCallbacks = true;
     std::vector<std::function<void()>> m_callbacks;
     std::map<std::string, SDL_Texture*> m_tex;
 
