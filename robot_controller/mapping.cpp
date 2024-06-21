@@ -253,7 +253,7 @@ void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* im
     double angle = imu->getRollPitchYaw()[2];
     //pdd coords = pdd(pos[0]-0.06*sin(angle)-getMinMax(pList).first.first, pos[2] - 0.06 * cos(angle)- getMinMax(pList).first.second);
     //pii coords_int = pii(int(floor(coords.first / 0.12)), int(ceil(coords.second / 0.12)));
-    pdd coords = pdd(pos[0] - 0.02 * sin(angle) * sign, -pos[2] + 0.02 * cos(angle) * sign);
+    pdd coords = pdd(pos[0] - 0.0175 * sin(angle) * sign, -pos[2] + 0.0175 * cos(angle) * sign);
 
     pii coords_int = pii(int(round((coords.first - startpos.first) / 0.12)), -int(round((coords.second - startpos.second) / 0.12)));
     //std::cout << coords_int.first << " " << coords_int.second << std::endl;

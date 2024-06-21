@@ -840,7 +840,7 @@ void RobotInstance::moveToNextPos()
 void RobotInstance::updateVisited()
 {
     pdd cur = getCurrentGPSPosition();
-    double rotation = -m_imu->getRollPitchYaw()[2];
+    double rotation = getYaw();
     addVisited(cur);
     addVisited(pointTo(cur, rotation + M_PI / 2));
     addVisited(pointTo(cur, rotation - M_PI / 2));
