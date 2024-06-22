@@ -353,15 +353,15 @@ int main(int argc, char **argv) {
         }
     });
 
-    rb->add_step_callback([&rb]() {
+    /*rb->add_step_callback([&rb]() {
         if (rb->getLM()->getVelocity() < 0 && rb->getRM()->getVelocity() < 0) col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), -1);
         else col(rb->getColorSensor(), rb->getGPS(), rb->getIMU(), rb->getStartPos(), 1);
-    });
+    });*/
 
     while (rb->step() != -1 && running && !rb->isFinished()) {
         rb->updateTargetPos();
         rb->moveToNextPos();
-        // show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
+        show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
         if (isAllDone() && rb->getCurrentGPSPosition() == rb->getStartPos())
         {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());

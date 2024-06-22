@@ -425,8 +425,8 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     double angle = std::atan2(target.first - start.first, target.second - start.second);
     while(traveled <= ticks && step() != -1)
     {
-        if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
-        else col(m_color, m_gps, m_imu, m_startPos, 1);
+        /*if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
+        else col(m_color, m_gps, m_imu, m_startPos, 1);*/
         if (!isTraversable(target, getLidarPoints()))
         {
             // std::cout << "path to target is not traversable!" << std::endl;
@@ -815,8 +815,8 @@ void RobotInstance::moveToPos(pdd pos)
 
 void RobotInstance::moveToNextPos()
 {
-    double frac = min(1, getDist(getRawGPSPosition(), getStartPos()) / std::hypot(m_mazeW, m_mazeH));
-    if (rb->getTimeLeft() < 20 * frac || rb->getRealTime() >= (600 - 15 * frac))
+    double frac = std::min(1.0, getDist(getRawGPSPosition(), getStartPos()) / std::hypot(m_mazeW, m_mazeH));
+    if (getTimeLeft() < 20 * frac || getRealTime() >= (600 - 15 * frac))
     {
         if (getCurrentGPSPosition() != getStartPos())
         {
@@ -848,6 +848,8 @@ void RobotInstance::updateVisited()
     addVisited(pointTo(cur, rotation - M_PI / 2, 0.02));
     if(cur != m_lastPos)
     {
+        if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
+        else col(m_color, m_gps, m_imu, m_startPos, 1);
         bfsAddOnWall(cur, 0.08);
         const double radius = 0.08;
 
