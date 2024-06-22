@@ -264,7 +264,7 @@ RobotInstance::RobotInstance()
         this->update_lidar_cloud();
         this->updateVisited();
 
-        if(getToVisit().size() == 0 && this->getCurrentGPSPosition() == this->m_startPos)
+        if(getOnWall().empty() && this->getCurrentGPSPosition() == this->m_startPos)
         {
             this->m_isFinished = true;
         }
@@ -431,7 +431,6 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         {
             // std::cout << "path to target is not traversable!" << std::endl;
             clearBfsResult();
-            removeToVisit(target);
             return false;
         }
         detectVictims();
@@ -472,15 +471,6 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         pdd cur = getRawGPSPosition();
         target = r2d(target);
         addLidarPoint(pointTo(target, -std::atan2(target.first - cur.first, target.second - cur.second), 0.03), false);
-        // double x = target.first - 0.01, y = target.second - 0.01;
-        // for(; x <= target.first + 0.01; x += 0.009)
-        // {
-        //     for(y = target.second - 0.01; y <= target.second + 0.01; y += 0.009)
-        //     {
-        //         addLidarPoint(r2d(pdd(x, y)));
-        //         removeToVisit(r2d(pdd(x, y)));
-        //     }
-        // }
         updateVisited();
         resetPosition();
 
@@ -825,7 +815,14 @@ void RobotInstance::moveToPos(pdd pos)
 
 void RobotInstance::moveToNextPos()
 {
-    // moveToPos(getTargetPos());
+    double frac = min(1, getDist(getRawGPSPosition(), getStartPos()) / std::hypot(m_mazeW, m_mazeH));
+    if (rb->getTimeLeft() < 20 * frac || rb->getRealTime() >= (600 - 15 * frac))
+    {
+        if (getCurrentGPSPosition() != getStartPos())
+        {
+            moveToPoint(this, getStartPos(), false);
+        }
+    }
 
     if(!isTraversableOpt(getTargetPos()))
     {
@@ -839,6 +836,9 @@ void RobotInstance::moveToNextPos()
 
 void RobotInstance::updateVisited()
 {
+    std::pair<pdd, pdd> minMax = get_lidar_minmax_opt();
+    m_mazeW = minMax.second.first - minMax.first.first;
+    m_mazeH = minMax.second.second - minMax.first.second;
     pdd cur = getCurrentGPSPosition();
     double rotation = getYaw();
     addVisited(cur);
@@ -859,16 +859,8 @@ void RobotInstance::updateVisited()
                 pdd point = r2d(pdd(x, y));
                 bool visited = isVisited(point);
                 bool traversable = isTraversableOpt(point);
-                if(!visited && traversable && canSee(cur, point))
+                if(!traversable)
                 {
-                    if(!isInToVisit(point))
-                    {
-                        addToVisit(point);
-                    }
-                }
-                else if(!traversable)
-                {
-                    removeToVisit(point);
                     removeOnWall(point);
                     addVisited(point);
                 }
@@ -876,7 +868,6 @@ void RobotInstance::updateVisited()
                 // {
                 //     addPseudoVisited(point);
                 //     removeOnWall(point);
-                //     removeToVisit(point);
                 // }
             }
         }

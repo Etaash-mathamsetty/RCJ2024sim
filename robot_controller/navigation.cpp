@@ -491,7 +491,6 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     return stack<pdd>();
 }
 
-deque<pdd> toVisit;
 unordered_set<pdd, pair_hash_combiner<double>> visitedPoints;
 unordered_set<pdd, pair_hash_combiner<double>> pseudoVisited;
 stack<pdd> bfsResult = {};
@@ -781,19 +780,9 @@ bool isVisited(const pdd& point)
     return visitedPoints.count(point) > 0;
 }
 
-void removeToVisit(pdd point)
-{
-    auto it = find(toVisit.begin(), toVisit.end(), point);
-    if(it != toVisit.end())
-    {
-        toVisit.erase(it);
-    }
-}
-
 void removeVisited(pdd point)
 {
     visitedPoints.erase(point);
-    removeToVisit(point);
 }
 
 bool isPseudoVisited(const pdd& point)
@@ -807,11 +796,6 @@ void addVisited(pdd point)
     {
         visitedPoints.insert(point);
     }
-    auto it = find(toVisit.begin(), toVisit.end(), point);
-    if (it != toVisit.end())
-    {
-        toVisit.erase(it);
-    }
 }
 
 void addPseudoVisited(pdd point)
@@ -820,37 +804,16 @@ void addPseudoVisited(pdd point)
     {
         pseudoVisited.insert(point);
     }
-    auto it = find(toVisit.begin(), toVisit.end(), point);
-    if (it != toVisit.end())
-    {
-        toVisit.erase(it);
-    }
 }
 
 void removePseudoVisited(pdd point)
 {
     pseudoVisited.erase(point);
-    removeToVisit(point);
 }
 
 const unordered_set<pdd, pair_hash_combiner<double>>& getVisited()
 {
     return visitedPoints;
-}
-
-void addToVisit(pdd point)
-{
-    if(isInToVisit(point))
-    {
-        return;
-    }
-    toVisit.push_back(point);
-}
-
-bool isInToVisit(pdd point)
-{
-    auto it = find(toVisit.begin(), toVisit.end(), point);
-    return it != toVisit.end();
 }
 
 void addOnWall(pdd point)
@@ -962,62 +925,9 @@ pdd pointTo(pdd point, double dir, double dist)
     return pdd(r2d(point.f + dist * sin(dir)), r2d(point.s + dist * cos(dir)));
 }
 
-void printToVisit()
-{
-    auto it = toVisit.begin();
-    while(it != toVisit.end())
-    {
-        cout << it->first << " " << it->second << endl;
-        it++;
-    }
-    cout << endl;
-}
-
-const std::deque<pdd>& getToVisit()
-{
-    return toVisit;
-}
-
 const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall()
 {
     return onWall;
-}
-
-stack<pdd> toVisitBfs(pdd current, pair<pdd, pdd> minMax)
-{
-    if(!isTraversableOpt(current))
-    {
-        return stack<pdd>();
-    }
-
-    double radius = 0.15;
-    pair<pdd, pdd> localMinMax = make_pair(
-        pdd(current.first - radius, current.second - radius),
-        pdd(current.first + radius, current.second + radius));
-
-    
-    stack<pdd> res = pointBfs(current, current, localMinMax, true);
-    if (!res.empty())
-    {
-        return res;
-    }
-
-    if (toVisit.empty())
-    {
-        res = pointBfs(current, current, minMax, true);
-        return res;
-    }
-
-    res = {};
-    for(; !toVisit.empty() && res.empty();)
-    {
-        res = pointBfs(current, toVisit.back(), minMax, false);
-        if(res.empty())
-        {
-            toVisit.pop_back();
-        }
-    }
-    return res;
 }
 
 bool isBfs = false;
@@ -1144,202 +1054,6 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     }
     return wallTracePath.top();
 }
-
-// pdd chooseMove(RobotInstance *rb, double rotation)
-// {
-//     pdd currentPoint = rb->getCurrentGPSPosition();
-//     // webots rotation is flipped sin(-t) = x and cos(-t) = y
-//     rotation *= -1;
-
-//     if(!isTraversableOpt(currentPoint))
-//     {
-//         // std::cout << "current point is not traversable!" << std::endl;
-//         clearBfsResult();
-//         //look for a nearby traversable point
-//         pdd nextPoint = currentPoint;
-//         for(int i = 1; i <= 7; i++)
-//         {
-//             pdd ret, farRet;
-//             double angle;
-//             switch(i)
-//             {
-//                 case 4: angle = M_PI / 4; break;
-//                 case 1: angle = M_PI / 2; break;
-//                 case 5: angle = M_PI * 3 / 4; break;
-//                 case 7: angle = M_PI; break;
-//                 case 6: angle = -M_PI * 3 / 4; break;
-//                 case 2: angle = -M_PI / 2; break;
-//                 case 3: angle = -M_PI / 4; break;
-//                 case 0:
-//                 default: angle = 0; break;
-//             }
-//             if (angle == 0)
-//             {
-//                 continue;
-//             }
-//             for(double l = 0.05; l >= 0.01; l-=0.01)
-//             {
-//                 ret = pointTo(currentPoint, rotation + angle, l);
-//                 ret = r2d(ret);
-//                 if (isTraversableOpt(ret))
-//                 {
-//                     printPoint(ret);
-//                     nextPoint = ret;
-//                     // cout << "turning to " << i << endl;
-//                     i = 8;
-//                     break;
-//                 }
-//             }
-//         }
-//         if(nextPoint != currentPoint)
-//         {
-//             isBfs = false;
-//             return nextPoint;
-//         }
-//     }
-
-//     if(!toVisit.empty() && isVisited(toVisit.back()))
-//     {
-//         toVisit.pop_back();
-//     }
-//     if (!bfsResult.empty())
-//     {
-//         pdd nextPoint = r2d(bfsResult.top());
-//         if(currentPoint == nextPoint && midpoint_check(currentPoint, nextPoint))
-//         {
-//             bfsResult.pop();
-//             if(bfsResult.empty())
-//             {
-//                 isBfs = false;
-//                 return currentPoint;
-//             }
-//             nextPoint = r2d(bfsResult.top());
-//         }
-//         else if(!midpoint_check(currentPoint, nextPoint) && !toVisit.empty())
-//         {
-//             bfsResult = toVisitBfs(currentPoint, getMinMax(getLidarPoints()));
-//             if(!bfsResult.empty())
-//             {
-//                 nextPoint = r2d(bfsResult.top());
-//                 if(!toVisit.empty() && !isTraversableOpt(nextPoint))
-//                 {
-//                     toVisit.pop_back();
-//                     while(!bfsResult.empty())
-//                     {
-//                         bfsResult.pop();
-//                     }
-//                     isBfs = false;
-//                     return currentPoint;
-//                 }
-//             }
-//         }
-//         isBfs = true;
-//         // cout << pointToString(rb->getRawGPSPosition()) << " --> " << pointToString(nextPoint) << endl;
-//         return nextPoint;
-//     }
-//     for (int i = 0; i <= 2; i++)
-//     {
-//         if (i == 2 && !toVisit.empty())
-//         {
-//             bfsResult = toVisitBfs(currentPoint, getMinMax(getLidarPoints()));
-//             if(!bfsResult.empty())
-//             {
-//                 pdd nextPoint = r2d(bfsResult.top());
-//                 if(currentPoint == nextPoint)
-//                 {
-//                     bfsResult.pop();
-//                     if(bfsResult.empty())
-//                     {
-//                         isBfs = false;
-//                         return currentPoint;
-//                     }
-//                     nextPoint = r2d(bfsResult.top());
-//                 }
-//                 isBfs = true;
-//                 return nextPoint;
-//             }
-//         }
-//         if (i == 0)
-//         {
-//             for(int i = 0; i <= 2; i++)
-//             {
-//                 pdd target = r2d(pointTo(currentPoint, rotation, 0.05 - i * 0.02));
-//                 if ((!isVisited(target)
-//                             && canSee(currentPoint, target))
-//                     && isTraversableOpt(target))
-//                 {
-//                     printPoint(target);
-//                     // std::cout << "visited" << isVisited(target) << std::endl;
-//                     isBfs = false;
-//                     return target;
-//                 }
-//             }
-//         }
-//         if (i == 1)
-//         {
-//             pdd nextPoint = currentPoint;
-//             for(int i = 1; i <= 7; i++)
-//             {
-//                 pdd ret, farRet;
-//                 double angle;
-//                 switch(i)
-//                 {
-//                     //case 4: angle = M_PI / 4; ret = pointTo(currentPoint, rotation + M_PI / 4); farRet = pointTo(currentPoint, rotation + M_PI / 4, 0.07); break;
-//                     case 1: angle = M_PI / 2; ret = pointTo(currentPoint, rotation + M_PI / 2); farRet = pointTo(currentPoint, rotation + M_PI / 2, 0.07); break;
-//                    // case 5: angle = M_PI * 3 / 4; ret = pointTo(currentPoint, rotation + M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation + M_PI * 3 / 4, 0.07); break;
-//                     case 7: angle = M_PI; ret = pointTo(currentPoint, rotation + M_PI); farRet = pointTo(currentPoint, rotation + M_PI, 0.07); break;
-//                     //case 6: angle = -M_PI * 3 / 4; ret = pointTo(currentPoint, rotation - M_PI * 3 / 4); farRet = pointTo(currentPoint, rotation - M_PI * 3 / 4, 0.07); break;
-//                     case 2: angle = -M_PI / 2; ret = pointTo(currentPoint, rotation - M_PI / 2); farRet = pointTo(currentPoint, rotation - M_PI / 2, 0.07); break;
-//                     //case 3: angle = -M_PI / 4; ret = pointTo(currentPoint, rotation - M_PI / 4); farRet = pointTo(currentPoint, rotation - M_PI / 4, 0.07); break;
-//                     case 0:
-//                     default: angle = 0; break;
-//                 }
-//                 if (angle == 0)
-//                 {
-//                     continue;
-//                 }
-//                 ret = r2d(ret);
-//                 if ((!isVisited(ret)
-//                             && canSee(currentPoint, ret))
-//                     && isTraversableOpt(ret))
-//                 {
-//                     printPoint(ret);
-//                     nextPoint = ret;
-//                     // cout << "turning to " << i << endl;
-//                     i = 8;
-//                 }
-//                 farRet = r2d(farRet);
-//                 if ((!isVisited(farRet)
-//                             && canSee(currentPoint, farRet))
-//                     && midpoint_check(currentPoint, farRet))
-//                 {
-//                     printPoint(farRet);
-//                     nextPoint = farRet;
-//                     // cout << "turning to " << i << endl;
-//                     i = 8;
-//                 }
-//             }
-//             if(nextPoint != currentPoint)
-//             {
-//                 isBfs = false;
-//                 return nextPoint;
-//             }
-//         }
-//     }
-//     if (toVisit.empty())
-//     {
-//         printPoint(currentPoint);
-//         bfsResult = pointBfs(currentPoint, rb->getStartPos(), getMinMax(getLidarPoints()), true);
-//         if (!bfsResult.empty())
-//         {
-//             pdd nextPoint = bfsResult.top();
-//             bfsResult.pop();
-//             return nextPoint;
-//         }
-//     }
-//     cout << "no move found" << endl;
-//     return currentPoint;
-// }
 
 bool isTraversable(const pdd& pos, const vector<pdd>& points, double robotRadius)
 {

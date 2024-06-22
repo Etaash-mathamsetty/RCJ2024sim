@@ -238,6 +238,9 @@ private:
     float m_score;
     int m_timeLeft;
 
+    double m_mazeW = DBL_MAX;
+    double m_mazeH = DBL_MAX;
+
     pdd m_targetPos;
     pdd m_lastPos;
     pdd m_startPos;

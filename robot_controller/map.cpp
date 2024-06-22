@@ -243,11 +243,6 @@ ImPlotPoint getCameraPointFromMap(int idx, void *_map)
     return {vecCameraPoints[idx].first, vecCameraPoints[idx].second};
 }
 
-ImPlotPoint getToVisitPoint(int idx, void* idontcare)
-{
-    return { getToVisit()[idx].first, getToVisit()[idx].second };
-}
-
 ImPlotPoint getOnWallPoint(int idx, void* doesntmatter)
 {
     auto it = getOnWall().begin();
@@ -319,10 +314,6 @@ void plotPoints(RobotInstance *rb, int w, int h)
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Cross, 4);
             ImPlot::PlotScatterG("Visited", getVisitedPlotPt, nullptr, getVisited().size(), ImPlotItemFlags_NoFit);
-        }
-        {
-            ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 3);
-            ImPlot::PlotScatterG("To Visit", getToVisitPoint, nullptr, getToVisit().size(), ImPlotItemFlags_NoFit);
         }
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 4);
