@@ -281,6 +281,7 @@ RobotInstance::RobotInstance()
 
     m_startPos = this->getCurrentGPSPosition();
     m_timeLeft = 800;
+    realtime = 0;
 }
 
 RobotInstance::~RobotInstance()
