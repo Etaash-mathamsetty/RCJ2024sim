@@ -848,15 +848,17 @@ void RobotInstance::moveToNextPos()
 {
     if (getTimeLeft() <= 20 || getRealTime() >= 580)
     {
-        int pathLen = pointBfs(getCurrentGPSPosition(), getStartPos(), get_lidar_minmax_opt(), false).size();
-        if (getTimeLeft() < 4 * pathLen || getRealTime() >= (605 - 4 * pathLen))
+        std::cout << "time almost up" << std::endl;
+        int pathLen = pointBfs(getCurrentGPSPosition(), m_startPos, get_lidar_minmax_opt(), false).size();
+        if (getTimeLeft() < 4 * pathLen || getRealTime() >= (600 - 3.5 * pathLen))
         {
-            if (getCurrentGPSPosition() != getStartPos())
+            if (getCurrentGPSPosition() != m_startPos)
             {
-                moveToPoint(this, getStartPos(), false);
+                moveToPoint(this, m_startPos, false);
             }
             else
             {
+                getOnWall().clear();
                 m_isFinished = true;
             }
             return;
@@ -870,7 +872,6 @@ void RobotInstance::moveToNextPos()
     }
 
     moveToPoint(this, getTargetPos(), false);
-    
 }
 
 void RobotInstance::updateVisited()

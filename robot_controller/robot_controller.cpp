@@ -362,7 +362,7 @@ int main(int argc, char **argv) {
         rb->updateTargetPos();
         rb->moveToNextPos();
         // show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
-        if (isAllDone() && rb->getCurrentGPSPosition() == rb->getStartPos())
+        if ((isAllDone() || rb->isFinished()) && rb->getCurrentGPSPosition() == rb->getStartPos())
         {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;
