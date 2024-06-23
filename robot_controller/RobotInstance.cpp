@@ -514,9 +514,11 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
     cv::Mat frame2;
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
     cv::adaptiveThreshold(frame2, frame2, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 2.0);
-    std::vector<std::vector<cv::Point>> contours;
-    std::vector<cv::Vec4i> hierarchy;
-    cv::findContours(frame2, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    static std::vector<std::vector<cv::Point>> contours;
+
+    contours.clear();
+
+    cv::findContours(frame2, contours, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
 
     std::vector<cv::Point> best_contour;
 
