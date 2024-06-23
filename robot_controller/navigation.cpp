@@ -826,6 +826,11 @@ void removeOnWall(pdd point)
     onWall.erase(point);
 }
 
+void clearOnWall()
+{
+    onWall.clear();
+}
+
 void bfsAddOnWall(pdd cur, double radius)
 {
     pdd min = {cur.f - radius, cur.s - radius};

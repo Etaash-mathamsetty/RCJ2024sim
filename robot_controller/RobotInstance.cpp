@@ -867,7 +867,7 @@ void RobotInstance::moveToNextPos()
             }
             else
             {
-                getOnWall().clear();
+                clearOnWall();
                 m_isFinished = true;
             }
             return;

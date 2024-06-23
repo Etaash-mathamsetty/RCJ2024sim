@@ -33,6 +33,7 @@ void addPseudoVisited(pdd point);
 void removePseudoVisited(pdd point);
 void addOnWall(pdd point);
 void removeOnWall(pdd point);
+void clearOnWall();
 void bfsAddOnWall(pdd cur, double radius);
 void bfsRemoveOnWall(pdd cur, double radius);
 bool isFollowingBfs();
