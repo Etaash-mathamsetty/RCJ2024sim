@@ -722,6 +722,8 @@ void RobotInstance::lookForLetter()
                         else
                         {
                             std::cout << "Could not follow victim" << std::endl;
+                            stopMotors();
+                            delay(1.5);
                             reportVictim(point);
                         }
                     }
@@ -787,6 +789,8 @@ void RobotInstance::lookForLetter()
                         else
                         {
                             std::cout << "Could not follow victim" << std::endl;
+                            stopMotors();
+                            delay(1.5);
                             reportVictim(point);
                         }
                     }
