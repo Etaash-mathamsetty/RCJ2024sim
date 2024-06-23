@@ -861,15 +861,9 @@ void RobotInstance::moveToNextPos()
         int pathLen = pointBfs(getCurrentGPSPosition(), m_startPos, get_lidar_minmax_opt(), false).size();
         if (getTimeLeft() < 4 * pathLen || getRealTime() >= (600 - 3.5 * pathLen))
         {
-            if (getCurrentGPSPosition() != m_startPos)
-            {
-                moveToPoint(this, m_startPos, false);
-            }
-            else
-            {
-                clearOnWall();
-                m_isFinished = true;
-            }
+            moveToPoint(this, m_startPos, false);
+            clearOnWall();
+            m_isFinished = true;
             return;
         }
     }
