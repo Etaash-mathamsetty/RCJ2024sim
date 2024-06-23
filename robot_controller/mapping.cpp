@@ -26,6 +26,7 @@ void otherdelay(int ms, webots::Robot* rb)
         if ((rb->getTime() - init) * 1000 > ms) break;
     }
 }
+const std::vector<std::string> colored = {"2", "3", "4", "5", "6", "7", "8", "9", "o", "y"};
 std::map<pii, std::string> tilemap;
 std::map<pii, int> roommap;
 std::unordered_set<pii, pair_hash_combiner<int>> room4;
@@ -151,7 +152,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         while (!q.empty())
         {
             tile = q.front();
-            std::cout << "front: " << tile.first << " " << tile.second << std::endl;
+            //std::cout << "front: " << tile.first << " " << tile.second << std::endl;
             q.pop();
             //add stars to map array
             int y = (tile.second + startTileY / 4) * 4, x = (tile.first + startTileX / 4) * 4;
@@ -458,7 +459,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         if (x > arrW - 5) x = arrW - 5;
         if (y > arrH - 5) y = arrH - 5;
         //std::cout << x << " " << y << std::endl;
-        if (map[y + 1][x + 1] != "8" && map[y + 1][x + 1] != "9" && map[y + 1][x + 1] != "o")
+        if (tilemap[tile] != "8" && map[y + 1][x + 1] != "9" && map[y + 1][x + 1] != "o")
         {
             for (int i = 0; i < 5; i++)
             {
@@ -481,7 +482,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         while (!q.empty())
         {
             tile = q.front();
-            std::cout << "front: " << tile.first << " " << tile.second << std::endl;
+            //std::cout << "front: " << tile.first << " " << tile.second << std::endl;
             q.pop();
             //add stars to map array
             int y = (tile.second + startTileY / 4) * 4, x = (tile.first + startTileX / 4) * 4;
@@ -489,7 +490,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
             if (y < 0) y = 0;
             if (x > arrW - 5) x = arrW - 5;
             if (y > arrH - 5) y = arrH - 5;
-            if (map[y + 1][x + 1] != "8" && map[y + 1][x + 1] != "9" && map[y + 1][x + 1] != "o")
+            if (count(colored.begin(), colored.end(), tilemap[tile]) == 0)
             {
                 for (int i = 0; i < 5; i++)
                 {
@@ -498,42 +499,42 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                         map[y + i][x + j] = "*";
                     }
                 }
-            }
-            //push viable neighbors to queue
+                //push viable neighbors to queue
             //right
-            if (tile.first < maxXrelativetostart && (!roommap.count(pii(tile.first + 1, tile.second)) || (roommap.count(pii(tile.first + 1, tile.second)) && roommap[pii(tile.first + 1, tile.second)] == 4)))
-            {
-                if (!bfsvisited.count(pii(tile.first + 1, tile.second)))
+                if (tile.first < maxXrelativetostart && (!roommap.count(pii(tile.first + 1, tile.second)) || (roommap.count(pii(tile.first + 1, tile.second)) && roommap[pii(tile.first + 1, tile.second)] == 4)))
                 {
-                    q.push(pii(tile.first + 1, tile.second));
-                    bfsvisited[pii(tile.first + 1, tile.second)] = 1;
+                    if (!bfsvisited.count(pii(tile.first + 1, tile.second)))
+                    {
+                        q.push(pii(tile.first + 1, tile.second));
+                        bfsvisited[pii(tile.first + 1, tile.second)] = 1;
+                    }
                 }
-            }
-            //up
-            if (tile.second > minYrelativetostart && (!roommap.count(pii(tile.first, tile.second - 1)) || (roommap.count(pii(tile.first, tile.second - 1)) && roommap[pii(tile.first, tile.second - 1)] == 4)))
-            {
-                if (!bfsvisited.count(pii(tile.first, tile.second - 1)))
+                //up
+                if (tile.second > minYrelativetostart && (!roommap.count(pii(tile.first, tile.second - 1)) || (roommap.count(pii(tile.first, tile.second - 1)) && roommap[pii(tile.first, tile.second - 1)] == 4)))
                 {
-                    q.push(pii(tile.first, tile.second - 1));
-                    bfsvisited[pii(tile.first, tile.second - 1)] = 1;
+                    if (!bfsvisited.count(pii(tile.first, tile.second - 1)))
+                    {
+                        q.push(pii(tile.first, tile.second - 1));
+                        bfsvisited[pii(tile.first, tile.second - 1)] = 1;
+                    }
                 }
-            }
-            //down
-            if (tile.second < maxYrelativetostart && (!roommap.count(pii(tile.first, tile.second + 1)) || (roommap.count(pii(tile.first, tile.second + 1)) && roommap[pii(tile.first, tile.second + 1)] == 4)))
-            {
-                if (!bfsvisited.count(pii(tile.first, tile.second + 1)))
+                //down
+                if (tile.second < maxYrelativetostart && (!roommap.count(pii(tile.first, tile.second + 1)) || (roommap.count(pii(tile.first, tile.second + 1)) && roommap[pii(tile.first, tile.second + 1)] == 4)))
                 {
-                    q.push(pii(tile.first, tile.second + 1));
-                    bfsvisited[pii(tile.first, tile.second + 1)] = 1;
+                    if (!bfsvisited.count(pii(tile.first, tile.second + 1)))
+                    {
+                        q.push(pii(tile.first, tile.second + 1));
+                        bfsvisited[pii(tile.first, tile.second + 1)] = 1;
+                    }
                 }
-            }
-            //left
-            if (tile.first > minXrelativetostart && (!roommap.count(pii(tile.first - 1, tile.second)) || (roommap.count(pii(tile.first - 1, tile.second)) && roommap[pii(tile.first - 1, tile.second)] == 4)))
-            {
-                if (!bfsvisited.count(pii(tile.first - 1, tile.second)))
+                //left
+                if (tile.first > minXrelativetostart && (!roommap.count(pii(tile.first - 1, tile.second)) || (roommap.count(pii(tile.first - 1, tile.second)) && roommap[pii(tile.first - 1, tile.second)] == 4)))
                 {
-                    q.push(pii(tile.first - 1, tile.second));
-                    bfsvisited[pii(tile.first - 1, tile.second)] = 1;
+                    if (!bfsvisited.count(pii(tile.first - 1, tile.second)))
+                    {
+                        q.push(pii(tile.first - 1, tile.second));
+                        bfsvisited[pii(tile.first - 1, tile.second)] = 1;
+                    }
                 }
             }
         }
