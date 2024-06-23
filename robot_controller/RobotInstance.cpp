@@ -857,8 +857,8 @@ void RobotInstance::moveToNextPos()
             {
                 m_isFinished = true;
             }
+            return;
         }
-        return;
     }
 
     if(!isTraversableOpt(getTargetPos()))
