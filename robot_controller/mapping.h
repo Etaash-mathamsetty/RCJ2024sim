@@ -13,6 +13,7 @@
 #ifndef pdd
 #define pdd std::pair<double,double>
 #endif
+int getRoom(const pdd &point, const pdd &startpos);
 void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* imu, const pdd& startpos, int sign);
 void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos, webots::Robot* rb);
 void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos, webots::Robot* rb);

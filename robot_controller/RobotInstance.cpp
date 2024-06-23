@@ -436,6 +436,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         detectVictims();
         if(blackDetected())
         {
+            stopMotors();
             break;
         }
         if(ticks - traveled <= 0.01)
@@ -469,11 +470,23 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         std::cout << "black detected" << std::endl;
         insert_tile("2", m_color, m_gps, m_imu, m_startPos);
         pdd cur = getRawGPSPosition();
-        target = r2d(target);
-        addLidarPoint(pointTo(target, -std::atan2(target.first - cur.first, target.second - cur.second), 0.03), false);
+        pdd colorSensorLoc = pdd(cur.first + 0.0155 * sin(getYaw()), cur.second + 0.0155 * cos(getYaw()));
+        pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
+            std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
+        double rad = 0.04;
+        double x = -rad, y = -rad;
+        for(; x <= rad; x += 0.01, x = r2d(x))
+        {
+            for(y = -rad; y <= rad; y += 0.01, y = r2d(y))
+            {
+                if (x == -rad || x == rad || y == -rad || y == rad)
+                {
+                    addLidarPoint(r2d(pdd(tileCenter.first + x, tileCenter.second + y)), false);
+                }
+            }
+        }
         updateVisited();
         resetPosition();
-
         while(traveled >= -2 && step() != -1)
         {
             forward(-vel * 0.5);
@@ -693,13 +706,21 @@ void RobotInstance::lookForLetter()
                         std::cout << "following victim" << std::endl;
                         stopMotors();
                         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
-                        isFollowingVictim = true;
-                        moveToPoint(this, nearest);
-                        pdd cur = getRawGPSPosition();
-                        //turnTo(MAX_VELOCITY, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
-                        isFollowingVictim = false;
-                        reporting = true;
-                        std::cout << "done following victim" << std::endl;
+                        if (isTraversable(nearest, getLidarPoints()) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
+                        {
+                            isFollowingVictim = true;
+                            moveToPoint(this, nearest);
+                            pdd cur = getRawGPSPosition();
+                            turnTo(MAX_VELOCITY / 2, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
+                            isFollowingVictim = false;
+                            reporting = true;
+                            std::cout << "done following victim" << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << "Could not follow victim" << std::endl;
+                            reportVictim(point);
+                        }
                     }
                 }
                 return;
@@ -750,14 +771,21 @@ void RobotInstance::lookForLetter()
                         std::cout << "following victim" << std::endl;
                         stopMotors();
                         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
-                        printPoint(nearest);
-                        isFollowingVictim = true;
-                        moveToPoint(this, nearest);
-                        pdd cur = getRawGPSPosition();
-                        //turnTo(MAX_VELOCITY, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
-                        isFollowingVictim = false;
-                        reporting = true;
-                        std::cout << "done following victim" << std::endl;
+                        if (isTraversable(nearest, getLidarPoints()) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
+                        {
+                            isFollowingVictim = true;
+                            moveToPoint(this, nearest);
+                            pdd cur = getRawGPSPosition();
+                            turnTo(MAX_VELOCITY / 2, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
+                            isFollowingVictim = false;
+                            reporting = true;
+                            std::cout << "done following victim" << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << "Could not follow victim" << std::endl;
+                            reportVictim(point);
+                        }
                     }
                 }
                 return;
@@ -815,8 +843,7 @@ void RobotInstance::moveToPos(pdd pos)
 
 void RobotInstance::moveToNextPos()
 {
-    double frac = std::min(1.0, getDist(getRawGPSPosition(), getStartPos()) / std::hypot(m_mazeW, m_mazeH));
-    if (getTimeLeft() < 20 * frac || getRealTime() >= (600 - 15 * frac))
+    if (getTimeLeft() < 20 * sqrt(getDist(getRawGPSPosition(), getStartPos())) || getRealTime() >= (605 - 15 * sqrt(getDist(getRawGPSPosition(), getStartPos()))))
     {
         if (getCurrentGPSPosition() != getStartPos())
         {
@@ -866,11 +893,11 @@ void RobotInstance::updateVisited()
                     removeOnWall(point);
                     addVisited(point);
                 }
-                // if (checkNearbyVisited(point))
-                // {
-                //     addPseudoVisited(point);
-                //     removeOnWall(point);
-                // }
+                if (checkNearbyVisited(point))
+                {
+                    addPseudoVisited(point);
+                    removeOnWall(point);
+                }
             }
         }
     }
@@ -934,7 +961,7 @@ void RobotInstance::destroyInstance()
 
 void RobotInstance::update_lidar_cloud()
 {
-    update_regions_map(m_gps, m_lidar->getRangeImage() + 1024, m_imu->getRollPitchYaw()[2]);
+    update_regions_map(this, m_gps, m_lidar->getRangeImage() + 1024, m_imu->getRollPitchYaw()[2]);
     //update_camera_map(m_gps, m_lidar->getRangeImage() + 1024, m_leftCamera, m_imu->getRollPitchYaw()[2]);
 }
 

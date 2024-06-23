@@ -14,13 +14,13 @@
 class RobotInstance;
 
 void plotPoints(RobotInstance *rb, int w, int h);
-void update_regions_map(webots::GPS *gps, const float *lidar_image, float theta=0);
+void update_regions_map(RobotInstance* rb, webots::GPS *gps, const float *lidar_image, float theta=0);
 void update_camera_map(webots::GPS *gps, const float *lidar_image, webots::Camera *camera, float theta=0);
 std::pair<std::pair<double, double>, pdd> lidarToPoint(webots::GPS *gps, double dist, double absAngle);
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
 std::unordered_set<pdd, pair_hash_combiner<double>>& getCameraToVisit();
-void addLidarPoint(std::pair<double, double> point, bool checkMidpoints = true);
+void addLidarPoint(std::pair<double, double> point, bool checkMidpoints = true, RobotInstance* rb = nullptr);
 void addVictim(std::pair<double, double> point);
 void reportVictim(std::pair<double, double> point);
 bool notBeenDetected(pdd victim);

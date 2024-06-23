@@ -46,16 +46,25 @@ void setroom(std::string tile, int r1, int r2)
     else if (room == r2 && lastcolor != tile) { room = r1; }
     lastcolor = tile;
 }
+int getRoom(const pdd &point, const pdd &startpos)
+{
+    pii coords_int = pii(int(round((point.first - startpos.first) / TILE_LENGTH)), -int(round((point.second - startpos.second) / TILE_LENGTH)));
+    if (roommap.count(coords_int))
+    {
+        return roommap[coords_int];
+    }
+    return 0;
+}
 void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos, webots::Robot* rb)
 {
     double minX = getMinMax(pList).first.first, minY = getMinMax(pList).first.second, maxX = getMinMax(pList).second.first, maxY = getMinMax(pList).second.second;
     double w = maxX - minX, h = maxY - minY;
-    int arrW = int(round(w / 0.12)) * 4 + 1, arrH = int(round(h / 0.12)) * 4 + 1;
+    int arrW = int(round(w / TILE_LENGTH)) * 4 + 1, arrH = int(round(h / TILE_LENGTH)) * 4 + 1;
     std::vector<std::vector<std::string>>map(arrH, std::vector<std::string>(arrW, "0"));
     double startX = startpos.first - minX - 0.06, startY = maxY - startpos.second - 0.06;
-    int startTileX = int(round(startX / 0.12)) * 4, startTileY = int(round(startY / 0.12)) * 4;
-    int sx = int(round(startX / 0.12)), sy = int(round(startY / 0.12));
-    int worldH = int(round(h / 0.12)), worldW = int(round(w / 0.12));
+    int startTileX = int(round(startX / TILE_LENGTH)) * 4, startTileY = int(round(startY / TILE_LENGTH)) * 4;
+    int sx = int(round(startX / TILE_LENGTH)), sy = int(round(startY / TILE_LENGTH));
+    int worldH = int(round(h / TILE_LENGTH)), worldW = int(round(w / TILE_LENGTH));
     //bounds checking
     if (startTileX < 0) startTileX = 0;
     if (startTileY < 0) startTileY = 0;
@@ -73,7 +82,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
                 for (int x = 0; x < 5; x++)
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
-                    double checkX = minX + 0.12 * j + x * 0.03, checkY = maxY - 0.12 * i - y * 0.03;
+                    double checkX = minX + TILE_LENGTH * j + x * 0.03, checkY = maxY - TILE_LENGTH * i - y * 0.03;
                     if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
                 }
             }
@@ -253,10 +262,10 @@ void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* im
     memcpy(pos, gps->getValues(), 3 * sizeof(double));
     double angle = imu->getRollPitchYaw()[2];
     //pdd coords = pdd(pos[0]-0.06*sin(angle)-getMinMax(pList).first.first, pos[2] - 0.06 * cos(angle)- getMinMax(pList).first.second);
-    //pii coords_int = pii(int(floor(coords.first / 0.12)), int(ceil(coords.second / 0.12)));
+    //pii coords_int = pii(int(floor(coords.first / TILE_LENGTH)), int(ceil(coords.second / TILE_LENGTH)));
     pdd coords = pdd(pos[0] - 0.0175 * sin(angle) * sign, -pos[2] + 0.0175 * cos(angle) * sign);
 
-    pii coords_int = pii(int(round((coords.first - startpos.first) / 0.12)), -int(round((coords.second - startpos.second) / 0.12)));
+    pii coords_int = pii(int(round((coords.first - startpos.first) / TILE_LENGTH)), -int(round((coords.second - startpos.second) / TILE_LENGTH)));
     //std::cout << coords_int.first << " " << coords_int.second << std::endl;
     minXrelativetostart = std::min(coords_int.first, minXrelativetostart);
     minYrelativetostart = std::min(coords_int.second, minYrelativetostart);
@@ -380,12 +389,12 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
     std::cout << "room: " << room << std::endl;
     double minX = getMinMax(pList).first.first, minY = getMinMax(pList).first.second, maxX = getMinMax(pList).second.first, maxY = getMinMax(pList).second.second;
     double w = maxX - minX, h = maxY - minY;
-    int arrW = int(round(w / 0.12)) * 4 + 1, arrH = int(round(h / 0.12)) * 4 + 1;
+    int arrW = int(round(w / TILE_LENGTH)) * 4 + 1, arrH = int(round(h / TILE_LENGTH)) * 4 + 1;
     std::vector<std::vector<std::string>>map(arrH, std::vector<std::string>(arrW, "0"));
     double startX = startpos.first - minX - 0.06, startY = maxY - startpos.second - 0.06;
-    int startTileX = int(round(startX / 0.12)) * 4, startTileY = int(round(startY / 0.12)) * 4;
-    int sx = int(round(startX / 0.12)), sy = int(round(startY / 0.12));
-    int worldH = int(round(h / 0.12)), worldW = int(round(w / 0.12));
+    int startTileX = int(round(startX / TILE_LENGTH)) * 4, startTileY = int(round(startY / TILE_LENGTH)) * 4;
+    int sx = int(round(startX / TILE_LENGTH)), sy = int(round(startY / TILE_LENGTH));
+    int worldH = int(round(h / TILE_LENGTH)), worldW = int(round(w / TILE_LENGTH));
     //bounds checking
     if (startTileX < 0) startTileX = 0;
     if (startTileY < 0) startTileY = 0;
@@ -403,7 +412,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                 for (int x = 0; x < 5; x++)
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
-                    double checkX = minX + 0.12 * j + x * 0.03, checkY = maxY - 0.12 * i - y * 0.03;
+                    double checkX = minX + TILE_LENGTH * j + x * 0.03, checkY = maxY - TILE_LENGTH * i - y * 0.03;
                     if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
                 }
             }
@@ -567,9 +576,9 @@ void insert_tile(std::string type, webots::Camera* colorsensor, webots::GPS* gps
     memcpy(pos, gps->getValues(), 3 * sizeof(double));
     double angle = imu->getRollPitchYaw()[2];
     //pdd coords = pdd(pos[0]-0.06*sin(angle)-getMinMax(pList).first.first, pos[2] - 0.06 * cos(angle)- getMinMax(pList).first.second);
-    //pii coords_int = pii(int(floor(coords.first / 0.12)), int(ceil(coords.second / 0.12)));
+    //pii coords_int = pii(int(floor(coords.first / TILE_LENGTH)), int(ceil(coords.second / TILE_LENGTH)));
     pdd coords = pdd(pos[0] - 0.035 * sin(angle), -pos[2] + 0.035 * cos(angle));
 
-    pii coords_int = pii(int(round((coords.first - startpos.first) / 0.12)), -int(round((coords.second - startpos.second) / 0.12)));
+    pii coords_int = pii(int(round((coords.first - startpos.first) / TILE_LENGTH)), -int(round((coords.second - startpos.second) / TILE_LENGTH)));
     tilemap[coords_int] = type;
 }

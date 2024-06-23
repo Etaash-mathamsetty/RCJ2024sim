@@ -14,7 +14,7 @@ enum class DIR
 };
 
 #define MAX_VELOCITY 6.28
-#define TILE_LENGTH 5.97
+#define TILE_LENGTH 0.12
 #define ADJ_WALL 0.05
 #define MAX_VIC_DETECTION_RANGE 0.1
 #define MAX_VIC_IDENTIFICATION_RANGE 0.07
