@@ -935,7 +935,7 @@ void RobotInstance::destroyInstance()
 void RobotInstance::update_lidar_cloud()
 {
     update_regions_map(m_gps, m_lidar->getRangeImage() + 1024, m_imu->getRollPitchYaw()[2]);
-    update_camera_map(m_gps, m_lidar->getRangeImage() + 1024, m_leftCamera, m_imu->getRollPitchYaw()[2]);
+    //update_camera_map(m_gps, m_lidar->getRangeImage() + 1024, m_leftCamera, m_imu->getRollPitchYaw()[2]);
 }
 
 void RobotInstance::run_callbacks()
