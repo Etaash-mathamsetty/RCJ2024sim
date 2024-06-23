@@ -337,6 +337,8 @@ void plotPoints(RobotInstance *rb, int w, int h)
         }
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
         ImPlot::PlotScatter("Robot", pos, pos + 2, 1, ImPlotItemFlags_NoFit);
+        double startx = rb->getStartPos().first, starty = rb->getStartPos().second;
+        ImPlot::PlotScatter("Start", &startx, &starty, 1, ImPlotItemFlags_NoFit);
         {
             double xs[] = { pos[0] + MAX_VIC_DETECTION_RANGE * sin(-theta + CAMERA_FOV), pos[0] - MAX_VIC_DETECTION_RANGE * sin(-theta - CAMERA_FOV),
             pos[0] + MAX_VIC_DETECTION_RANGE * sin(-theta + M_PI + CAMERA_FOV), pos[0] - MAX_VIC_DETECTION_RANGE * sin(-theta + M_PI - CAMERA_FOV)};
