@@ -313,9 +313,9 @@ void plotPoints(RobotInstance *rb, int w, int h)
         ImPlot::SetNextLineStyle(ImVec4(0,0.4,1.0,1));
         ImPlot::SetNextMarkerStyle(ImPlotMarker_Asterisk, 3);
         ImPlot::PlotScatterG("Lidar Points", getPointFromMap, nullptr, getCount(), ImPlotItemFlags_NoFit);
-        ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
-        ImPlot::SetNextMarkerStyle(ImPlotMarker_Plus);
-        ImPlot::PlotScatterG("Camera Points", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
+        // ImPlot::SetNextLineStyle(ImVec4(1.0,0.4,0,1));
+        // ImPlot::SetNextMarkerStyle(ImPlotMarker_Plus);
+        // ImPlot::PlotScatterG("Camera Points", getCameraPointFromMap, nullptr, getCameraCount(), ImPlotItemFlags_NoFit);
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Cross, 4);
             ImPlot::PlotScatterG("Visited", getVisitedPlotPt, nullptr, getVisited().size(), ImPlotItemFlags_NoFit);
@@ -337,6 +337,8 @@ void plotPoints(RobotInstance *rb, int w, int h)
         }
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
         ImPlot::PlotScatter("Robot", pos, pos + 2, 1, ImPlotItemFlags_NoFit);
+        double startx = rb->getStartPos().first, starty = rb->getStartPos().second;
+        ImPlot::PlotScatter("Start", &startx, &starty, 1, ImPlotItemFlags_NoFit);
         {
             double xs[] = { pos[0] + MAX_VIC_DETECTION_RANGE * sin(-theta + CAMERA_FOV), pos[0] - MAX_VIC_DETECTION_RANGE * sin(-theta - CAMERA_FOV),
             pos[0] + MAX_VIC_DETECTION_RANGE * sin(-theta + M_PI + CAMERA_FOV), pos[0] - MAX_VIC_DETECTION_RANGE * sin(-theta + M_PI - CAMERA_FOV)};

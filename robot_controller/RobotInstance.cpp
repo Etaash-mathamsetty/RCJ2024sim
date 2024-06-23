@@ -846,12 +846,21 @@ void RobotInstance::moveToPos(pdd pos)
 
 void RobotInstance::moveToNextPos()
 {
-    if (getTimeLeft() < 20 * sqrt(getDist(getRawGPSPosition(), getStartPos())) || getRealTime() >= (605 - 15 * sqrt(getDist(getRawGPSPosition(), getStartPos()))))
+    if (getTimeLeft() <= 20 || getRealTime() >= 580)
     {
-        if (getCurrentGPSPosition() != getStartPos())
+        int pathLen = pointBfs(getCurrentGPSPosition(), getStartPos(), get_lidar_minmax_opt(), false).size();
+        if (getTimeLeft() < 4 * pathLen || getRealTime() >= (605 - 4 * pathLen))
         {
-            moveToPoint(this, getStartPos(), false);
+            if (getCurrentGPSPosition() != getStartPos())
+            {
+                moveToPoint(this, getStartPos(), false);
+            }
+            else
+            {
+                m_isFinished = true;
+            }
         }
+        return;
     }
 
     if(!isTraversableOpt(getTargetPos()))
