@@ -682,7 +682,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
     cur = r2d(cur);
     if (!isOnWall(cur))
     {
-        pdd temp = nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), cur);
+        pdd temp = nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos());
         if (temp == rb->getStartPos())
         {
             static stack<pdd> bfsResult{};

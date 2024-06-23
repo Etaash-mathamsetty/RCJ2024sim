@@ -512,17 +512,20 @@ void RobotInstance::delay(double seconds)
 std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame)
 {
     cv::Mat frame2;
+    cv::Mat hsv;
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
-    cv::adaptiveThreshold(frame2, frame2, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 2.0);
+    cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
+    cv::Mat mask;
+    cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 80), mask);
     static std::vector<std::vector<cv::Point>> contours;
 
     contours.clear();
 
-    cv::findContours(frame2, contours, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    cv::findContours(mask, contours, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
 
     std::vector<cv::Point> best_contour;
 
-    addTexture(name + " Threshold", frame2, SDL_PIXELFORMAT_RGB332);
+    addTexture(name + " Threshold", mask.clone(), SDL_PIXELFORMAT_RGB332);
 
     if(contours.size() == 0)
         return best_contour;
@@ -531,7 +534,9 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
     {
         double area = cv::contourArea(*it);
         auto rect = cv::boundingRect(*it);
-        if(area >= 400 && area <= 2500 && rect.height / (double)rect.width >= 0.5 && rect.height / (double)rect.width <= 2.0)
+        double asp_ratio = rect.height / (double)rect.width;
+        std::cout << area << std::endl;
+        if(area >= 50 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
             if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
                 best_contour = *it;
@@ -544,7 +549,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
         cv::drawContours(frame3, std::vector<std::vector<cv::Point>>{best_contour}, -1, cv::Scalar(255, 0, 0));
         if(name.size() > 0)
         {
-            addTexture(name, frame3, SDL_PIXELFORMAT_RGB888);
+            addTexture(name, frame3.clone(), SDL_PIXELFORMAT_RGB888);
         }
     }
     return best_contour;
@@ -671,7 +676,7 @@ void RobotInstance::lookForLetter()
         cv::Mat roi(frameL, boundRect);
         addTexture("Left ROI", roi.clone(), SDL_PIXELFORMAT_RGB888);
         double rectCenterX = boundRect.x + boundRect.width / 2; //in columns
-        if (boundRect.width * boundRect.height > 400)
+        if (boundRect.width * boundRect.height > 300)
         {
             if (determineLetter(roi, "l", m_gps->getValues()))
             {
@@ -722,6 +727,8 @@ void RobotInstance::lookForLetter()
                         else
                         {
                             std::cout << "Could not follow victim" << std::endl;
+                            stopMotors();
+                            delay(1.5);
                             reportVictim(point);
                         }
                     }
@@ -736,7 +743,7 @@ void RobotInstance::lookForLetter()
         cv::Mat roi(frameR, boundRect);
         addTexture("Right ROI", roi.clone(), SDL_PIXELFORMAT_RGB888);
         double rectCenterX = boundRect.x + boundRect.width / 2; //in columns
-        if (boundRect.width * boundRect.height > 400)
+        if (boundRect.width * boundRect.height > 300)
         {
             if (determineLetter(roi, "r", m_gps->getValues()))
             {
@@ -787,6 +794,8 @@ void RobotInstance::lookForLetter()
                         else
                         {
                             std::cout << "Could not follow victim" << std::endl;
+                            stopMotors();
+                            delay(1.5);
                             reportVictim(point);
                         }
                     }
