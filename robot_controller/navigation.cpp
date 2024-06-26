@@ -32,19 +32,14 @@ double getDist2(const pdd& pt1, const pdd& pt2)
     return pow(pt2.f - pt1.f, 2) + pow(pt2.s - pt1.s, 2);
 }
 
-double getDist(const pdd&  pt1, const pdd& pt2)
-{
-    return hypot(pt2.f - pt1.f, pt2.s - pt1.s);
-}
-
-bool compPts(pdd pt1, pdd pt2, double thresh)
+inline bool compPts(const pdd& pt1, const pdd& pt2, double thresh)
 {
     return (abs(pt1.f - pt2.f) < thresh && abs(pt1.s - pt2.s) < thresh);
 }
 
-bool compPts(pdd pt1, pdd pt2)
+bool compPts(const pdd& pt1, const pdd& pt2)
 {
-    return (abs(pt1.f - pt2.f) < 0.005 && abs(pt1.s - pt2.s) < 0.005);
+    return compPts(pt1, pt2, 0.005);
 }
 
 pair<pdd, pdd> getMinMax(const vector<pdd>& list)

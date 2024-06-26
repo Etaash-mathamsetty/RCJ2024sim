@@ -900,7 +900,6 @@ void RobotInstance::updateVisited()
             for(y = cur.second - radius; y <= cur.second + radius; y += 0.008)
             {
                 pdd point = r2d(pdd(x, y));
-                bool visited = isVisited(point);
                 bool traversable = isTraversableOpt(point);
                 if(!traversable)
                 {
@@ -915,7 +914,7 @@ void RobotInstance::updateVisited()
             }
         }
     }
-    m_lastPos = r2d(getCurrentGPSPosition());
+    m_lastPos = getCurrentGPSPosition();
 }
 
 std::vector<std::pair<char, SDL_Texture*>> RobotInstance::get_training_images()
