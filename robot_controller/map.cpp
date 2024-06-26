@@ -35,6 +35,19 @@ inline double ceil_to(double value, const double precision = 0.01)
     return std::ceil(value / precision) * precision;
 }
 
+//does the opposite of truncation
+inline double anti_trunc_to(double value, const double precision = 0.01)
+{
+    if(value > 0)
+    {
+        return std::ceil(value / precision) * precision;
+    }
+    else
+    {
+        return std::floor(value / precision) * precision;
+    }
+}
+
 
 std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
@@ -52,8 +65,11 @@ std::pair<pdd, pdd> lidarToPoint(GPS* gps, double dist, double absAngle)
     pos[1] = 0;
     pdd region_pos;
 
-    double x = round_to(dist*sin(absAngle) + pos[0], 0.02);
-    double y = round_to(dist*cos(absAngle) + pos[2], 0.02);
+    double x = dist*sin(absAngle) + pos[0];
+    double y = dist*cos(absAngle) + pos[2];
+
+    //x = round_to(x, 0.02);
+    //y = round_to(y, 0.02);
 
     region_pos.second = floor_to(y, region_size);
     region_pos.first = floor_to(x, region_size);
@@ -75,7 +91,7 @@ void update_regions_map(RobotInstance* rb, GPS *gps, const float *lidar_image, f
 
         dist *= cos(LIDAR_TILT_ANGLE);
 
-        if(dist > 0.3)
+        if(dist > 0.15)
             continue;
 
         const double angle = i/512.0 * 2.0 * M_PI;
@@ -180,7 +196,9 @@ std::unordered_set<pdd, pair_hash_combiner<double>>& getCameraToVisit()
 
 void addLidarPoint(pdd point, bool checkMidpoints, RobotInstance* rb)
 {
-    point = r2d(point);
+    point.first = anti_trunc_to(point.first, 0.01);
+    point.second = anti_trunc_to(point.second, 0.01);
+
     auto rcoord = point;
     rcoord.first = floor_to(rcoord.first, region_size);
     rcoord.second = floor_to(rcoord.second, region_size);
@@ -191,27 +209,27 @@ void addLidarPoint(pdd point, bool checkMidpoints, RobotInstance* rb)
     {
         vecLidarPoints.push_back(point);
         regions[rcoord].points[point].wall = true;
-        if (checkMidpoints && rb)
-        {
-            for (double angle = 0; angle < 2 * M_PI; angle += M_PI / 2)
-            {
-                if (std::find(vecLidarPoints.begin(), vecLidarPoints.end(), r2d(pointTo(point, angle, 0.02))) != vecLidarPoints.end())
-                {
-                    addLidarPoint(pointTo(point, angle), false);
-                }
-            }
-            // int room = getRoom(point, rb->getStartPos());
-            // if (room == 3 || room == 4)
-            // {
-            //     for (double angle = M_PI / 4; angle < 2 * M_PI; angle += M_PI / 2)
-            //     {
-            //         if (std::find(vecLidarPoints.begin(), vecLidarPoints.end(), r2d(pointTo(point, angle, std::hypot(0.02, 0.02)))) != vecLidarPoints.end())
-            //         {
-            //             addLidarPoint(pointTo(point, angle, hypot(0.01, 0.01)), false);
-            //         }
-            //     }
-            // }
-        }
+        // if (checkMidpoints && rb)
+        // {
+        //     for (double angle = 0; angle < 2 * M_PI; angle += M_PI / 2)
+        //     {
+        //         if (std::find(vecLidarPoints.begin(), vecLidarPoints.end(), r2d(pointTo(point, angle, 0.02))) != vecLidarPoints.end())
+        //         {
+        //             addLidarPoint(pointTo(point, angle), false);
+        //         }
+        //     }
+        //     // int room = getRoom(point, rb->getStartPos());
+        //     // if (room == 3 || room == 4)
+        //     // {
+        //     //     for (double angle = M_PI / 4; angle < 2 * M_PI; angle += M_PI / 2)
+        //     //     {
+        //     //         if (std::find(vecLidarPoints.begin(), vecLidarPoints.end(), r2d(pointTo(point, angle, std::hypot(0.02, 0.02)))) != vecLidarPoints.end())
+        //     //         {
+        //     //             addLidarPoint(pointTo(point, angle, hypot(0.01, 0.01)), false);
+        //     //         }
+        //     //     }
+        //     // }
+        // }
     }
 }
 
