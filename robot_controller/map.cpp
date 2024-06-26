@@ -348,24 +348,25 @@ std::pair<pdd, pdd> get_lidar_minmax_opt()
     double maxy = -100000;
     for(const auto& r : regions)
     {
-        if(maxx < r.first.first)
+        const pdd& pt = r.first;
+        if(maxx < pt.first)
         {
-            maxx = r.first.first;
+            maxx = pt.first;
         }
 
-        if(maxy < r.first.second)
+        if(maxy < pt.second)
         {
-            maxy = r.first.second;
+            maxy = pt.second;
         }
 
-        if(minx > r.first.first)
+        if(minx > pt.first)
         {
-            minx = r.first.first;
+            minx = pt.first;
         }
 
-        if(miny > r.first.second)
+        if(miny > pt.second)
         {
-            miny = r.first.second;
+            miny = pt.second;
         }
     }
     maxx += region_size;
