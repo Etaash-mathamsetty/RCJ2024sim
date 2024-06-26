@@ -200,17 +200,17 @@ void addLidarPoint(pdd point, bool checkMidpoints, RobotInstance* rb)
                     addLidarPoint(pointTo(point, angle), false);
                 }
             }
-            int room = getRoom(point, rb->getStartPos());
-            if (room == 3 || room == 4)
-            {
-                for (double angle = M_PI / 4; angle < 2 * M_PI; angle += M_PI / 2)
-                {
-                    if (std::find(vecLidarPoints.begin(), vecLidarPoints.end(), r2d(pointTo(point, angle, std::hypot(0.02, 0.02)))) != vecLidarPoints.end())
-                    {
-                        addLidarPoint(pointTo(point, angle, hypot(0.01, 0.01)), false);
-                    }
-                }
-            }
+            // int room = getRoom(point, rb->getStartPos());
+            // if (room == 3 || room == 4)
+            // {
+            //     for (double angle = M_PI / 4; angle < 2 * M_PI; angle += M_PI / 2)
+            //     {
+            //         if (std::find(vecLidarPoints.begin(), vecLidarPoints.end(), r2d(pointTo(point, angle, std::hypot(0.02, 0.02)))) != vecLidarPoints.end())
+            //         {
+            //             addLidarPoint(pointTo(point, angle, hypot(0.01, 0.01)), false);
+            //         }
+            //     }
+            // }
         }
     }
 }
