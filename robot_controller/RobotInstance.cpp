@@ -516,7 +516,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
     cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
     cv::Mat mask;
-    cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 80), mask);
+    cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 50), mask);
     static std::vector<std::vector<cv::Point>> contours;
 
     contours.clear();
