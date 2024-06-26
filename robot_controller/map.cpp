@@ -80,7 +80,7 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
 
     for(int i = 0; i < 512; i++)
     {
-        float dist = lidar_image[i];
+        double dist = lidar_image[i];
 
         if(std::isinf(dist))
             continue;
@@ -93,9 +93,8 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
         const double angle = i/512.0 * 2.0 * M_PI;
 
         const auto coord = lidarToPoint(pos, dist, angle - theta);
-        const pdd coord2 = coord.first;
         
-        addLidarPoint(coord2);
+        addLidarPoint(coord.first);
     }
 }
 
