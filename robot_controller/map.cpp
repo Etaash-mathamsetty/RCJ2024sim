@@ -87,7 +87,7 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
 
         dist *= cos(LIDAR_TILT_ANGLE);
 
-        if(dist > 0.15)
+        if(dist > 0.3)
             continue;
 
         const double angle = i/512.0 * 2.0 * M_PI;
