@@ -713,7 +713,7 @@ void RobotInstance::lookForLetter()
                         std::cout << "following victim" << std::endl;
                         stopMotors();
                         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
-                        if (isTraversable(nearest, getLidarPoints()) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
+                        if (isTraversableOpt(nearest) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
                         {
                             isFollowingVictim = true;
                             moveToPoint(this, nearest);
@@ -779,7 +779,7 @@ void RobotInstance::lookForLetter()
                         std::cout << "following victim" << std::endl;
                         stopMotors();
                         pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
-                        if (isTraversable(nearest, getLidarPoints()) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
+                        if (isTraversableOpt(nearest) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
                         {
                             isFollowingVictim = true;
                             moveToPoint(this, nearest);
