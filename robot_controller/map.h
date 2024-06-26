@@ -14,13 +14,11 @@
 class RobotInstance;
 
 void plotPoints(RobotInstance *rb, int w, int h);
-void update_regions_map(RobotInstance* rb, webots::GPS *gps, const float *lidar_image, float theta=0);
-void update_camera_map(webots::GPS *gps, const float *lidar_image, webots::Camera *camera, float theta=0);
-std::pair<std::pair<double, double>, pdd> lidarToPoint(webots::GPS *gps, double dist, double absAngle);
+void update_regions_map(RobotInstance *rb, const float *lidar_image, float theta=0);
+std::pair<std::pair<double, double>, pdd> lidarToPoint(const pdd& pos, double dist, double absAngle);
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
-std::unordered_set<pdd, pair_hash_combiner<double>>& getCameraToVisit();
-void addLidarPoint(std::pair<double, double> point, bool checkMidpoints = true, RobotInstance* rb = nullptr);
+void addLidarPoint(std::pair<double, double> point);
 void addVictim(std::pair<double, double> point);
 void reportVictim(std::pair<double, double> point);
 bool notBeenDetected(pdd victim);
@@ -71,6 +69,6 @@ struct REGION {
 };
 
 REGION* get_region(webots::GPS *gps);
-std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt);
+std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt, double radius = TRAVERSABLE_RADIUS);
 
 #endif

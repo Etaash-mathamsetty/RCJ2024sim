@@ -52,21 +52,15 @@ inline double anti_trunc_to(double value, const double precision = 0.01)
 std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
 std::vector<pdd> vecCameraPoints;
-std::unordered_set<pdd, pair_hash_combiner<double>> cameraToVisit;
 std::vector<pdd> victims;
 std::vector<pdd> reportedVictims;
 
-std::pair<pdd, pdd> lidarToPoint(GPS* gps, double dist, double absAngle)
+std::pair<pdd, pdd> lidarToPoint(const pdd& pos, double dist, double absAngle)
 {
-    double pos[3];
-    memcpy(pos, gps->getValues(), 3 * sizeof(double));
-    pos[2] *= -1;
-    //force single floor for now
-    pos[1] = 0;
     pdd region_pos;
 
-    double x = dist*sin(absAngle) + pos[0];
-    double y = dist*cos(absAngle) + pos[2];
+    double x = dist*sin(absAngle) + pos.first;
+    double y = dist*cos(absAngle) + pos.second;
 
     //x = round_to(x, 0.02);
     //y = round_to(y, 0.02);
@@ -78,9 +72,11 @@ std::pair<pdd, pdd> lidarToPoint(GPS* gps, double dist, double absAngle)
 }
 
 //theta is in radians
-void update_regions_map(RobotInstance* rb, GPS *gps, const float *lidar_image, float theta)
+void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta)
 {
     vecLidarPoints.reserve(20000);
+    
+    pdd pos = rb->getRawGPSPosition();
 
     for(int i = 0; i < 512; i++)
     {
@@ -96,18 +92,10 @@ void update_regions_map(RobotInstance* rb, GPS *gps, const float *lidar_image, f
 
         const double angle = i/512.0 * 2.0 * M_PI;
 
-        const auto coord = lidarToPoint(gps, dist, angle - theta);
+        const auto coord = lidarToPoint(pos, dist, angle - theta);
         const pdd coord2 = coord.first;
-        const pdd rcoord = coord.second;
-
-        //std::cout << "pts: " << (std::string)GPS_position(pos_rounded) << ": " << pointToString(coord2) << std::endl;
-
-        //std::cout << "x: " << x << " y: " << y << std::endl;
-        if(regions[rcoord].points.count(coord2) == 0 || !regions[rcoord].points[coord2].wall)
-        {
-            addLidarPoint(coord2, true, rb);
-            cameraToVisit.insert(coord2);
-        }
+        
+        addLidarPoint(coord2);
     }
 }
 
@@ -138,47 +126,6 @@ bool isBetween(double theta, double start, double end)
     return theta <= end;
 }
 
-void update_camera_map(GPS* gps, const float* lidar_image, Camera* camera, float theta)
-{
-    double fov = CAMERA_FOV; //radians
-
-    double leftAngle = clampAngle(theta - M_PI / 2);
-    double rightAngle = clampAngle(theta + M_PI / 2);
-
-    //sweeping counterclockwise
-    pdd leftEndpoints = pdd(clampAngle(leftAngle - fov / 2),
-        clampAngle(leftAngle + fov / 2));
-    pdd rightEndpoints = pdd(clampAngle(rightAngle - fov / 2),
-        clampAngle(rightAngle + fov / 2));
-
-    vecCameraPoints.reserve(20000);
-
-    for (int i = 0; i < 512; i++)
-    {
-        float dist = lidar_image[i];
-        dist *= cos(LIDAR_TILT_ANGLE);
-        if (std::isinf(dist))
-            continue;
-        const float angle = clampAngle(i / 512.0 * 2.0 * M_PI);
-        if (!isBetween(angle - theta, leftEndpoints.f, leftEndpoints.s) &&
-            !isBetween(angle - theta, rightEndpoints.f, rightEndpoints.s))
-            continue;
-        if (dist > MAX_VIC_DETECTION_RANGE)
-            continue;
-
-        const auto coord = lidarToPoint(gps, dist, angle - theta);
-        const pdd coord2 = coord.first;
-        const pdd rcoord = coord.second;
-
-        if (regions[rcoord].points.count(coord2) == 0 || !regions[rcoord].points[coord2].camera)
-        {
-            vecCameraPoints.push_back(coord2);
-            cameraToVisit.erase(coord2);
-            regions[rcoord].points[coord2].camera = true;
-        }
-    }
-}
-
 std::vector<std::pair<double, double>>& getLidarPoints()
 {
     return vecLidarPoints;
@@ -189,47 +136,19 @@ std::vector<std::pair<double, double>>& getCameraPoints()
     return vecCameraPoints;
 }
 
-std::unordered_set<pdd, pair_hash_combiner<double>>& getCameraToVisit()
+void addLidarPoint(pdd point)
 {
-    return cameraToVisit;
-}
+    if(!isTraversableOpt(point, 0.0045)) return;
 
-void addLidarPoint(pdd point, bool checkMidpoints, RobotInstance* rb)
-{
-    point.first = anti_trunc_to(point.first, 0.01);
-    point.second = anti_trunc_to(point.second, 0.01);
-
-    auto rcoord = point;
-    rcoord.first = floor_to(rcoord.first, region_size);
-    rcoord.second = floor_to(rcoord.second, region_size);
-
+    pdd rcoord;
+    rcoord.first = floor_to(point.first, region_size);
+    rcoord.second = floor_to(point.second, region_size);
     rcoord = r2d(rcoord);
 
     if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
     {
         vecLidarPoints.push_back(point);
         regions[rcoord].points[point].wall = true;
-        // if (checkMidpoints && rb)
-        // {
-        //     for (double angle = 0; angle < 2 * M_PI; angle += M_PI / 2)
-        //     {
-        //         if (std::find(vecLidarPoints.begin(), vecLidarPoints.end(), r2d(pointTo(point, angle, 0.02))) != vecLidarPoints.end())
-        //         {
-        //             addLidarPoint(pointTo(point, angle), false);
-        //         }
-        //     }
-        //     // int room = getRoom(point, rb->getStartPos());
-        //     // if (room == 3 || room == 4)
-        //     // {
-        //     //     for (double angle = M_PI / 4; angle < 2 * M_PI; angle += M_PI / 2)
-        //     //     {
-        //     //         if (std::find(vecLidarPoints.begin(), vecLidarPoints.end(), r2d(pointTo(point, angle, std::hypot(0.02, 0.02)))) != vecLidarPoints.end())
-        //     //         {
-        //     //             addLidarPoint(pointTo(point, angle, hypot(0.01, 0.01)), false);
-        //     //         }
-        //     //     }
-        //     // }
-        // }
     }
 }
 
@@ -455,35 +374,35 @@ std::pair<pdd, pdd> get_lidar_minmax_opt()
     return make_pair(pdd(minx, miny), pdd(maxx, maxy));
 }
 
-std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt)
+std::vector<REGION*> get_neighboring_regions(const pdd& pt, double rad)
 {
-    double pos_rounded[3];
-    pos_rounded[1] = 0;
-    pos_rounded[0] = floor_to(pt.first - region_size, region_size);
-    pos_rounded[2] = floor_to(pt.second - region_size, region_size);
+    pdd min;
+    pdd max;
+    min.first = floor_to(pt.first - rad, region_size);
+    min.second = floor_to(pt.second - rad, region_size);
+    max.first = floor_to(pt.first + rad, region_size);
+    max.second = floor_to(pt.second + rad, region_size);
+
+    min = r2d(min);
+    max = r2d(max);
 
     std::vector<REGION*> ret;
 
-    ret.reserve(9);
+    ret.reserve(20);
 
-    for(int i = 0; i < 3; i++)
+    for(pdd cur = min; cur.first <= max.first; cur.first = r2d(cur.first + region_size))
     {
-        auto rcoord = r2d(std::make_pair(pos_rounded[0], pos_rounded[2]));
-        for(int l = 0; l < 3; l++)
+        for(cur.second = min.second; cur.second <= max.second; cur.second = r2d(cur.second + region_size))
         {
             //printPoint(rcoord);
-            if(regions.count(rcoord) > 0)
+            if(regions.count(cur) > 0)
             {
-                ret.push_back(&regions[rcoord]);
+                ret.push_back(&regions[cur]);
             }
-            rcoord.first += region_size;
-            rcoord.first = r2d(rcoord.first);
         }
-        pos_rounded[2] += region_size;
-        pos_rounded[2] = r2d(pos_rounded[2]);
      }
 
-    //std::cout << pointToString(pt) << " " << "nearest regions: " << ret.size() << std::endl;
+    // std::cout << pointToString(pt) << " " << "nearest regions: " << ret.size() << std::endl;
 
     return ret;
 }

@@ -108,7 +108,7 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points)
 
 bool isTraversableOpt(const pdd& pos, double rad)
 {
-    for (const auto& r : get_neighboring_regions(pos))
+    for (const auto& r : get_neighboring_regions(pos, rad))
     {
         if(r)
         {
@@ -143,22 +143,7 @@ double minDist(pdd a, pdd b, pdd p)
 
 bool canSee(pdd cur, pdd tar)
 {
-    auto vec = get_neighboring_regions(tar);
-    for (const auto& r : vec)
-    {
-        if(r)
-        {
-            for(const auto& pair: r->points)
-            {
-                if(minDist(cur, tar, pair.first) < 0.01 && pair.second.wall)
-                {
-                    return false;
-                }
-            }
-        }
-    }
-    vec = get_neighboring_regions(cur);
-    for (const auto& r : vec)
+    for (const auto& r : get_neighboring_regions(midpoint(tar, cur), getDist(cur, tar)/2.0))
     {
         if(r)
         {
@@ -242,7 +227,7 @@ stack<pdd> optimizeRoute(stack<pdd> route)
 
 bool isNearWall(pdd pt)
 {
-    for(REGION* r : get_neighboring_regions(pt))
+    for(REGION* r : get_neighboring_regions(pt, 0.1))
     {
         if(r)
         {

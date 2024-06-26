@@ -482,7 +482,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
             {
                 if (x == -rad || x == rad || y == -rad || y == rad)
                 {
-                    addLidarPoint(r2d(pdd(tileCenter.first + x, tileCenter.second + y)), false);
+                    addLidarPoint(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
                 }
             }
         }
@@ -689,7 +689,7 @@ void RobotInstance::lookForLetter()
                     thetaFromRobot += 2 * M_PI;
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
-                pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
+                pdd point = lidarToPoint(getRawGPSPosition(), rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
                 addVictim(point);
                 std::cout << "victim dist: " << getDist(getRawGPSPosition(), point) << std::endl;
                 if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
@@ -755,7 +755,7 @@ void RobotInstance::lookForLetter()
                     thetaFromRobot += 2 * M_PI;
                 }
                 int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
-                pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
+                pdd point = lidarToPoint(getRawGPSPosition(), rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
                 addVictim(point);
                 std::cout << "victim dist: " << getDist(getRawGPSPosition(), point) << std::endl;
                 if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
@@ -975,7 +975,10 @@ void RobotInstance::destroyInstance()
 
 void RobotInstance::update_lidar_cloud()
 {
-    update_regions_map(this, m_gps, m_lidar->getRangeImage() + 1024, m_imu->getRollPitchYaw()[2]);
+    if(m_lastPos != getCurrentGPSPosition())
+    {
+        update_regions_map(this, m_lidar->getRangeImage() + 1024, m_imu->getRollPitchYaw()[2]);
+    }
     //update_camera_map(m_gps, m_lidar->getRangeImage() + 1024, m_leftCamera, m_imu->getRollPitchYaw()[2]);
 }
 

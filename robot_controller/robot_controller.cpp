@@ -117,7 +117,7 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
             if(ImGui::BeginTabItem("Map Debug", nullptr))
             {
                 ImGui::Text("Lidar points: %ld  Score: %f  Time: %d  RealTime: %ld", getCount(), rb->getScore(), rb->getTimeLeft(), rb->getRealTime());
-                ImGui::Text("IsTraversable%s: %d", pointToString(rb->getCurrentGPSPosition()).c_str(),
+                ImGui::Text("IsTraversableOpt%s: %d", pointToString(rb->getCurrentGPSPosition()).c_str(),
                                 isTraversableOpt(rb->getCurrentGPSPosition()));
 
                 if(ImGui::Button("Clear Point Cloud"))
