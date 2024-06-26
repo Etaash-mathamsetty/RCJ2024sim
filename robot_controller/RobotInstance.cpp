@@ -695,7 +695,6 @@ void RobotInstance::lookForLetter()
                 if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
-                    std::cout << "emitting " << sizeof(message) << std::endl;
                     delay(1.5);
                     reportVictim(point);
                     victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = message[8];
@@ -762,7 +761,6 @@ void RobotInstance::lookForLetter()
                 if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
-                    std::cout << "emitting " << sizeof(message) << std::endl;
                     delay(1.5);
                     victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = message[8];
                     reportVictim(point);
