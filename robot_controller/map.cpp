@@ -169,7 +169,7 @@ void reportVictim(pdd point)
 
 bool notBeenDetected(pdd victim)
 {
-    const double dist = 0.03;
+    const double dist = 0.01;
     std::cout << reportedVictims.size() << " " << isTraversable(victim, reportedVictims, dist) << std::endl;
     return isTraversable(victim, reportedVictims, dist);
 }
