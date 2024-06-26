@@ -692,7 +692,7 @@ void RobotInstance::lookForLetter()
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
                 addVictim(point);
                 std::cout << "victim dist: " << getDist(getRawGPSPosition(), point) << std::endl;
-                if (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
+                if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
                     std::cout << "emitting " << sizeof(message) << std::endl;
@@ -709,7 +709,7 @@ void RobotInstance::lookForLetter()
                 }
                 else
                 {
-                    if (!isFollowingVictim && !m_disableEmit)
+                    if (!isFollowingVictim && notBeenDetected(point) && !m_disableEmit)
                     {
                         std::cout << "following victim" << std::endl;
                         stopMotors();
@@ -759,7 +759,7 @@ void RobotInstance::lookForLetter()
                 pdd point = lidarToPoint(m_gps, rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
                 addVictim(point);
                 std::cout << "victim dist: " << getDist(getRawGPSPosition(), point) << std::endl;
-                if (getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
+                if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
                     std::cout << "emitting " << sizeof(message) << std::endl;
@@ -776,7 +776,7 @@ void RobotInstance::lookForLetter()
                 }
                 else
                 {
-                    if (!isFollowingVictim && !m_disableEmit)
+                    if (!isFollowingVictim && notBeenDetected(point) && !m_disableEmit)
                     {
                         std::cout << "following victim" << std::endl;
                         stopMotors();
