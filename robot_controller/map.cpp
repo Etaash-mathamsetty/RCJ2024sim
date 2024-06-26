@@ -137,7 +137,7 @@ std::vector<std::pair<double, double>>& getCameraPoints()
 
 void addLidarPoint(pdd point)
 {
-    if(!isTraversableOpt(point, 0.0045)) return;
+    if(!isTraversableOpt(point, 0.005)) return;
 
     pdd rcoord;
     rcoord.first = floor_to(point.first, region_size);
