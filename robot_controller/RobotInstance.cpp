@@ -577,8 +577,8 @@ char RobotInstance::checkHsv(const cv::Mat& roi, std::string side)
     cv::Mat red;
     cv::Mat orange;
 
-    cv::inRange(roi2, cv::Scalar(160, 0, 0), cv::Scalar(180, 255, 255), red);
-    cv::inRange(roi2, cv::Scalar(25, 127, 127), cv::Scalar(40, 255, 255), orange);
+    cv::inRange(roi2, cv::Scalar(160, 100, 0), cv::Scalar(180, 255, 255), red);
+    cv::inRange(roi2, cv::Scalar(20, 200, 80), cv::Scalar(40, 255, 255), orange);
 
     std::vector<std::vector<cv::Point>> red_c;
     std::vector<std::vector<cv::Point>> orange_c;
@@ -595,7 +595,7 @@ char RobotInstance::checkHsv(const cv::Mat& roi, std::string side)
 
     for(size_t i = 0; i < orange_c.size(); i++)
     {
-        if(cv::contourArea(orange_c[i]) >= 200 && (big_orange_c.size() == 0 || cv::contourArea(orange_c[i]) > cv::contourArea(big_orange_c)))
+        if(cv::contourArea(orange_c[i]) >= 75 && (big_orange_c.size() == 0 || cv::contourArea(orange_c[i]) > cv::contourArea(big_orange_c)))
             big_orange_c = orange_c[i];
     }
 
@@ -670,6 +670,56 @@ void RobotInstance::lookForLetter()
     auto contourL = getContour("Left Contour", frameL);
     auto contourR = getContour("Right Contour", frameR);
     const double* position = m_gps->getValues();
+    if (checkHsv(frameL, "l") == 'O' || checkHsv(frameL, "l") == 'F')
+    {
+        std::cout << "SOCK IT 2 THEM" << std::endl;
+        pdd point = pdd(position[0], position[2]);
+
+        addVictim(point);
+        char msg[9];
+        int xPos = (int)(position[0] * 100);
+        int zPos = (int)(position[2] * 100);
+        int victim_pos[2] = { xPos, zPos };
+        memcpy(msg, victim_pos, sizeof(victim_pos));
+        msg[8] = checkHsv(frameL, "l");
+        std::cout << "reporting.." << std::endl;
+        stopMotors();
+        delay(1.5);
+        reportVictim(point);
+        victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = msg[8];
+        if (!m_disableEmit)
+        {
+            m_emitter->send(msg, sizeof(msg));
+            step();
+        }
+        isFollowingVictim = false;
+        reporting = false;
+        return;
+    }
+    if (checkHsv(frameR, "r") == 'O' || checkHsv(frameR, "r") == 'F')
+    {
+        pdd point = pdd(position[0], position[2]);
+
+        addVictim(point);
+        char msg[9];
+        int xPos = (int)(position[0] * 100);
+        int zPos = (int)(position[2] * 100);
+        int victim_pos[2] = { xPos, zPos };
+        memcpy(msg, victim_pos, sizeof(victim_pos));
+        msg[8] = checkHsv(frameR, "r");
+        std::cout << "reporting.." << std::endl;
+        stopMotors();
+        delay(1.5);
+        reportVictim(point);
+        victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = msg[8];
+        {
+            m_emitter->send(msg, sizeof(msg));
+            step();
+        }
+        isFollowingVictim = false;
+        reporting = false;
+        return;
+    }
     if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE && contourL.size() > 0)
     {
         boundRect = boundingRect(contourL);
