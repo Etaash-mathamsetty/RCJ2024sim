@@ -617,13 +617,13 @@ char RobotInstance::checkHsv(const cv::Mat& roi, std::string side)
 
     for(size_t i = 0; i < orange_c.size(); i++)
     {
-        if(cv::contourArea(orange_c[i]) >= 75 && (big_orange_c.size() == 0 || cv::contourArea(orange_c[i]) > cv::contourArea(big_orange_c)))
+        if(cv::contourArea(orange_c[i]) >= 50 && (big_orange_c.size() == 0 || cv::contourArea(orange_c[i]) > cv::contourArea(big_orange_c)))
             big_orange_c = orange_c[i];
     }
 
     for(size_t i = 0; i < red_c.size(); i++)
     {
-        if(cv::contourArea(red_c[i]) >= 200 && (big_red_c.size() == 0 || cv::contourArea(red_c[i]) > cv::contourArea(big_red_c)))
+        if(cv::contourArea(red_c[i]) >= 50 && (big_red_c.size() == 0 || cv::contourArea(red_c[i]) > cv::contourArea(big_red_c)))
             big_red_c = red_c[i];
     }
 
