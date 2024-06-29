@@ -18,6 +18,7 @@ enum class DIR
 #define ADJ_WALL 0.05
 #define MAX_VIC_DETECTION_RANGE 0.1
 #define MAX_VIC_IDENTIFICATION_RANGE 0.072
+//vertical and horizontal
 #define CAMERA_FOV 1 //yep that's the actual number
 #define pdd std::pair<double, double>
 #define pii std::pair<int, int>

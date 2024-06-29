@@ -159,7 +159,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
         cv::Mat _roi(frame2, boundRect);
         cv::Mat roi = _roi.clone();
         cv::Mat roi3;
-        cv::resize(roi, roi3, cv::Size(20, 20));
+        cv::resize(roi, roi3, cv::Size(10, 10));
         cv::threshold(roi3, roi3, 127, 255, cv::THRESH_BINARY);
         cv::Mat roi4;
         roi3.convertTo(roi4, CV_32FC1);
@@ -187,7 +187,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
         cv::Mat _roi(frame2, boundRect);
         cv::Mat roi = _roi.clone();
         cv::Mat roi3;
-        cv::resize(roi, roi3, cv::Size(20, 20));
+        cv::resize(roi, roi3, cv::Size(10, 10));
         cv::threshold(roi3, roi3, 127, 255, cv::THRESH_BINARY);
         cv::Mat roi4;
         roi3.convertTo(roi4, CV_32FC1);
@@ -652,7 +652,7 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     cv::Mat roi3;
     cv::inRange(roi2, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 80), roi3);
     cv::Mat Roi1D;
-    cv::resize(roi3, Roi1D, cv::Size(20, 20));
+    cv::resize(roi3, Roi1D, cv::Size(10, 10));
     cv::threshold(Roi1D, Roi1D, 127, 255, cv::THRESH_BINARY);
     cv::Mat Roi1D3;
     Roi1D.convertTo(Roi1D3, CV_32F);
@@ -665,7 +665,7 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     // std::cout << "ret: " << ch << " dist: " << dist << std::endl;
 
     char ch2 = checkHsv(roi, side);
-    if(dist > 4500000 && !ch2)
+    if(dist > 450000 && !ch2)
     {
         return false;
     }
@@ -833,7 +833,6 @@ void RobotInstance::detectVictims()
         return;
     }
     lookForLetter();
-
 }
 
 pdd RobotInstance::calcNextPos()
@@ -940,7 +939,7 @@ std::vector<std::pair<char, SDL_Texture*>> RobotInstance::get_training_images()
         cv::Mat img = training_data.row(i).clone();
         cv::Mat img2;
         img.convertTo(img2, CV_8U);
-        img2 = img2.reshape(1, 20);
+        img2 = img2.reshape(1, 10);
         SDL_Texture *tex = getTextureFromMat(renderer, img2.clone(), SDL_PIXELFORMAT_RGB332);
         ret.push_back(std::make_pair((char)output[i], tex));
     }
