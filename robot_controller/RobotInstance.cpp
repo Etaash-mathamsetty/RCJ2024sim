@@ -155,7 +155,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
         cv::Rect boundRect = boundingRect(contour);
         cv::Mat frame2;
         cv::cvtColor(frame, frame, cv::COLOR_BGR2HSV);
-        cv::inRange(frame, cv::Scalar(0,0,0), cv::Scalar(255,20,50), frame2);
+        cv::inRange(frame, cv::Scalar(0,0,0), cv::Scalar(255,20,80), frame2);
         cv::Mat _roi(frame2, boundRect);
         cv::Mat roi = _roi.clone();
         cv::Mat roi3;
@@ -183,7 +183,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
         cv::Rect boundRect = boundingRect(contour);
         cv::Mat frame2;
         cv::cvtColor(frame, frame, cv::COLOR_BGR2HSV);
-        cv::inRange(frame, cv::Scalar(0,0,0), cv::Scalar(255,20,50), frame2);
+        cv::inRange(frame, cv::Scalar(0,0,0), cv::Scalar(255,20,80), frame2);
         cv::Mat _roi(frame2, boundRect);
         cv::Mat roi = _roi.clone();
         cv::Mat roi3;
@@ -518,7 +518,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
     cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
     cv::Mat mask1, mask2, mask3;
-    cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 50), mask1);
+    cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 80), mask1);
     cv::inRange(hsv, cv::Scalar(160, 100, 0), cv::Scalar(180, 255, 255), mask2);
     cv::inRange(hsv, cv::Scalar(20, 200, 80), cv::Scalar(40, 255, 255), mask3);
 
@@ -638,7 +638,7 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     cv::cvtColor(roi2, roi2, cv::COLOR_BGR2HSV);
     addTexture("HSV " + side, roi2.clone(), SDL_PIXELFORMAT_RGB888);
     cv::Mat roi3;
-    cv::inRange(roi2, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 50), roi3);
+    cv::inRange(roi2, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 80), roi3);
     cv::Mat Roi1D;
     cv::resize(roi3, Roi1D, cv::Size(20, 20));
     cv::threshold(Roi1D, Roi1D, 127, 255, cv::THRESH_BINARY);
