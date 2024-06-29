@@ -21,7 +21,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-std::map<std::pair<std::pair<pdd, std::string>, double>, char> victimMap;
+std::map<pdd, char> victimMap;
 
 static RobotInstance* instance = NULL;
 
@@ -600,7 +600,7 @@ char RobotInstance::checkHsv(const cv::Mat& roi, std::string side)
     cv::Mat orange;
 
     cv::inRange(roi2, cv::Scalar(160, 100, 0), cv::Scalar(180, 255, 255), red);
-    cv::inRange(roi2, cv::Scalar(20, 200, 80), cv::Scalar(40, 255, 255), orange);
+    cv::inRange(roi2, cv::Scalar(20, 100, 80), cv::Scalar(40, 255, 255), orange);
 
     std::vector<std::vector<cv::Point>> red_c;
     std::vector<std::vector<cv::Point>> orange_c;
@@ -627,7 +627,7 @@ char RobotInstance::checkHsv(const cv::Mat& roi, std::string side)
             big_red_c = red_c[i];
     }
 
-    if(big_red_c.size() > 0 && big_orange_c.size() > 0)
+    if(big_orange_c.size() > 0)
     {
         return 'O';
     }
@@ -665,7 +665,6 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     // std::cout << "ret: " << ch << " dist: " << dist << std::endl;
 
     char ch2 = checkHsv(roi, side);
-
     if(dist > 4500000 && !ch2)
     {
         return false;
@@ -720,7 +719,7 @@ void RobotInstance::lookForLetter()
                     stopMotors();
                     delay(1.5);
                     reportVictim(point);
-                    victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = message[8];
+                    victimMap[point] = message[8];
                     if(!m_disableEmit)
                     {
                         m_emitter->send(message, sizeof(message));
@@ -785,7 +784,7 @@ void RobotInstance::lookForLetter()
                 {
                     stopMotors();
                     delay(1.5);
-                    victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = message[8];
+                    victimMap[point] = message[8];
                     reportVictim(point);
                     if(!m_disableEmit)
                     {
@@ -1013,7 +1012,7 @@ REGION* RobotInstance::get_current_region()
     return get_region(m_gps);
 }
 
-std::map<std::pair<std::pair<pdd, std::string>, double>, char>& getVictims()
+std::map<pdd, char>& getVictims()
 {
     return victimMap;
 }

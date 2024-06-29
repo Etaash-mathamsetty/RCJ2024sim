@@ -114,20 +114,8 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         //first.first.second - y
         //first.second - side
         //second - angle
-        double victimXPos = v.first.first.first.first, victimYPos = -v.first.first.first.second;
-        if (v.first.first.second == "r")
-        {
-            victimXPos += cos(v.first.second) * 0.06;
-            victimYPos += sin(v.first.second) * 0.06;
-        }
-        if (v.first.first.second == "l")
-        {
-            victimXPos -= cos(v.first.second) * 0.06;
-            victimYPos -= sin(v.first.second) * 0.06;
-        }
-        int victimX = int(round(((victimXPos - minX) / 0.03))), victimY = int(round(((maxY - victimYPos) / 0.03)));
-        std::cout << victimXPos << victimYPos << std::endl;
-        std::cout << victimX << victimY << std::endl;
+        pdd victim_pos = v.first;
+        int victimX = int(round(((victim_pos.first - minX) / 0.03))), victimY = int(round(((maxY - victim_pos.second) / 0.03)));
         map[victimY][victimX] = v.second;
     }
     for (pii tile : room4)
@@ -444,20 +432,8 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         //first.first.second - y
         //first.second - side
         //second - angle
-        double victimXPos = v.first.first.first.first, victimYPos = -v.first.first.first.second;
-        if (v.first.first.second == "r")
-        {
-            victimXPos += cos(v.first.second) * 0.06;
-            victimYPos += sin(v.first.second) * 0.06;
-        }
-        if (v.first.first.second == "l")
-        {
-            victimXPos -= cos(v.first.second) * 0.06;
-            victimYPos -= sin(v.first.second) * 0.06;
-        }
-        int victimX = int(round(((victimXPos - minX) / 0.03))), victimY = int(round(((maxY - victimYPos) / 0.03)));
-        std::cout << victimXPos << victimYPos << std::endl;
-        std::cout << victimX << victimY << std::endl;
+        pdd victim_pos = v.first;
+        int victimX = int(round(((victim_pos.first - minX) / 0.03))), victimY = int(round(((maxY - victim_pos.second) / 0.03)));
         map[victimY][victimX] = v.second;
     }
     for (pii tile : room4)

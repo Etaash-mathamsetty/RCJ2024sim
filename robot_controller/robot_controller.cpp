@@ -361,7 +361,7 @@ int main(int argc, char **argv) {
     while (rb->step() != -1 && running && !rb->isFinished()) {
         rb->updateTargetPos();
         rb->moveToNextPos();
-        // show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
+        show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
         if ((isAllDone() || rb->isFinished()) && rb->getCurrentGPSPosition() == rb->getStartPos())
         {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());

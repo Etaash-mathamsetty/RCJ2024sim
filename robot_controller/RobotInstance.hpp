@@ -259,5 +259,5 @@ private:
 
 };
 
-std::map<std::pair<std::pair<pdd, std::string>, double>, char>& getVictims();
+std::map<pdd, char>& getVictims();
 #endif
