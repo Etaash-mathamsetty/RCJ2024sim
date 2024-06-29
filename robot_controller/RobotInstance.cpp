@@ -316,6 +316,10 @@ void RobotInstance::turnTo(double speed, double target_angle)
             target_angle = M_PI;
     }
 
+    //drive function should take care of it
+    if(abs(current - target_angle) <= 0.015)
+        return;
+
     while(step() != -1 && abs(current - target_angle) > 0.01)
     {
         current = m_imu->getRollPitchYaw()[2];
@@ -419,6 +423,7 @@ bool RobotInstance::alignmentNeeded()
 }
 
 const double drive_kp = 1.2;
+const double turn_drive_kp = 1.5;
 
 bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 {
@@ -444,7 +449,14 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         }
         if(ticks - traveled <= 0.01)
         {
-            forward(std::max(0.75, vel - pow((traveled - (ticks - 0.01))/0.01, 2) * drive_kp * vel));
+            double vel2 = std::max(0.75, vel - pow((traveled - (ticks - 0.01))/0.01, 2) * drive_kp * vel);
+            double cur_angle = getYaw();
+            double err = angle - cur_angle;
+            if(err > M_PI)
+                err -= 2 * M_PI;
+            else if(err < -M_PI)
+                err += 2 * M_PI;
+            forward(vel2 + err * turn_drive_kp, vel2 - err * turn_drive_kp);
         }
         else
         {
@@ -454,7 +466,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
                 err -= 2 * M_PI;
             else if(err < -M_PI)
                 err += 2 * M_PI;
-            forward(vel + err * turn_kp, vel - err * turn_kp);
+            forward(vel + err * turn_drive_kp, vel - err * turn_drive_kp);
         }
         pdd cur = getRawGPSPosition();
         if (m_robot->getTime() > startTime + 3)

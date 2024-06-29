@@ -64,7 +64,6 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
     std::vector<std::vector<std::string>>map(arrH, std::vector<std::string>(arrW, "0"));
     double startX = startpos.first - minX - 0.06, startY = maxY - startpos.second - 0.06;
     int startTileX = int(round(startX / TILE_LENGTH)) * 4, startTileY = int(round(startY / TILE_LENGTH)) * 4;
-    int sx = int(round(startX / TILE_LENGTH)), sy = int(round(startY / TILE_LENGTH));
     int worldH = int(round(h / TILE_LENGTH)), worldW = int(round(w / TILE_LENGTH));
     //bounds checking
     if (startTileX < 0) startTileX = 0;
@@ -395,7 +394,6 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
     std::vector<std::vector<std::string>>map(arrH, std::vector<std::string>(arrW, "0"));
     double startX = startpos.first - minX - 0.06, startY = maxY - startpos.second - 0.06;
     int startTileX = int(round(startX / TILE_LENGTH)) * 4, startTileY = int(round(startY / TILE_LENGTH)) * 4;
-    int sx = int(round(startX / TILE_LENGTH)), sy = int(round(startY / TILE_LENGTH));
     int worldH = int(round(h / TILE_LENGTH)), worldW = int(round(w / TILE_LENGTH));
     //bounds checking
     if (startTileX < 0) startTileX = 0;
