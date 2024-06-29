@@ -153,9 +153,10 @@ void RobotInstance::add_training_data(std::string side, char classification)
         }
 
         cv::Rect boundRect = boundingRect(contour);
-        cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-        cv::adaptiveThreshold(frame, frame, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 2.0);
-        cv::Mat _roi(frame, boundRect);
+        cv::Mat frame2;
+        cv::cvtColor(frame, frame, cv::COLOR_BGR2HSV);
+        cv::inRange(frame, cv::Scalar(0,0,0), cv::Scalar(255,20,50), frame2);
+        cv::Mat _roi(frame2, boundRect);
         cv::Mat roi = _roi.clone();
         cv::Mat roi3;
         cv::resize(roi, roi3, cv::Size(20, 20));
@@ -180,9 +181,10 @@ void RobotInstance::add_training_data(std::string side, char classification)
         }
 
         cv::Rect boundRect = boundingRect(contour);
-        cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-        cv::adaptiveThreshold(frame, frame, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 2.0);
-        cv::Mat _roi(frame, boundRect);
+        cv::Mat frame2;
+        cv::cvtColor(frame, frame, cv::COLOR_BGR2HSV);
+        cv::inRange(frame, cv::Scalar(0,0,0), cv::Scalar(255,20,50), frame2);
+        cv::Mat _roi(frame2, boundRect);
         cv::Mat roi = _roi.clone();
         cv::Mat roi3;
         cv::resize(roi, roi3, cv::Size(20, 20));
