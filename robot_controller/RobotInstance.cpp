@@ -515,8 +515,16 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
     cv::Mat hsv;
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
     cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
+    cv::Mat mask1, mask2, mask3;
+    cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 50), mask1);
+    cv::inRange(hsv, cv::Scalar(160, 100, 0), cv::Scalar(180, 255, 255), mask2);
+    cv::inRange(hsv, cv::Scalar(20, 200, 80), cv::Scalar(40, 255, 255), mask3);
+
     cv::Mat mask;
-    cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 50), mask);
+
+    cv::bitwise_or(mask1, mask2, mask);
+    cv::bitwise_or(mask, mask3, mask);
+
     static std::vector<std::vector<cv::Point>> contours;
 
     contours.clear();
@@ -625,11 +633,12 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     }
 
     cv::Mat roi2 = roi.clone();
-    cv::cvtColor(roi2, roi2, cv::COLOR_BGR2GRAY);
-    addTexture("BW " + side, roi2.clone(), SDL_PIXELFORMAT_RGB332);
-    cv::adaptiveThreshold(roi2, roi2, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 5, 2.0);
+    cv::cvtColor(roi2, roi2, cv::COLOR_BGR2HSV);
+    addTexture("HSV " + side, roi2.clone(), SDL_PIXELFORMAT_RGB888);
+    cv::Mat roi3;
+    cv::inRange(roi2, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 50), roi3);
     cv::Mat Roi1D;
-    cv::resize(roi2, Roi1D, cv::Size(20, 20));
+    cv::resize(roi3, Roi1D, cv::Size(20, 20));
     cv::threshold(Roi1D, Roi1D, 127, 255, cv::THRESH_BINARY);
     cv::Mat Roi1D3;
     Roi1D.convertTo(Roi1D3, CV_32F);
@@ -670,56 +679,6 @@ void RobotInstance::lookForLetter()
     auto contourL = getContour("Left Contour", frameL);
     auto contourR = getContour("Right Contour", frameR);
     const double* position = m_gps->getValues();
-    if (checkHsv(frameL, "l") == 'O' || checkHsv(frameL, "l") == 'F')
-    {
-        std::cout << "SOCK IT 2 THEM" << std::endl;
-        pdd point = pdd(position[0], position[2]);
-
-        addVictim(point);
-        char msg[9];
-        int xPos = (int)(position[0] * 100);
-        int zPos = (int)(position[2] * 100);
-        int victim_pos[2] = { xPos, zPos };
-        memcpy(msg, victim_pos, sizeof(victim_pos));
-        msg[8] = checkHsv(frameL, "l");
-        std::cout << "reporting.." << std::endl;
-        stopMotors();
-        delay(1.5);
-        reportVictim(point);
-        victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "l"), m_imu->getRollPitchYaw()[2]))] = msg[8];
-        if (!m_disableEmit)
-        {
-            m_emitter->send(msg, sizeof(msg));
-            step();
-        }
-        isFollowingVictim = false;
-        reporting = false;
-        return;
-    }
-    if (checkHsv(frameR, "r") == 'O' || checkHsv(frameR, "r") == 'F')
-    {
-        pdd point = pdd(position[0], position[2]);
-
-        addVictim(point);
-        char msg[9];
-        int xPos = (int)(position[0] * 100);
-        int zPos = (int)(position[2] * 100);
-        int victim_pos[2] = { xPos, zPos };
-        memcpy(msg, victim_pos, sizeof(victim_pos));
-        msg[8] = checkHsv(frameR, "r");
-        std::cout << "reporting.." << std::endl;
-        stopMotors();
-        delay(1.5);
-        reportVictim(point);
-        victimMap[(std::make_pair(std::make_pair(pdd(position[0], position[2]), "r"), m_imu->getRollPitchYaw()[2]))] = msg[8];
-        {
-            m_emitter->send(msg, sizeof(msg));
-            step();
-        }
-        isFollowingVictim = false;
-        reporting = false;
-        return;
-    }
     if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE && contourL.size() > 0)
     {
         boundRect = boundingRect(contourL);
@@ -860,15 +819,7 @@ void RobotInstance::detectVictims()
     {
         return;
     }
-    // try
-    // {
     lookForLetter();
-    // }
-    // catch(const std::exception& e)
-    // {
-    //     std::cerr << "caught exception:" << std::endl;
-    //     std::cerr << e.what() << '\n';
-    // }
 
 }
 
