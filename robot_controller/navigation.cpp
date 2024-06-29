@@ -662,24 +662,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
     cur = r2d(cur);
     if (!isOnWall(cur))
     {
-        pdd temp = nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos());
-        if (temp == rb->getStartPos())
-        {
-            static stack<pdd> bfsResult{};
-            if(bfsResult.empty())
-            {
-                removeVisited(rb->getStartPos());
-                bfsResult = pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false);
-            }
-
-            if(!bfsResult.empty())
-            {
-                return bfsResult;
-            }
-            cout << "path to start not found" << endl;
-            return stack<pdd>();
-        }
-        cur = temp;
+        cur = nearestIsOnWall(cur, get_lidar_minmax_opt(), -rb->getYaw(), rb->getStartPos());
     }
     checkSide(rb->getLidar()->getRangeImage() + 1024, rb->getLidar()->getHorizontalResolution());
     double offset = isLeft ? -M_PI / 2 : M_PI / 2;
