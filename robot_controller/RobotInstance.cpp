@@ -717,7 +717,7 @@ void RobotInstance::lookForLetter()
                 if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
-                    delay(1.5);
+                    delay(VICTIM_DELAY_TIME);
                     reportVictim(point);
                     victimMap[point] = message[8];
                     if(!m_disableEmit)
@@ -749,7 +749,7 @@ void RobotInstance::lookForLetter()
                         {
                             std::cout << "Could not follow victim" << std::endl;
                             stopMotors();
-                            delay(1.5);
+                            delay(VICTIM_DELAY_TIME);
                             reportVictim(point);
                         }
                     }
@@ -783,7 +783,7 @@ void RobotInstance::lookForLetter()
                 if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopMotors();
-                    delay(1.5);
+                    delay(VICTIM_DELAY_TIME);
                     victimMap[point] = message[8];
                     reportVictim(point);
                     if(!m_disableEmit)
@@ -815,7 +815,7 @@ void RobotInstance::lookForLetter()
                         {
                             std::cout << "Could not follow victim" << std::endl;
                             stopMotors();
-                            delay(1.5);
+                            delay(VICTIM_DELAY_TIME);
                             reportVictim(point);
                         }
                     }

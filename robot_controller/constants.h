@@ -25,6 +25,7 @@ enum class DIR
 #define TRAVERSABLE_RADIUS 0.04
 //radians
 #define LIDAR_TILT_ANGLE 0.05
+#define VICTIM_DELAY_TIME 1.3
 #endif
 
 #ifndef M_PI
