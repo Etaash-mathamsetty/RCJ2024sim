@@ -787,7 +787,7 @@ char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
 
     if(ch2)
     {
-        std::cout << "ret: " << ch2;
+        std::cout << "ret: " << ch2 << std::endl;
     }
     else
     {
@@ -832,7 +832,7 @@ void RobotInstance::lookForLetter()
         auto hazard = getContourHazard("Left HazardC", frameL);
 
         auto boundRect = cv::boundingRect(contour);
-        if(boundRect.area() >= 300)
+        if(boundRect.area() >= 200)
         {
             cv::Mat roi(frameL, boundRect);
             message.letter = determineLetter(roi, "L");
@@ -849,11 +849,33 @@ void RobotInstance::lookForLetter()
                     //TODO: add back victim following
                 }
             }
+            else
+            {
+                boundRect = cv::boundingRect(hazard);
+                if(boundRect.area() >= 200)
+                {
+                    cv::Mat roi(frameL, boundRect);
+                    message.letter = checkHazard(roi, "L");
+
+                    if(message.letter)
+                    {
+                        if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
+                        {
+                            stopAndEmit((void*)&message);
+                            return;
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                }
+            }
         }
         else
         {
             boundRect = cv::boundingRect(hazard);
-            if(boundRect.area() >= 300)
+            if(boundRect.area() >= 200)
             {
                 cv::Mat roi(frameL, boundRect);
                 message.letter = checkHazard(roi, "L");
@@ -879,7 +901,7 @@ void RobotInstance::lookForLetter()
         auto hazard = getContourHazard("Right HazardC", frameR);
 
         auto boundRect = cv::boundingRect(contour);
-        if(boundRect.area() >= 300)
+        if(boundRect.area() >= 200)
         {
             cv::Mat roi(frameR, boundRect);
             message.letter = determineLetter(roi, "R");
@@ -895,11 +917,33 @@ void RobotInstance::lookForLetter()
 
                 }
             }
+            else
+            {
+                boundRect = cv::boundingRect(hazard);
+                if(boundRect.area() >= 200)
+                {
+                    cv::Mat roi(frameR, boundRect);
+                    message.letter = checkHazard(roi, "R");
+
+                    if(message.letter)
+                    {
+                        if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
+                        {
+                            stopAndEmit((void*)&message);
+                            return;
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                }
+            }
         }
         else
         {
             boundRect = cv::boundingRect(hazard);
-            if(boundRect.area() >= 300)
+            if(boundRect.area() >= 200)
             {
                 cv::Mat roi(frameR, boundRect);
                 message.letter = checkHazard(roi, "R");
