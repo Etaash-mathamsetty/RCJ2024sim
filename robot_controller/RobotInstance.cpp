@@ -210,11 +210,11 @@ void RobotInstance::add_training_data(std::string side, char classification)
 
         cv::bitwise_and(roi1, roi3, roi1);
 
-        cv::threshold(roi1, roi1, 127, 255, cv::THRESH_BINARY);
+        cv::threshold(roi1, roi1, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
 
         cv::Mat Roi1D;
         cv::resize(roi1, Roi1D, cv::Size(10, 10));
-        cv::threshold(Roi1D, Roi1D, 127, 255, cv::THRESH_BINARY);
+        cv::threshold(Roi1D, Roi1D, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
         addTexture("Hazard threshold " + side, Roi1D.clone(), SDL_PIXELFORMAT_RGB332);
         cv::Mat Roi1D3;
         Roi1D.convertTo(Roi1D3, CV_32F);
@@ -695,13 +695,15 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
     for(size_t i = 0; i < orange_c.size(); i++)
     {
-        if(cv::contourArea(orange_c[i]) >= 50 && (big_orange_c.size() == 0 || cv::contourArea(orange_c[i]) > cv::contourArea(big_orange_c)))
+        const double area = cv::contourArea(orange_c[i]);
+        if(area >= 50 && area <= 4000 && (big_orange_c.size() == 0 || area > cv::contourArea(big_orange_c)))
             big_orange_c = orange_c[i];
     }
 
     for(size_t i = 0; i < red_c.size(); i++)
     {
-        if(cv::contourArea(red_c[i]) >= 50 && (big_red_c.size() == 0 || cv::contourArea(red_c[i]) > cv::contourArea(big_red_c)))
+        const double area = cv::contourArea(red_c[i]);
+        if(area >= 50 && area <= 4000 && (big_red_c.size() == 0 || area > cv::contourArea(big_red_c)))
             big_red_c = red_c[i];
     }
 
@@ -732,26 +734,40 @@ char RobotInstance::checkHazard(cv::Mat roi, std::string side)
 
     cv::bitwise_and(roi1, roi3, roi1);
 
-    cv::threshold(roi1, roi1, 127, 255, cv::THRESH_BINARY);
+    cv::Mat mask_black, mask_white;
+
+    cv::inRange(roi2, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 120), mask_black);
+    cv::inRange(roi2, cv::Scalar(0, 0, 200), cv::Scalar(255, 20, 255), mask_white);
+
+    double white_sum = cv::sum(mask_white)[0];
+    double black_sum = cv::sum(mask_black)[0];
+
+    if(black_sum <= 1000 || white_sum <= 1000)
+        return 0;
+
+    cv::threshold(roi1, roi1, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
 
     cv::Mat Roi1D;
     cv::resize(roi1, Roi1D, cv::Size(10, 10));
-    cv::threshold(Roi1D, Roi1D, 127, 255, cv::THRESH_BINARY);
+    cv::threshold(Roi1D, Roi1D, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
     addTexture("Hazard threshold " + side, Roi1D.clone(), SDL_PIXELFORMAT_RGB332);
     cv::Mat Roi1D3;
     Roi1D.convertTo(Roi1D3, CV_32F);
     cv::Mat Roi1D2 = Roi1D3.reshape(1, 1);
 
     std::vector<float> dists;
-    float ret = m_knn->findNearest(Roi1D2, 3, cv::noArray(), cv::noArray(), dists);
+    char ret = (char)m_knn->findNearest(Roi1D2, 3, cv::noArray(), cv::noArray(), dists);
+
+    if(ret == 'H' || ret == 'S' || ret == 'U')
+        return 0;
 
     if(dists[0] > 450000)
         return 0;
 
 
-    std::cout << "ret: " << (char)ret << " dist: " << dists[0] << std::endl;
+    std::cout << "ret: " << ret << " dist: " << dists[0] << std::endl;
 
-    return (char)(ret);
+    return ret;
 }
 
 char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
@@ -778,6 +794,9 @@ char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
     float dist = dists[0];
 
     // std::cout << "ret: " << ch << " dist: " << dist << std::endl;
+
+    if(ch == 'P' || ch == 'C')
+        ch = 0;
 
     char ch2 = checkHsv(roi, side);
     if(dist > 600000 && !ch2)

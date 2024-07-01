@@ -1,0 +1,120 @@
+{
+	"Wheel 1": {
+		"dictName": "Wheel 1",
+		"name": "Wheel",
+		"customName": "wheel1",
+		"type": "",
+		"x": 260,
+		"y": 15,
+		"z": 0,
+		"rx": 0,
+		"ry": -1,
+		"rz": 0,
+		"a": 1.57,
+		"custom": []
+	},
+	"Wheel 2": {
+		"dictName": "Wheel 2",
+		"name": "Wheel",
+		"customName": "wheel2",
+		"type": "",
+		"x": -260,
+		"y": 15,
+		"z": 0,
+		"rx": 0,
+		"ry": -1,
+		"rz": 0,
+		"a": 1.57,
+		"custom": []
+	},
+	"lidar": {
+		"dictName": "lidar",
+		"name": "Lidar",
+		"customName": "lidar",
+		"type": "add",
+		"x": 0,
+		"y": 336,
+		"z": 0,
+		"rx": -0.5858,
+		"ry": 0.5858,
+		"rz": 0.5858,
+		"a": 2.09,
+		"custom": []
+	},
+	"camera3": {
+		"dictName": "camera3",
+		"name": "Camera",
+		"customName": "camera3",
+		"type": "add",
+		"x": -256,
+		"y": 120,
+		"z": 0,
+		"rx": 0,
+		"ry": 0.71,
+		"rz": 0.71,
+		"a": 3.14,
+		"custom": [
+			64,
+			64
+		]
+	},
+	"camera2": {
+		"dictName": "camera2",
+		"name": "Camera",
+		"customName": "camera2",
+		"type": "add",
+		"x": 256,
+		"y": 120,
+		"z": 0,
+		"rx": -1,
+		"ry": 0,
+		"rz": 0,
+		"a": 1.57,
+		"custom": [
+			64,
+			64
+		]
+	},
+	"colsensor": {
+		"dictName": "colsensor",
+		"name": "Colour sensor",
+		"customName": "colour_sensor",
+		"type": "add",
+		"x": 0,
+		"y": -50,
+		"z": -155,
+		"rx": -0.71,
+		"ry": 0,
+		"rz": 0.71,
+		"a": 3.14,
+		"custom": []
+	},
+	"iu": {
+		"dictName": "iu",
+		"name": "InertialUnit",
+		"customName": "inertial_unit",
+		"type": "add",
+		"x": 0,
+		"y": 0,
+		"z": 0,
+		"rx": -0.58,
+		"ry": 0.58,
+		"rz": 0.58,
+		"a": 2.09,
+		"custom": []
+	},
+	"gps": {
+		"dictName": "gps",
+		"name": "GPS",
+		"customName": "gps",
+		"type": "add",
+		"x": 0,
+		"y": 0,
+		"z": 0,
+		"rx": -0.5858,
+		"ry": 0.5858,
+		"rz": 0.5858,
+		"a": 2.09,
+		"custom": []
+	}
+}
