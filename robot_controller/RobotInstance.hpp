@@ -205,6 +205,8 @@ private:
     std::vector<cv::Point> getContourHazard(std::string name, cv::Mat frame);
 
     void stopAndEmit(void *message);
+    pdd victimToPoint(int rectCenterX, int frameCols, std::string side);
+    void followVictim(pdd victim, std::string side);
 
     bool isFollowingVictim;
     bool reporting;

@@ -516,15 +516,15 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         pdd colorSensorLoc = pdd(cur.first + 0.0155 * sin(getYaw()), cur.second + 0.0155 * cos(getYaw()));
         pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
             std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
-        double rad = 0.04;
+        double rad = 0.045;
         double x = -rad, y = -rad;
-        for(; x <= rad; x += 0.01, x = r2d(x))
+        for(; x <= rad; x += 0.005, x = std::round(x / 0.005) * 0.005)
         {
-            for(y = -rad; y <= rad; y += 0.01, y = r2d(y))
+            for(y = -rad; y <= rad; y += 0.005, y = std::round(x / 0.005) * 0.005)
             {
                 if (x == -rad || x == rad || y == -rad || y == rad)
                 {
-                    addLidarPoint(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
+                    addLidarPoint(pdd(tileCenter.first + x, tileCenter.second + y));
                 }
             }
         }
@@ -809,6 +809,40 @@ void RobotInstance::stopAndEmit(void* message)
     m_robot->step(m_timestep);
 }
 
+pdd RobotInstance::victimToPoint(int rectCenterX, int frameCols, std::string side)
+{
+    double offset = rectCenterX - frameCols / 2;
+    double percent = offset / (frameCols / 2);
+    double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
+    double thetaFromRobot = (side == "L" ? -M_PI : M_PI) / 2 + thetaFromCenter;
+    if (thetaFromRobot < 0)
+    {
+        thetaFromRobot += 2 * M_PI;
+    }
+    int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
+    pdd point = lidarToPoint(getRawGPSPosition(), m_lidar->getRangeImage()[rangeImgIdx], clampAngle(thetaFromRobot + getYaw())).first;
+    return point;
+}
+
+void RobotInstance::followVictim(pdd point, std::string side)
+{
+    pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
+    if (isTraversableOpt(nearest) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
+    {
+        isFollowingVictim = true;
+        moveToPoint(this, nearest);
+        pdd cur = getRawGPSPosition();
+        turnTo(MAX_VELOCITY / 2, -std::atan2(point.first - cur.first, point.second - cur.second) + (side == "L" ? M_PI : -M_PI) / 2);
+        stopMotors();
+        isFollowingVictim = false;
+    }
+    else
+    {
+        std::cout << "Could not follow victim" << std::endl;
+        stopMotors();
+    }
+}
+
 void RobotInstance::lookForLetter()
 {
     const int horizontalResolution = m_lidar->getHorizontalResolution();
@@ -839,6 +873,8 @@ void RobotInstance::lookForLetter()
 
             if(message.letter)
             {
+                pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
+                addVictim(point);
                 if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopAndEmit((void*)&message);
@@ -846,7 +882,8 @@ void RobotInstance::lookForLetter()
                 }
                 else
                 {
-                    //TODO: add back victim following
+                    followVictim(point, "L");
+                    return;
                 }
             }
             else
@@ -856,9 +893,10 @@ void RobotInstance::lookForLetter()
                 {
                     cv::Mat roi(frameL, boundRect);
                     message.letter = checkHazard(roi, "L");
-
                     if(message.letter)
                     {
+                        pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
+                        addVictim(point);
                         if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
                         {
                             stopAndEmit((void*)&message);
@@ -866,7 +904,8 @@ void RobotInstance::lookForLetter()
                         }
                         else
                         {
-
+                            followVictim(point, "L");
+                            return;
                         }
                     }
                 }
@@ -882,6 +921,8 @@ void RobotInstance::lookForLetter()
 
                 if(message.letter)
                 {
+                    pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
+                    addVictim(point);
                     if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
                     {
                         stopAndEmit((void*)&message);
@@ -889,7 +930,7 @@ void RobotInstance::lookForLetter()
                     }
                     else
                     {
-
+                        followVictim(point, "L");
                     }
                 }
             }
@@ -907,6 +948,8 @@ void RobotInstance::lookForLetter()
             message.letter = determineLetter(roi, "R");
             if(message.letter)
             {
+                pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
+                addVictim(point);
                 if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
                     stopAndEmit((void*)&message);
@@ -914,7 +957,8 @@ void RobotInstance::lookForLetter()
                 }
                 else
                 {
-
+                    followVictim(point, "R");
+                    return;
                 }
             }
             else
@@ -927,6 +971,8 @@ void RobotInstance::lookForLetter()
 
                     if(message.letter)
                     {
+                        pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
+                        addVictim(point);
                         if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
                         {
                             stopAndEmit((void*)&message);
@@ -934,7 +980,8 @@ void RobotInstance::lookForLetter()
                         }
                         else
                         {
-
+                            followVictim(point, "R");
+                            return;
                         }
                     }
                 }
@@ -950,6 +997,8 @@ void RobotInstance::lookForLetter()
 
                 if(message.letter)
                 {
+                    pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
+                    addVictim(point);
                     if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
                     {
                         stopAndEmit((void*)&message);
@@ -957,7 +1006,8 @@ void RobotInstance::lookForLetter()
                     }
                     else
                     {
-
+                        followVictim(point, "R");
+                        return;
                     }
                 }
             }
