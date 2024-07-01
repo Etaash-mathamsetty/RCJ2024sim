@@ -779,6 +779,9 @@ char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
 
     // std::cout << "ret: " << ch << " dist: " << dist << std::endl;
 
+    if(ch == 'P' || ch == 'C')
+        ch = 0;
+
     char ch2 = checkHsv(roi, side);
     if(dist > 600000 && !ch2)
     {
