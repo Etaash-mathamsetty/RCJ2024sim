@@ -97,15 +97,18 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         if (x > arrW - 5) x = arrW - 5;
         if (y > arrH - 5) y = arrH - 5;
         std::string val = tile.second;
+        if (val != "0")
+        {
+            map[y + 1][x + 2] = "0";
+            map[y + 2][x + 1] = "0";
+            map[y + 2][x + 2] = "0";
+            map[y + 2][x + 3] = "0";
+            map[y + 3][x + 2] = "0";
+        }
         map[y + 1][x + 1] = val;
         map[y + 1][x + 3] = val;
         map[y + 3][x + 1] = val;
         map[y + 3][x + 3] = val;
-        map[y + 1][x + 2] = "0";
-        map[y + 2][x + 1] = "0";
-        map[y + 2][x + 2] = "0";
-        map[y + 2][x + 3] = "0";
-        map[y + 3][x + 2] = "0";
     }
     for (const auto& v : getVictims())
     {
@@ -415,15 +418,18 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         if (x > arrW - 5) x = arrW - 5;
         if (y > arrH - 5) y = arrH - 5;
         std::string val = tile.second;
+        if (val != "0")
+        {
+            map[y + 1][x + 2] = "0";
+            map[y + 2][x + 1] = "0";
+            map[y + 2][x + 2] = "0";
+            map[y + 2][x + 3] = "0";
+            map[y + 3][x + 2] = "0";
+        }
         map[y + 1][x + 1] = val;
         map[y + 1][x + 3] = val;
         map[y + 3][x + 1] = val;
         map[y + 3][x + 3] = val;
-        map[y + 1][x + 2] = "0";
-        map[y + 2][x + 1] = "0";
-        map[y + 2][x + 2] = "0";
-        map[y + 2][x + 3] = "0";
-        map[y + 3][x + 2] = "0";
     }
     for (const auto& v : getVictims())
     {
