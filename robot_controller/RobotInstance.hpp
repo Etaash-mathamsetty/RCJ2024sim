@@ -196,13 +196,18 @@ private:
 
     void delay(double seconds);
 
-    bool determineLetter(const cv::Mat& roi, std::string side, const double* position);
+    char determineLetter(cv::Mat roi, std::string side);
 
-    char checkHsv(const cv::Mat& roi, std::string side);
+    char checkHsv(cv::Mat roi, std::string side);
+
+    char checkHazard(cv::Mat roi, std::string side);
+
+    std::vector<cv::Point> getContourHazard(std::string name, cv::Mat frame);
+
+    void stopAndEmit(void *message);
 
     bool isFollowingVictim;
     bool reporting;
-    char message[9];
     void lookForLetter();
 
     RobotInstance();

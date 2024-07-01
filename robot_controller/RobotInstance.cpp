@@ -142,9 +142,18 @@ void RobotInstance::save_training_data()
 
 void RobotInstance::add_training_data(std::string side, char classification)
 {
-    if(side == "L")
+    if(classification == 'H' || classification == 'S' || classification == 'U')
     {
-        cv::Mat frame = getLeftCameraMat();
+        cv::Mat frame;
+        if(side == "L")
+        {
+            frame = getLeftCameraMat();
+        }
+        else if(side == "R")
+        {
+            frame = getRightCameraMat();
+        }
+
         auto contour = getContour(frame);
         if(contour.size() == 0)
         {
@@ -170,10 +179,20 @@ void RobotInstance::add_training_data(std::string side, char classification)
             cv::vconcat(training_data, roi2, training_data);
         output.push_back((int)classification);
     }
-    else if(side == "R")
+    else
     {
-        cv::Mat frame = getRightCameraMat();
-        auto contour = getContour(frame);
+        cv::Mat frame;
+        if(side == "L")
+        {
+            frame = getLeftCameraMat();
+        }
+        else if(side == "R")
+        {
+            frame = getRightCameraMat();
+        }
+
+        auto contour = getContourHazard("", frame);
+
         if(contour.size() == 0)
         {
             // std::cout << "no contour found!" << std::endl;
@@ -181,21 +200,30 @@ void RobotInstance::add_training_data(std::string side, char classification)
         }
 
         cv::Rect boundRect = boundingRect(contour);
-        cv::Mat frame2;
-        cv::cvtColor(frame, frame, cv::COLOR_BGR2HSV);
-        cv::inRange(frame, cv::Scalar(0,0,0), cv::Scalar(255,20,80), frame2);
-        cv::Mat _roi(frame2, boundRect);
-        cv::Mat roi = _roi.clone();
+        cv::Mat roi2(frame, boundRect);
+        cv::Mat roi1;
+        cv::cvtColor(roi2, roi1, cv::COLOR_BGR2GRAY);
+        cv::cvtColor(roi2, roi2, cv::COLOR_BGR2HSV);
+
         cv::Mat roi3;
-        cv::resize(roi, roi3, cv::Size(10, 10));
-        cv::threshold(roi3, roi3, 127, 255, cv::THRESH_BINARY);
-        cv::Mat roi4;
-        roi3.convertTo(roi4, CV_32FC1);
-        cv::Mat roi2 = roi4.reshape(1, 1);
+        cv::inRange(roi2, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 255), roi3);
+
+        cv::bitwise_and(roi1, roi3, roi1);
+
+        cv::threshold(roi1, roi1, 127, 255, cv::THRESH_BINARY);
+
+        cv::Mat Roi1D;
+        cv::resize(roi1, Roi1D, cv::Size(10, 10));
+        cv::threshold(Roi1D, Roi1D, 127, 255, cv::THRESH_BINARY);
+        addTexture("Hazard threshold " + side, Roi1D.clone(), SDL_PIXELFORMAT_RGB332);
+        cv::Mat Roi1D3;
+        Roi1D.convertTo(Roi1D3, CV_32F);
+        cv::Mat Roi1D2 = Roi1D3.reshape(1, 1);
+
         if(training_data.rows == 0)
-            training_data.push_back(roi2);
+            training_data.push_back(Roi1D2);
         else
-            cv::vconcat(training_data, roi2, training_data);
+            cv::vconcat(training_data, Roi1D2, training_data);
         output.push_back((int)classification);
     }
 
@@ -582,13 +610,63 @@ std::vector<cv::Point> RobotInstance::getContour(cv::Mat frame)
     return getContour("", frame);
 }
 
+std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat frame)
+{
+    cv::Mat frame2;
+    cv::Mat hsv;
+    cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
+
+    cv::Mat mask;
+
+    cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 255), mask);
+
+    static std::vector<std::vector<cv::Point>> contours;
+
+    contours.clear();
+
+    cv::findContours(mask, contours, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+
+    std::vector<cv::Point> best_contour;
+
+    addTexture(name + " Threshold", mask.clone(), SDL_PIXELFORMAT_RGB332);
+
+    if(contours.size() == 0)
+        return best_contour;
+
+    for(auto it = contours.begin(); it != contours.end(); it++)
+    {
+        double area = cv::contourArea(*it);
+        auto rect = cv::boundingRect(*it);
+        double asp_ratio = rect.height / (double)rect.width;
+        //std::cout << area << std::endl;
+        if(area >= 100 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
+        {
+            if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
+                best_contour = *it;
+        }
+    }
+
+    cv::Mat frame3 = frame.clone();
+    if(best_contour.size() > 0)
+    {
+        cv::drawContours(frame3, std::vector<std::vector<cv::Point>>{best_contour}, -1, cv::Scalar(255, 0, 0));
+        if(name.size() > 0)
+        {
+            addTexture(name, frame3.clone(), SDL_PIXELFORMAT_RGB888);
+        }
+    }
+
+    return best_contour;
+}
+
 void RobotInstance::addTexture(std::string name, cv::Mat m, SDL_PixelFormatEnum f)
 {
     if(!m_disabledGUI)
         m_tex[name] = getTextureFromMat(renderer, m, f);
 }
 
-char RobotInstance::checkHsv(const cv::Mat& roi, std::string side)
+char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 {
     cv::Mat roi2 = roi.clone();
 
@@ -639,11 +717,48 @@ char RobotInstance::checkHsv(const cv::Mat& roi, std::string side)
     return 0;
 }
 
-bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const double* position) //"l" or "r"
+char RobotInstance::checkHazard(cv::Mat roi, std::string side)
+{
+    if(!m_knn->isTrained())
+        return 0;
+
+    cv::Mat roi2 = roi.clone();
+    cv::Mat roi1;
+    cv::cvtColor(roi2, roi1, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(roi2, roi2, cv::COLOR_BGR2HSV);
+
+    cv::Mat roi3;
+    cv::inRange(roi2, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 255), roi3);
+
+    cv::bitwise_and(roi1, roi3, roi1);
+
+    cv::threshold(roi1, roi1, 127, 255, cv::THRESH_BINARY);
+
+    cv::Mat Roi1D;
+    cv::resize(roi1, Roi1D, cv::Size(10, 10));
+    cv::threshold(Roi1D, Roi1D, 127, 255, cv::THRESH_BINARY);
+    addTexture("Hazard threshold " + side, Roi1D.clone(), SDL_PIXELFORMAT_RGB332);
+    cv::Mat Roi1D3;
+    Roi1D.convertTo(Roi1D3, CV_32F);
+    cv::Mat Roi1D2 = Roi1D3.reshape(1, 1);
+
+    std::vector<float> dists;
+    float ret = m_knn->findNearest(Roi1D2, 3, cv::noArray(), cv::noArray(), dists);
+
+    if(dists[0] > 450000)
+        return 0;
+
+    
+    std::cout << "ret: " << (char)ret << " dist: " << dists[0] << std::endl;
+
+    return (char)(ret);
+}
+
+char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
 {
     if(!m_knn->isTrained())
     {
-        return false;
+        return 0;
     }
 
     cv::Mat roi2 = roi.clone();
@@ -667,17 +782,31 @@ bool RobotInstance::determineLetter(const cv::Mat& roi, std::string side, const 
     char ch2 = checkHsv(roi, side);
     if(dist > 450000 && !ch2)
     {
-        return false;
+        return 0;
     }
 
-    int xPos = (int)(position[0] * 100);
-    int zPos = (int)(position[2] * 100);
-    int victim_pos[2] = {xPos, zPos};
-    memcpy(message, victim_pos, sizeof(victim_pos));
-    message[8] = ch2 ? ch2 : ch;
-    std::cout << message[8] << " found on side " << side << std::endl;
+    if(ch2)
+    {
+        std::cout << "ret: " << ch2;
+    }
+    else
+    {
+        std::cout << "ret: " << ch << " dist: " << dist << std::endl;
+    }
+
     // std::cout << std::string(message) << std::endl;
-    return true;
+    return ch2 ? ch2 : ch;
+}
+
+void RobotInstance::stopAndEmit(void* message)
+{
+    if(m_disableEmit)
+        return;
+
+    stopMotors();
+    delay(VICTIM_DELAY_TIME);
+    m_emitter->send(message, 9);
+    m_robot->step(m_timestep);
 }
 
 void RobotInstance::lookForLetter()
@@ -689,138 +818,104 @@ void RobotInstance::lookForLetter()
     cv::Mat frameR = getCv2Mat(m_rightCamera);
     addTexture("Left Camera", frameL, SDL_PIXELFORMAT_RGB888);
     addTexture("Right Camera", frameR, SDL_PIXELFORMAT_RGB888);
-    auto contourL = getContour("Left Contour", frameL);
-    auto contourR = getContour("Right Contour", frameR);
-    const double* position = m_gps->getValues();
-    if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE && contourL.size() > 0)
+    struct {
+        int32_t xpos;
+        int32_t zpos;
+        char letter;
+    } message;
+    pdd cur = getRawGPSPosition();
+    message.xpos = (int32_t)(cur.first * 100);
+    message.zpos = (int32_t)(cur.second * -100);
+    if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE)
     {
-        boundRect = boundingRect(contourL);
-        cv::Mat roi(frameL, boundRect);
-        addTexture("Left ROI", roi.clone(), SDL_PIXELFORMAT_RGB888);
-        double rectCenterX = boundRect.x + boundRect.width / 2; //in columns
-        if (boundRect.width * boundRect.height > 300)
+        auto contour = getContour("Left Contour", frameL);
+        auto hazard = getContourHazard("Left HazardC", frameL);
+
+        auto boundRect = cv::boundingRect(contour);
+        if(boundRect.area() >= 300)
         {
-            if (determineLetter(roi, "l", m_gps->getValues()))
+            cv::Mat roi(frameL, boundRect);
+            message.letter = determineLetter(roi, "L");
+
+            if(message.letter)
             {
-                double offset = rectCenterX - frameL.cols / 2;
-                double percent = offset / (frameL.cols / 2);
-                double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
-                double thetaFromRobot = -M_PI / 2 + thetaFromCenter;
-                if (thetaFromRobot < 0)
+                if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
-                    thetaFromRobot += 2 * M_PI;
-                }
-                int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
-                pdd point = lidarToPoint(getRawGPSPosition(), rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
-                addVictim(point);
-                std::cout << "victim dist: " << getDist(getRawGPSPosition(), point) << std::endl;
-                if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
-                {
-                    stopMotors();
-                    delay(VICTIM_DELAY_TIME);
-                    reportVictim(point);
-                    victimMap[point] = message[8];
-                    if(!m_disableEmit)
-                    {
-                        m_emitter->send(message, sizeof(message));
-                        step();
-                    }
-                    isFollowingVictim = false;
-                    reporting = false;
+                    stopAndEmit((void*)&message);
+                    return;
                 }
                 else
                 {
-                    if (!isFollowingVictim && notBeenDetected(point) && !m_disableEmit)
+                    //TODO: add back victim following
+                }
+            }
+        }
+        else
+        {
+            boundRect = cv::boundingRect(hazard);
+            if(boundRect.area() >= 300)
+            {
+                cv::Mat roi(frameL, boundRect);
+                message.letter = checkHazard(roi, "L");
+
+                if(message.letter)
+                {
+                    if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
                     {
-                        std::cout << "following victim" << std::endl;
-                        stopMotors();
-                        pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
-                        if (isTraversableOpt(nearest) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
-                        {
-                            isFollowingVictim = true;
-                            moveToPoint(this, nearest);
-                            pdd cur = getRawGPSPosition();
-                            turnTo(MAX_VELOCITY / 2, -std::atan2(point.first - cur.first, point.second - cur.second) + M_PI / 2);
-                            isFollowingVictim = false;
-                            reporting = true;
-                            std::cout << "done following victim" << std::endl;
-                        }
-                        else
-                        {
-                            std::cout << "Could not follow victim" << std::endl;
-                            stopMotors();
-                            delay(VICTIM_DELAY_TIME);
-                            reportVictim(point);
-                        }
+                        stopAndEmit((void*)&message);
+                        return;
+                    }
+                    else
+                    {
+
                     }
                 }
-                return;
             }
         }
     }
-    if (rangeImage[horizontalResolution / 4] <= MAX_VIC_DETECTION_RANGE && contourR.size() > 0)
+    if (rangeImage[horizontalResolution / 4] <= MAX_VIC_DETECTION_RANGE)
     {
-        boundRect = boundingRect(contourR);
-        cv::Mat roi(frameR, boundRect);
-        addTexture("Right ROI", roi.clone(), SDL_PIXELFORMAT_RGB888);
-        double rectCenterX = boundRect.x + boundRect.width / 2; //in columns
-        if (boundRect.width * boundRect.height > 300)
+        auto contour = getContour("Right Contour", frameR);
+        auto hazard = getContourHazard("Right HazardC", frameR);
+
+        auto boundRect = cv::boundingRect(contour);
+        if(boundRect.area() >= 300)
         {
-            if (determineLetter(roi, "r", m_gps->getValues()))
+            cv::Mat roi(frameR, boundRect);
+            message.letter = determineLetter(roi, "R");
+            if(message.letter)
             {
-                double offset = rectCenterX - frameR.cols / 2;
-                double percent = offset / (frameR.cols / 2);
-                double thetaFromCenter = clampAngle(std::atan(percent * std::tan(0.5)));
-                double thetaFromRobot = M_PI / 2 + thetaFromCenter;
-                if (thetaFromRobot < 0)
+                if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
                 {
-                    thetaFromRobot += 2 * M_PI;
-                }
-                int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
-                pdd point = lidarToPoint(getRawGPSPosition(), rangeImage[rangeImgIdx], clampAngle(thetaFromRobot - m_imu->getRollPitchYaw()[2])).first;
-                addVictim(point);
-                std::cout << "victim dist: " << getDist(getRawGPSPosition(), point) << std::endl;
-                if (notBeenDetected(point) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
-                {
-                    stopMotors();
-                    delay(VICTIM_DELAY_TIME);
-                    victimMap[point] = message[8];
-                    reportVictim(point);
-                    if(!m_disableEmit)
-                    {
-                        m_emitter->send(message, sizeof(message));
-                        step();
-                    }
-                    isFollowingVictim = false;
-                    reporting = false;
+                    stopAndEmit((void*)&message);
+                    return;
                 }
                 else
                 {
-                    if (!isFollowingVictim && notBeenDetected(point) && !m_disableEmit)
+
+                }
+            }
+        }
+        else
+        {
+            boundRect = cv::boundingRect(hazard);
+            if(boundRect.area() >= 300)
+            {
+                cv::Mat roi(frameR, boundRect);
+                message.letter = checkHazard(roi, "R");
+
+                if(message.letter)
+                {
+                    if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
                     {
-                        std::cout << "following victim" << std::endl;
-                        stopMotors();
-                        pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
-                        if (isTraversableOpt(nearest) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
-                        {
-                            isFollowingVictim = true;
-                            moveToPoint(this, nearest);
-                            pdd cur = getRawGPSPosition();
-                            turnTo(MAX_VELOCITY / 2, -std::atan2(point.first - cur.first, point.second - cur.second) - M_PI / 2);
-                            isFollowingVictim = false;
-                            reporting = true;
-                            std::cout << "done following victim" << std::endl;
-                        }
-                        else
-                        {
-                            std::cout << "Could not follow victim" << std::endl;
-                            stopMotors();
-                            delay(VICTIM_DELAY_TIME);
-                            reportVictim(point);
-                        }
+                        stopAndEmit((void*)&message);
+                        return;
+                    }
+                    else
+                    {
+
                     }
                 }
-                return;
             }
         }
     }
