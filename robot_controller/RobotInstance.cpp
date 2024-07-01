@@ -748,7 +748,7 @@ char RobotInstance::checkHazard(cv::Mat roi, std::string side)
     if(dists[0] > 450000)
         return 0;
 
-    
+
     std::cout << "ret: " << (char)ret << " dist: " << dists[0] << std::endl;
 
     return (char)(ret);
@@ -780,7 +780,7 @@ char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
     // std::cout << "ret: " << ch << " dist: " << dist << std::endl;
 
     char ch2 = checkHsv(roi, side);
-    if(dist > 450000 && !ch2)
+    if(dist > 600000 && !ch2)
     {
         return 0;
     }
