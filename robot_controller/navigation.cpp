@@ -326,7 +326,7 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
 
 pdd findNearestTraversable(pdd cur)
 {
-    const double rad = 0.02;
+    const double rad = 0.03;
     pdd cur2 = cur;
     cur2.first -= rad;
     cur2.second -= rad;
