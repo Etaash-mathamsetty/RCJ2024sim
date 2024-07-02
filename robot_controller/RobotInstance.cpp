@@ -586,7 +586,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
         auto rect = cv::boundingRect(*it);
         double asp_ratio = rect.height / (double)rect.width;
         //std::cout << area << std::endl;
-        if(area >= 50 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
+        if(area >= 40 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
             if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
                 best_contour = *it;
@@ -879,6 +879,8 @@ void RobotInstance::stopAndEmit(void* message)
     delay(VICTIM_DELAY_TIME);
     m_emitter->send(message, 9);
     m_robot->step(m_timestep);
+
+    std::cout << "emitted" << std::endl;
 }
 
 pdd RobotInstance::victimToPoint(int rectCenterX, int frameCols, std::string side)
