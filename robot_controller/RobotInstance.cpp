@@ -520,7 +520,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         double x = -rad, y = -rad;
         for(; x <= rad; x += 0.005, x = std::round(x / 0.005) * 0.005)
         {
-            for(y = -rad; y <= rad; y += 0.005, y = std::round(x / 0.005) * 0.005)
+            for(y = -rad; y <= rad; y += 0.005, y = std::round(y / 0.005) * 0.005)
             {
                 if (x == -rad || x == rad || y == -rad || y == rad)
                 {
