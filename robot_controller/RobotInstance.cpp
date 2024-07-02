@@ -963,6 +963,7 @@ void RobotInstance::lookForLetter()
             addVictim(point);
             if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
             {
+                victimMap[point] = message.letter;
                 stopAndEmit((void*)&message);
                 return;
             }
@@ -1010,6 +1011,7 @@ void RobotInstance::lookForLetter()
             addVictim(point);
             if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
             {
+                victimMap[point] = message.letter;
                 stopAndEmit((void*)&message);
                 return;
             }
