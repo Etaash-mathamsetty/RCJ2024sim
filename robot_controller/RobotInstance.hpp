@@ -203,6 +203,7 @@ private:
     char checkHazard(cv::Mat roi, std::string side);
 
     std::vector<cv::Point> getContourHazard(std::string name, cv::Mat frame);
+    std::vector<cv::Point> getContourColor(std::string name, cv::Mat frame);
 
     void stopAndEmit(void *message);
     pdd victimToPoint(int rectCenterX, int frameCols, std::string side);

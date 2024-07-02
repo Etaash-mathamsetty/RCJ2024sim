@@ -660,6 +660,60 @@ std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat
     return best_contour;
 }
 
+std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat frame)
+{
+    cv::Mat frame2;
+    cv::Mat hsv;
+    cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
+    cv::Mat mask1, mask2, mask3;
+    cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 255), mask1);
+    cv::inRange(hsv, cv::Scalar(160, 100, 0), cv::Scalar(180, 255, 255), mask2);
+    cv::inRange(hsv, cv::Scalar(20, 200, 80), cv::Scalar(40, 255, 255), mask3);
+
+    cv::Mat mask;
+
+    cv::bitwise_or(mask1, mask2, mask);
+    cv::bitwise_or(mask, mask3, mask);
+
+    static std::vector<std::vector<cv::Point>> contours;
+
+    contours.clear();
+
+    cv::findContours(mask, contours, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+
+    std::vector<cv::Point> best_contour;
+
+    addTexture(name + " Threshold", mask.clone(), SDL_PIXELFORMAT_RGB332);
+
+    if(contours.size() == 0)
+        return best_contour;
+
+    for(auto it = contours.begin(); it != contours.end(); it++)
+    {
+        double area = cv::contourArea(*it);
+        auto rect = cv::boundingRect(*it);
+        double asp_ratio = rect.height / (double)rect.width;
+        //std::cout << area << std::endl;
+        if(area >= 50 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
+        {
+            if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
+                best_contour = *it;
+        }
+    }
+
+    cv::Mat frame3 = frame.clone();
+    if(best_contour.size() > 0)
+    {
+        cv::drawContours(frame3, std::vector<std::vector<cv::Point>>{best_contour}, -1, cv::Scalar(255, 0, 0));
+        if(name.size() > 0)
+        {
+            addTexture(name, frame3.clone(), SDL_PIXELFORMAT_RGB888);
+        }
+    }
+    return best_contour;
+}
+
 void RobotInstance::addTexture(std::string name, cv::Mat m, SDL_PixelFormatEnum f)
 {
     if(!m_disabledGUI)
@@ -696,18 +750,18 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
     for(size_t i = 0; i < orange_c.size(); i++)
     {
         const double area = cv::contourArea(orange_c[i]);
-        if(area >= 50 && area <= 4000 && (big_orange_c.size() == 0 || area > cv::contourArea(big_orange_c)))
+        if(area >= 50 && area <= 3500 && (big_orange_c.size() == 0 || area > cv::contourArea(big_orange_c)))
             big_orange_c = orange_c[i];
     }
 
     for(size_t i = 0; i < red_c.size(); i++)
     {
         const double area = cv::contourArea(red_c[i]);
-        if(area >= 50 && area <= 4000 && (big_red_c.size() == 0 || area > cv::contourArea(big_red_c)))
+        if(area >= 50 && area <= 3500 && (big_red_c.size() == 0 || area > cv::contourArea(big_red_c)))
             big_red_c = red_c[i];
     }
 
-    if(big_orange_c.size() > 0)
+    if(big_orange_c.size() > 0 && big_red_c.size() > 0)
     {
         return 'O';
     }
@@ -798,23 +852,15 @@ char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
     if(ch == 'P' || ch == 'C')
         ch = 0;
 
-    char ch2 = checkHsv(roi, side);
-    if(dist > 600000 && !ch2)
+    if(dist > 600000)
     {
         return 0;
     }
 
-    if(ch2)
-    {
-        std::cout << "ret: " << ch2 << std::endl;
-    }
-    else
-    {
-        std::cout << "ret: " << ch << " dist: " << dist << std::endl;
-    }
+    std::cout << "ret: " << ch << " dist: " << dist << std::endl;
 
     // std::cout << std::string(message) << std::endl;
-    return ch2 ? ch2 : ch;
+    return ch;
 }
 
 void RobotInstance::stopAndEmit(void* message)
@@ -879,79 +925,51 @@ void RobotInstance::lookForLetter()
     pdd cur = getRawGPSPosition();
     message.xpos = (int32_t)(cur.first * 100);
     message.zpos = (int32_t)(cur.second * -100);
+    message.letter = 0;
     if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE)
     {
         auto contour = getContour("Left Contour", frameL);
         auto hazard = getContourHazard("Left HazardC", frameL);
+        auto color = getContourColor("Left ColorH", frameL);
 
         auto boundRect = cv::boundingRect(contour);
         if(boundRect.area() >= 200)
         {
             cv::Mat roi(frameL, boundRect);
             message.letter = determineLetter(roi, "L");
-
-            if(message.letter)
+        }
+        if(!message.letter)
+        {
+            boundRect = cv::boundingRect(color);
+            if(boundRect.area() >= 200)
             {
-                pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
-                addVictim(point);
-                if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
-                {
-                    stopAndEmit((void*)&message);
-                    return;
-                }
-                else
-                {
-                    followVictim(point, "L");
-                    return;
-                }
-            }
-            else
-            {
-                boundRect = cv::boundingRect(hazard);
-                if(boundRect.area() >= 200)
-                {
-                    cv::Mat roi(frameL, boundRect);
-                    message.letter = checkHazard(roi, "L");
-                    if(message.letter)
-                    {
-                        pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
-                        addVictim(point);
-                        if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
-                        {
-                            stopAndEmit((void*)&message);
-                            return;
-                        }
-                        else
-                        {
-                            followVictim(point, "L");
-                            return;
-                        }
-                    }
-                }
+                cv::Mat roi(frameL, boundRect);
+                message.letter = checkHsv(roi, "L");
             }
         }
-        else
+        if(!message.letter)
         {
             boundRect = cv::boundingRect(hazard);
             if(boundRect.area() >= 200)
             {
                 cv::Mat roi(frameL, boundRect);
                 message.letter = checkHazard(roi, "L");
+            }
+        }
 
-                if(message.letter)
-                {
-                    pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
-                    addVictim(point);
-                    if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
-                    {
-                        stopAndEmit((void*)&message);
-                        return;
-                    }
-                    else
-                    {
-                        followVictim(point, "L");
-                    }
-                }
+        if(message.letter)
+        {
+            pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
+            addVictim(point);
+            if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
+            {
+                stopAndEmit((void*)&message);
+                return;
+            }
+            else
+            {
+                followVictim(point, "L");
+                return;
             }
         }
     }
@@ -959,76 +977,46 @@ void RobotInstance::lookForLetter()
     {
         auto contour = getContour("Right Contour", frameR);
         auto hazard = getContourHazard("Right HazardC", frameR);
+        auto color = getContourColor("Right ColorH", frameR);
 
         auto boundRect = cv::boundingRect(contour);
         if(boundRect.area() >= 200)
         {
             cv::Mat roi(frameR, boundRect);
             message.letter = determineLetter(roi, "R");
-            if(message.letter)
+        }
+        if(!message.letter)
+        {
+            boundRect = cv::boundingRect(color);
+            if(boundRect.area() >= 200)
             {
-                pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
-                addVictim(point);
-                if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
-                {
-                    stopAndEmit((void*)&message);
-                    return;
-                }
-                else
-                {
-                    followVictim(point, "R");
-                    return;
-                }
-            }
-            else
-            {
-                boundRect = cv::boundingRect(hazard);
-                if(boundRect.area() >= 200)
-                {
-                    cv::Mat roi(frameR, boundRect);
-                    message.letter = checkHazard(roi, "R");
-
-                    if(message.letter)
-                    {
-                        pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
-                        addVictim(point);
-                        if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
-                        {
-                            stopAndEmit((void*)&message);
-                            return;
-                        }
-                        else
-                        {
-                            followVictim(point, "R");
-                            return;
-                        }
-                    }
-                }
+                cv::Mat roi(frameR, boundRect);
+                message.letter = checkHsv(roi, "R");
             }
         }
-        else
+        if(!message.letter)
         {
             boundRect = cv::boundingRect(hazard);
             if(boundRect.area() >= 200)
             {
                 cv::Mat roi(frameR, boundRect);
                 message.letter = checkHazard(roi, "R");
+            }
+        }
 
-                if(message.letter)
-                {
-                    pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
-                    addVictim(point);
-                    if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
-                    {
-                        stopAndEmit((void*)&message);
-                        return;
-                    }
-                    else
-                    {
-                        followVictim(point, "R");
-                        return;
-                    }
-                }
+        if(message.letter)
+        {
+            pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
+            addVictim(point);
+            if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
+            {
+                stopAndEmit((void*)&message);
+                return;
+            }
+            else
+            {
+                followVictim(point, "R");
+                return;
             }
         }
     }
