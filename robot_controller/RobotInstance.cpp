@@ -700,7 +700,7 @@ std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat 
         auto rect = cv::boundingRect(*it);
         double asp_ratio = rect.height / (double)rect.width;
         //std::cout << area << std::endl;
-        if(area >= 50 && area <= 800 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
+        if(area >= 50 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
             if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
                 best_contour = *it;
