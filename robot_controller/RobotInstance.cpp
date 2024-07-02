@@ -612,8 +612,7 @@ std::vector<cv::Point> RobotInstance::getContour(cv::Mat frame)
 
 std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat frame)
 {
-    cv::Mat frame2;
-    cv::Mat hsv;
+    cv::Mat frame2, hsv;
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
     cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
 
@@ -662,14 +661,20 @@ std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat
 
 std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat frame)
 {
-    cv::Mat frame2;
-    cv::Mat hsv;
+    cv::Mat frame2, hsv;
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
     cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
     cv::Mat mask1, mask2, mask3;
     cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 255), mask1);
     cv::inRange(hsv, cv::Scalar(160, 100, 0), cv::Scalar(180, 255, 255), mask2);
     cv::inRange(hsv, cv::Scalar(20, 200, 80), cv::Scalar(40, 255, 255), mask3);
+
+    //there is an orange area between the red and yellow, so blur the mask to make it bigger
+    cv::blur(mask2, mask2, cv::Size(5, 5));
+    cv::blur(mask3, mask3, cv::Size(5, 5));
+
+    cv::threshold(mask2, mask2, 80, 255, cv::THRESH_BINARY);
+    cv::threshold(mask3, mask3, 80, 255, cv::THRESH_BINARY);
 
     cv::Mat mask;
 
@@ -695,7 +700,7 @@ std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat 
         auto rect = cv::boundingRect(*it);
         double asp_ratio = rect.height / (double)rect.width;
         //std::cout << area << std::endl;
-        if(area >= 50 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
+        if(area >= 50 && area <= 800 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
             if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
                 best_contour = *it;
@@ -763,10 +768,12 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
     if(big_orange_c.size() > 0 && big_red_c.size() > 0)
     {
+        std::cout << "found O" << std::endl;
         return 'O';
     }
     else if(big_red_c.size() > 0)
     {
+        std::cout << "found F" << std::endl;
         return 'F';
     }
 
@@ -891,6 +898,7 @@ pdd RobotInstance::victimToPoint(int rectCenterX, int frameCols, std::string sid
 
 void RobotInstance::followVictim(pdd point, std::string side)
 {
+    if(m_disableEmit) return;
     pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
     if (isTraversableOpt(nearest) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
     {
