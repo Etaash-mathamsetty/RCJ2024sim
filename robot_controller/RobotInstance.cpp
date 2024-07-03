@@ -1091,7 +1091,7 @@ void RobotInstance::moveToNextPos()
     {
         std::cout << "time almost up" << std::endl;
         int pathLen = pointBfs(getCurrentGPSPosition(), m_startPos, get_lidar_minmax_opt(), false).size();
-        if (getTimeLeft() < 4 * pathLen || getRealTime() >= (600 - 3.5 * pathLen))
+        if (getTimeLeft() < 5 * pathLen || getRealTime() >= (600 - 3.5 * pathLen))
         {
             moveToPoint(this, m_startPos, false);
             clearOnWall();
