@@ -727,6 +727,8 @@ void RobotInstance::addTexture(std::string name, cv::Mat m, SDL_PixelFormatEnum 
 
 char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 {
+    if(!m_knn->isTrained())
+        return 0;
     cv::Mat roi2 = roi.clone();
 
     cv::cvtColor(roi2, roi2, cv::COLOR_BGR2HSV);
@@ -766,12 +768,39 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
             big_red_c = red_c[i];
     }
 
-    if(big_orange_c.size() > 0 && big_red_c.size() > 0)
+    cv::Mat mask, grayscale_mask;
+
+    cv::bitwise_or(red, orange, mask);
+
+    cv::inRange(roi2, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 80), grayscale_mask);
+
+    cv::bitwise_or(mask, grayscale_mask, mask);
+
+    cv::Mat mask2;
+
+    cv::resize(mask, mask2, cv::Size(10, 10));
+    cv::threshold(mask2, mask2, 127, 255, cv::THRESH_BINARY);
+
+    cv::Mat mask3;
+    mask2.convertTo(mask3, CV_32F);
+    cv::Mat mask4 = mask3.reshape(1, 1);
+
+    std::vector<float> dists;
+    char ret = (char)m_knn->findNearest(mask4, 3, cv::noArray(), cv::noArray(), dists);
+
+    bool valid_shape = (ret == 'P' || ret == 'C') && dists[0] <= 1500000;
+
+    if(big_red_c.size() > 0 && !valid_shape)
+    {
+        std::cout << "invalid shape!!" << std::endl;
+    }
+
+    if(big_orange_c.size() > 0 && big_red_c.size() > 0 && valid_shape)
     {
         std::cout << "found O" << std::endl;
         return 'O';
     }
-    else if(big_red_c.size() > 0)
+    else if(big_red_c.size() > 0 && valid_shape)
     {
         std::cout << "found F" << std::endl;
         return 'F';
