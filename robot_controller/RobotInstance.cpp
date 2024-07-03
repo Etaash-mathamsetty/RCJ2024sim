@@ -757,6 +757,10 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
     for(size_t i = 0; i < orange_c.size(); i++)
     {
         const double area = cv::contourArea(orange_c[i]);
+        auto rect = cv::boundingRect(orange_c[i]);
+        double asp_ratio = rect.height / (double)rect.width;
+        if(asp_ratio <= 0.5 && asp_ratio >= 2.0)
+            continue;
         if(area >= 50 && area <= 3500 && (big_orange_c.size() == 0 || area > cv::contourArea(big_orange_c)))
             big_orange_c = orange_c[i];
     }
@@ -764,36 +768,15 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
     for(size_t i = 0; i < red_c.size(); i++)
     {
         const double area = cv::contourArea(red_c[i]);
+        auto rect = cv::boundingRect(red_c[i]);
+        double asp_ratio = rect.height / (double)rect.width;
+        if(asp_ratio <= 0.5 && asp_ratio >= 2.0)
+            continue;
         if(area >= 50 && area <= 3500 && (big_red_c.size() == 0 || area > cv::contourArea(big_red_c)))
             big_red_c = red_c[i];
     }
 
-    cv::Mat mask, grayscale_mask;
-
-    cv::bitwise_or(red, orange, mask);
-
-    cv::inRange(roi2, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 80), grayscale_mask);
-
-    cv::bitwise_or(mask, grayscale_mask, mask);
-
-    cv::Mat mask2;
-
-    cv::resize(mask, mask2, cv::Size(10, 10));
-    cv::threshold(mask2, mask2, 127, 255, cv::THRESH_BINARY);
-
-    cv::Mat mask3;
-    mask2.convertTo(mask3, CV_32F);
-    cv::Mat mask4 = mask3.reshape(1, 1);
-
-    std::vector<float> dists;
-    char ret = (char)m_knn->findNearest(mask4, 3, cv::noArray(), cv::noArray(), dists);
-
-    bool valid_shape = (ret == 'P' || ret == 'C') && dists[0] <= 1500000;
-
-    if(big_red_c.size() > 0 && !valid_shape)
-    {
-        std::cout << "invalid shape!!" << std::endl;
-    }
+    bool valid_shape = true;
 
     if(big_orange_c.size() > 0 && big_red_c.size() > 0 && valid_shape)
     {
@@ -933,6 +916,7 @@ void RobotInstance::followVictim(pdd point, std::string side)
     pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
     if (isTraversableOpt(nearest) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
     {
+        std::cout << "following victim" << std::endl;
         isFollowingVictim = true;
         moveToPoint(this, nearest);
         pdd cur = getRawGPSPosition();
