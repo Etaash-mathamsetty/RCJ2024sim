@@ -26,7 +26,7 @@ void otherdelay(int ms, webots::Robot* rb)
         if ((rb->getTime() - init) * 1000 > ms) break;
     }
 }
-const std::vector<std::string> colored = { "5", "6", "7", "8", "9", "o", "y", "p", "r", "g", "b"};
+const std::vector<std::string> colored = {"2", "5", "6", "7", "8", "9", "o", "y", "p", "r", "g", "b"};
 std::map<pii, std::string> tilemap;
 std::map<pii, int> roommap;
 std::unordered_set<pii, pair_hash_combiner<int>> room4;
@@ -83,7 +83,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
                     double checkX = minX + TILE_LENGTH * j + x * 0.03, checkY = maxY - TILE_LENGTH * i - y * 0.03;
-                    if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
+                    if (!isTraversable(pdd(checkX, checkY), pList, 0.01)) map[yidx][xidx] = "1";
                 }
             }
         }
@@ -97,7 +97,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         if (x > arrW - 5) x = arrW - 5;
         if (y > arrH - 5) y = arrH - 5;
         std::string val = tile.second;
-        if (val != "0")
+        if (count(colored.begin(), colored.end(), val))
         {
             map[y + 1][x + 2] = "0";
             map[y + 2][x + 1] = "0";
@@ -404,7 +404,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
                     double checkX = minX + TILE_LENGTH * j + x * 0.03, checkY = maxY - TILE_LENGTH * i - y * 0.03;
-                    if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
+                    if (!isTraversable(pdd(checkX, checkY), pList, 0.01)) map[yidx][xidx] = "1";
                 }
             }
         }
@@ -418,7 +418,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         if (x > arrW - 5) x = arrW - 5;
         if (y > arrH - 5) y = arrH - 5;
         std::string val = tile.second;
-        if (val != "0")
+        if (count(colored.begin(), colored.end(), val))
         {
             map[y + 1][x + 2] = "0";
             map[y + 2][x + 1] = "0";
