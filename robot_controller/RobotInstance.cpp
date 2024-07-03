@@ -993,15 +993,16 @@ void RobotInstance::lookForLetter()
         if(message.letter)
         {
             pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
-            addVictim(point);
             if(getDist(cur, point) <= MAX_VIC_IDENTIFICATION_RANGE)
             {
+                addVictim(point);
                 victimMap[point] = message.letter;
                 stopAndEmit((void*)&message);
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
                 std::cout << "victim dist: " << getDist(cur, point) << std::endl;
+                addVictim(point);
                 followVictim(point, "L");
             }
             return;
@@ -1041,15 +1042,16 @@ void RobotInstance::lookForLetter()
         if(message.letter)
         {
             pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
-            addVictim(point);
             if(getDist(cur, point) <= MAX_VIC_IDENTIFICATION_RANGE)
             {
+                addVictim(point);
                 victimMap[point] = message.letter;
                 stopAndEmit((void*)&message);
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
                 std::cout << "victim dist: " << getDist(cur, point) << std::endl;
+                addVictim(point);
                 followVictim(point, "R");
             }
             return;
