@@ -1098,8 +1098,19 @@ void RobotInstance::moveToNextPos()
     if (getTimeLeft() <= 20 || getRealTime() >= 580)
     {
         std::cout << "time almost up" << std::endl;
-        int pathLen = pointBfs(getCurrentGPSPosition(), m_startPos, get_lidar_minmax_opt(), false).size();
-        if (getTimeLeft() < 4.5 * pathLen || getRealTime() >= (600 - 3.5 * pathLen))
+        auto path = pointBfs(getCurrentGPSPosition(), m_startPos, get_lidar_minmax_opt(), false);
+        path.push(getRawGPSPosition());
+        double pathLen = 0;
+        pdd last = path.top();
+        path.pop();
+        while(!path.empty())
+        {
+            pdd cur = path.top();
+            pathLen += getDist(cur, last);
+            last = cur;
+            path.pop();
+        }
+        if (getTimeLeft() < 30 * pathLen || getRealTime() >= (600 - 20 * pathLen))
         {
             moveToPoint(this, m_startPos, false);
             clearOnWall();
