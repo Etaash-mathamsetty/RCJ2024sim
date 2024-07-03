@@ -639,7 +639,7 @@ std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat
         auto rect = cv::boundingRect(*it);
         double asp_ratio = rect.height / (double)rect.width;
         //std::cout << area << std::endl;
-        if(area >= 100 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
+        if(area >= 150 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
             if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
                 best_contour = *it;
@@ -907,7 +907,7 @@ void RobotInstance::followVictim(pdd point, std::string side)
         isFollowingVictim = true;
         moveToPoint(this, nearest);
         pdd cur = getRawGPSPosition();
-        turnTo(MAX_VELOCITY / 2, -std::atan2(point.first - cur.first, point.second - cur.second) + (side == "L" ? M_PI : -M_PI) / 2);
+        turnTo(MAX_VELOCITY / 2, -std::atan2(point.first - cur.first, point.second - cur.second) + (side == "L" ? -M_PI : M_PI) / 2);
         stopMotors();
         isFollowingVictim = false;
     }
