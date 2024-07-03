@@ -588,7 +588,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
         //std::cout << area << std::endl;
         if(area >= 40 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
-            if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
+            if(best_contour.size() == 0 || area > cv::contourArea(best_contour))
                 best_contour = *it;
         }
     }
@@ -641,7 +641,7 @@ std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat
         //std::cout << area << std::endl;
         if(area >= 150 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
-            if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
+            if(best_contour.size() == 0 || area > cv::contourArea(best_contour))
                 best_contour = *it;
         }
     }
@@ -702,7 +702,7 @@ std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat 
         //std::cout << area << std::endl;
         if(area >= 50 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
-            if(best_contour.size() == 0 || cv::contourArea(*it) > cv::contourArea(best_contour))
+            if(best_contour.size() == 0 || area > cv::contourArea(best_contour))
                 best_contour = *it;
         }
     }
