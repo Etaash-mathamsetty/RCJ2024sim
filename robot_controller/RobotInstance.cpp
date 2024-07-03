@@ -637,7 +637,7 @@ std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat
     {
         double area = cv::contourArea(*it);
         auto rect = cv::boundingRect(*it);
-        double asp_ratio = rect.height / (double)rect.width;
+        double asp_ratio = rect.width / (double)rect.height;
         //std::cout << area << std::endl;
         if(area >= 150 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
@@ -696,7 +696,7 @@ std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat 
     {
         double area = cv::contourArea(*it);
         auto rect = cv::boundingRect(*it);
-        double asp_ratio = rect.height / (double)rect.width;
+        double asp_ratio = rect.width / (double)rect.height;
         //std::cout << area << std::endl;
         if(area >= 50 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
@@ -756,8 +756,8 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
     {
         const double area = cv::contourArea(orange_c[i]);
         auto rect = cv::boundingRect(orange_c[i]);
-        double asp_ratio = rect.height / (double)rect.width;
-        if(asp_ratio <= 0.8 && asp_ratio >= 3.0)
+        double asp_ratio = rect.width / (double)rect.height;
+        if(asp_ratio <= 0.8 || asp_ratio >= 3.0)
             continue;
         if(area >= 50 && area <= 3500 && (big_orange_c.size() == 0 || area > cv::contourArea(big_orange_c)))
             big_orange_c = orange_c[i];
@@ -767,8 +767,8 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
     {
         const double area = cv::contourArea(red_c[i]);
         auto rect = cv::boundingRect(red_c[i]);
-        double asp_ratio = rect.height / (double)rect.width;
-        if(asp_ratio <= 0.8 && asp_ratio >= 3.0)
+        double asp_ratio = rect.width / (double)rect.height;
+        if(asp_ratio <= 0.8 || asp_ratio >= 3.0)
             continue;
         if(area >= 50 && area <= 3500 && (big_red_c.size() == 0 || area > cv::contourArea(big_red_c)))
             big_red_c = red_c[i];
