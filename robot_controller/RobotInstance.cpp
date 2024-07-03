@@ -664,8 +664,7 @@ std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat 
     cv::Mat frame2, hsv;
     cv::cvtColor(frame, frame2, cv::COLOR_BGR2GRAY);
     cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
-    cv::Mat mask1, mask2, mask3;
-    cv::inRange(hsv, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 255), mask1);
+    cv::Mat mask2, mask3;
     cv::inRange(hsv, cv::Scalar(160, 100, 0), cv::Scalar(180, 255, 255), mask2);
     cv::inRange(hsv, cv::Scalar(20, 200, 80), cv::Scalar(40, 255, 255), mask3);
 
@@ -678,8 +677,7 @@ std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat 
 
     cv::Mat mask;
 
-    cv::bitwise_or(mask1, mask2, mask);
-    cv::bitwise_or(mask, mask3, mask);
+    cv::bitwise_or(mask3, mask2, mask);
 
     static std::vector<std::vector<cv::Point>> contours;
 
@@ -776,21 +774,27 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
             big_red_c = red_c[i];
     }
 
-    bool valid_shape = true;
-
-    if(big_orange_c.size() > 0 && big_red_c.size() > 0 && valid_shape)
+    if(big_orange_c.size() > 0 && big_red_c.size() > 0)
     {
         double ratio = cv::contourArea(big_orange_c) / cv::contourArea(big_red_c);
         if(ratio < 0.8 || ratio > 1.2)
         {
-            std::cout << "ratio: " << ratio << std::endl;
+            std::cout << "ratio O: " << ratio << std::endl;
             return 0;
         }
         std::cout << "found O" << std::endl;
         return 'O';
     }
-    else if(big_red_c.size() > 0 && valid_shape)
+    else if(big_red_c.size() > 0)
     {
+        double ratio = cv::contourArea(big_red_c) / roi.size().area();
+
+        if(ratio >= 0.7)
+        {
+            std::cout << "ratio F: " <<  ratio << std::endl;
+            return 0;
+        }
+
         std::cout << "found F" << std::endl;
         return 'F';
     }
@@ -990,17 +994,17 @@ void RobotInstance::lookForLetter()
         {
             pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
             addVictim(point);
-            if(rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
+            if(getDist(cur, point) <= MAX_VIC_IDENTIFICATION_RANGE)
             {
                 victimMap[point] = message.letter;
                 stopAndEmit((void*)&message);
-                return;
             }
-            else
+            else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
+                std::cout << "victim dist: " << getDist(cur, point) << std::endl;
                 followVictim(point, "L");
-                return;
             }
+            return;
         }
     }
     if (rangeImage[horizontalResolution / 4] <= MAX_VIC_DETECTION_RANGE)
@@ -1038,27 +1042,23 @@ void RobotInstance::lookForLetter()
         {
             pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
             addVictim(point);
-            if(rangeImage[horizontalResolution / 4] <= MAX_VIC_IDENTIFICATION_RANGE)
+            if(getDist(cur, point) <= MAX_VIC_IDENTIFICATION_RANGE)
             {
                 victimMap[point] = message.letter;
                 stopAndEmit((void*)&message);
-                return;
             }
-            else
+            else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
+                std::cout << "victim dist: " << getDist(cur, point) << std::endl;
                 followVictim(point, "R");
-                return;
             }
+            return;
         }
     }
 }
 
 void RobotInstance::detectVictims()
 {
-    if (isFollowingVictim)
-    {
-        return;
-    }
     lookForLetter();
 }
 
