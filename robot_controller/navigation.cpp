@@ -179,6 +179,7 @@ bool midpoint_check(pdd a, pdd b)
 unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
 bool isWallTracing = false;
 
+
 stack<pdd> optimizeRoute(stack<pdd> route)
 {
     if (route.empty())
@@ -244,6 +245,7 @@ stack<pdd> optimizeRouteOnWall(stack<pdd> route)
         return route;
     }
     stack<pdd> ret;
+    cout << route.size();
 
     while (!route.empty())
     {
@@ -260,13 +262,40 @@ stack<pdd> optimizeRouteOnWall(stack<pdd> route)
     {
         pdd cur = ret.top();
         ret.pop();
-        if (rev_ret.size() > 0 && midpoint_check(rev_ret.top(), cur) && isNearWall(rev_ret.top()))
+        if (!ret.empty() && !rev_ret.empty())
         {
+            vector<pdd> toSkip;
+            pdd next = ret.top();
             last_pt = cur;
-            continue;
+            while (midpoint_check(next, cur))
+            {
+                double maxDist = 0;
+                for (const pdd& p : toSkip)
+                {
+                    maxDist = max(maxDist, minDist(cur, next, p));
+                }
+                if (maxDist < 0.01)
+                {
+                    last_pt = next;
+                    ret.pop();
+                    if (ret.empty())
+                    {
+                        break;
+                    }
+                    toSkip.push_back(next);
+                    next = ret.top();
+                }
+                else
+                {
+                    break;
+                }
+            }
+            rev_ret.push(last_pt);
         }
-        rev_ret.push(last_pt);
-        last_pt = cur;
+        else
+        {
+            rev_ret.push(cur);
+        }
     }
 
     //ensure the last point is added
@@ -274,6 +303,8 @@ stack<pdd> optimizeRouteOnWall(stack<pdd> route)
     {
         rev_ret.push(last_pt);
     }
+
+    cout << " --> " << rev_ret.size() << endl;
 
     return rev_ret;
 }
@@ -730,12 +761,12 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
             pindex = parent[pindex];
         }
         res.push(cur);
-        optimizeRouteOnWall(res);
+        res = optimizeRouteOnWall(res);
         res.pop();
         return res;
     }
     cout << "no traceable wall found" << endl;
-    return pointBfs(cur, nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw() * -1, rb->getStartPos()), get_lidar_minmax_opt(), false);
+    return pointBfs(cur, nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos()), get_lidar_minmax_opt(), false);
 }
 
 bool isVisited(const pdd& point)

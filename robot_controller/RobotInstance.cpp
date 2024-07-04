@@ -513,7 +513,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         std::cout << "black detected" << std::endl;
         insert_tile("2", m_color, m_gps, m_imu, m_startPos);
         pdd cur = getRawGPSPosition();
-        pdd colorSensorLoc = pdd(cur.first + 0.0155 * sin(getYaw()), cur.second + 0.0155 * cos(getYaw()));
+        pdd colorSensorLoc = pdd(cur.first + 0.03 * sin(getYaw()), cur.second + 0.03 * cos(getYaw()));
         pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
             std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
         double rad = 0.045;
