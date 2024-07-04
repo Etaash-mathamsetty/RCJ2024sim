@@ -6,3 +6,4 @@ robot_controller/build/*
 .cache
 .idea
 robot_controller/cmake-build-*
+build-gui
