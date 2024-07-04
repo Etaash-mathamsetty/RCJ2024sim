@@ -436,16 +436,12 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         visited.insert(node);
         if (!compPts(node, tar) || (isBlind && (isVisited(node) || isPseudoVisited(node))))
         {
-            //north: +y, east: +x, south: -y, west: -x; 
-            pdd adjacentNodes[8] = {
+            //north: +y, east: +x, south: -y, west: -x;
+            pdd adjacentNodes[] = {
                 r2d(pdd(node.f, node.s - 0.01)),
                 r2d(pdd(node.f, node.s + 0.01)),
                 r2d(pdd(node.f + 0.01, node.s)),
-                r2d(pdd(node.f - 0.01, node.s)),
-                r2d(pdd(node.f - 0.01, node.s - 0.01)),
-                r2d(pdd(node.f + 0.01, node.s + 0.01)),
-                r2d(pdd(node.f + 0.01, node.s - 0.01)),
-                r2d(pdd(node.f - 0.01, node.s + 0.01))
+                r2d(pdd(node.f - 0.01, node.s))
             };
 
             // pdd adjacentNodes[4] = {
@@ -484,7 +480,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         route.push(cur);
         if (!wall)
             route = optimizeRoute(route);
-        else 
+        else
             route = optimizeRouteOnWall(route);
         route.pop();
         // cout << "!!!!! optimized bfs route length: " << route.size() << endl;
