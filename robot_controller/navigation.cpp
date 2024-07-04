@@ -334,14 +334,14 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
         else
         {
             pdd adjacentNodes[8] = {
-                r2d(pdd(node.f, node.s - 0.01)),
-                r2d(pdd(node.f, node.s + 0.01)),
-                r2d(pdd(node.f + 0.01, node.s)),
-                r2d(pdd(node.f - 0.01, node.s)),
-                r2d(pdd(node.f - 0.01, node.s - 0.01)),
-                r2d(pdd(node.f + 0.01, node.s + 0.01)),
-                r2d(pdd(node.f + 0.01, node.s - 0.01)),
-                r2d(pdd(node.f - 0.01, node.s + 0.01))
+                r2d(pdd(node.f, node.s - GRID_PRECISION)),
+                r2d(pdd(node.f, node.s + GRID_PRECISION)),
+                r2d(pdd(node.f + GRID_PRECISION, node.s)),
+                r2d(pdd(node.f - GRID_PRECISION, node.s)),
+                r2d(pdd(node.f - GRID_PRECISION, node.s - GRID_PRECISION)),
+                r2d(pdd(node.f + GRID_PRECISION, node.s + GRID_PRECISION)),
+                r2d(pdd(node.f + GRID_PRECISION, node.s - GRID_PRECISION)),
+                r2d(pdd(node.f - GRID_PRECISION, node.s + GRID_PRECISION))
             };
             for (const pdd& adjacent : adjacentNodes)
             {
@@ -438,10 +438,10 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         {
             //north: +y, east: +x, south: -y, west: -x;
             pdd adjacentNodes[] = {
-                r2d(pdd(node.f, node.s - 0.01)),
-                r2d(pdd(node.f, node.s + 0.01)),
-                r2d(pdd(node.f + 0.01, node.s)),
-                r2d(pdd(node.f - 0.01, node.s))
+                r2d(pdd(node.f, node.s - GRID_PRECISION)),
+                r2d(pdd(node.f, node.s + GRID_PRECISION)),
+                r2d(pdd(node.f + GRID_PRECISION, node.s)),
+                r2d(pdd(node.f - GRID_PRECISION, node.s))
             };
 
             // pdd adjacentNodes[4] = {
@@ -542,11 +542,11 @@ bool isOnWall(pdd node, double rad)
     //     r2d(pdd(node.f + 0.01, node.s - 0.01)),
     //     r2d(pdd(node.f - 0.01, node.s + 0.01))
     // };
-    pdd adjacents[4] = {
-        r2d(pdd(node.f, node.s - 0.01)),
-        r2d(pdd(node.f, node.s + 0.01)),
-        r2d(pdd(node.f + 0.01, node.s)),
-        r2d(pdd(node.f - 0.01, node.s))
+    pdd adjacents[] = {
+        r2d(pdd(node.f, node.s - GRID_PRECISION)),
+        r2d(pdd(node.f, node.s + GRID_PRECISION)),
+        r2d(pdd(node.f + GRID_PRECISION, node.s)),
+        r2d(pdd(node.f - GRID_PRECISION, node.s))
     };
 
     for (const pdd& adjacent : adjacents)
@@ -566,15 +566,15 @@ bool checkNearbyVisited(pdd point)
     {
         return false;
     }
-    pdd adjacents[8] = {
-        r2d(pdd(point.f, point.s - 0.01)),
-        r2d(pdd(point.f, point.s + 0.01)),
-        r2d(pdd(point.f + 0.01, point.s)),
-        r2d(pdd(point.f - 0.01, point.s)),
-        r2d(pdd(point.f - 0.01, point.s - 0.01)),
-        r2d(pdd(point.f + 0.01, point.s + 0.01)),
-        r2d(pdd(point.f + 0.01, point.s - 0.01)),
-        r2d(pdd(point.f - 0.01, point.s + 0.01))
+    pdd adjacents[] = {
+        r2d(pdd(point.f, point.s - GRID_PRECISION)),
+        r2d(pdd(point.f, point.s + GRID_PRECISION)),
+        r2d(pdd(point.f + GRID_PRECISION, point.s)),
+        r2d(pdd(point.f - GRID_PRECISION, point.s)),
+        r2d(pdd(point.f - GRID_PRECISION, point.s - GRID_PRECISION)),
+        r2d(pdd(point.f + GRID_PRECISION, point.s + GRID_PRECISION)),
+        r2d(pdd(point.f + GRID_PRECISION, point.s - GRID_PRECISION)),
+        r2d(pdd(point.f - GRID_PRECISION, point.s + GRID_PRECISION))
     };
     int totalTraversable = 0, visited = 0;
     for (const pdd& adjacent : adjacents)
@@ -624,14 +624,14 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
         else
         {
             // prioritizing forward
-            pdd adjacentNodes[8] = {
+            pdd adjacentNodes[] = {
                 pointTo(node, rotation),
-                pointTo(node, rotation + M_PI / 4, hypot(0.01, 0.01)),
+                pointTo(node, rotation + M_PI / 4, hypot(GRID_PRECISION, GRID_PRECISION)),
                 pointTo(node, rotation + M_PI / 2),
-                pointTo(node, rotation + 3 * M_PI / 4, hypot(0.01, 0.01)),
-                pointTo(node, rotation - M_PI / 4, hypot(0.01, 0.01)),
+                pointTo(node, rotation + 3 * M_PI / 4, hypot(GRID_PRECISION, GRID_PRECISION)),
+                pointTo(node, rotation - M_PI / 4, hypot(GRID_PRECISION, GRID_PRECISION)),
                 pointTo(node, rotation - M_PI / 2),
-                pointTo(node, rotation - 3 * M_PI / 4, hypot(0.01, 0.01)),
+                pointTo(node, rotation - 3 * M_PI / 4, hypot(GRID_PRECISION, GRID_PRECISION)),
                 pointTo(node, rotation + M_PI)
             };
             // pdd adjacentNodes[8] = {
@@ -846,15 +846,15 @@ void bfsAddOnWall(pdd cur, double radius)
         {
             removeOnWall(node);
         }
-        pdd adjacentNodes[8] = {
-            r2d(pdd(node.f, node.s - 0.01)),
-            r2d(pdd(node.f, node.s + 0.01)),
-            r2d(pdd(node.f + 0.01, node.s)),
-            r2d(pdd(node.f - 0.01, node.s)),
-            r2d(pdd(node.f - 0.01, node.s - 0.01)),
-            r2d(pdd(node.f + 0.01, node.s + 0.01)),
-            r2d(pdd(node.f + 0.01, node.s - 0.01)),
-            r2d(pdd(node.f - 0.01, node.s + 0.01))
+        pdd adjacentNodes[] = {
+            r2d(pdd(node.f, node.s - GRID_PRECISION)),
+            r2d(pdd(node.f, node.s + GRID_PRECISION)),
+            r2d(pdd(node.f + GRID_PRECISION, node.s)),
+            r2d(pdd(node.f - GRID_PRECISION, node.s)),
+            r2d(pdd(node.f - GRID_PRECISION, node.s - GRID_PRECISION)),
+            r2d(pdd(node.f + GRID_PRECISION, node.s + GRID_PRECISION)),
+            r2d(pdd(node.f + GRID_PRECISION, node.s - GRID_PRECISION)),
+            r2d(pdd(node.f - GRID_PRECISION, node.s + GRID_PRECISION))
         };
         for (const pdd& adjacent : adjacentNodes)
         {
@@ -888,15 +888,15 @@ void bfsRemoveOnWall(pdd cur, double radius)
             removeOnWall(node);
             addVisited(node);
         }
-        pdd adjacentNodes[8] = {
-            r2d(pdd(node.f, node.s - 0.01)),
-            r2d(pdd(node.f, node.s + 0.01)),
-            r2d(pdd(node.f + 0.01, node.s)),
-            r2d(pdd(node.f - 0.01, node.s)),
-            r2d(pdd(node.f - 0.01, node.s - 0.01)),
-            r2d(pdd(node.f + 0.01, node.s + 0.01)),
-            r2d(pdd(node.f + 0.01, node.s - 0.01)),
-            r2d(pdd(node.f - 0.01, node.s + 0.01))
+        pdd adjacentNodes[] = {
+            r2d(pdd(node.f, node.s - GRID_PRECISION)),
+            r2d(pdd(node.f, node.s + GRID_PRECISION)),
+            r2d(pdd(node.f + GRID_PRECISION, node.s)),
+            r2d(pdd(node.f - GRID_PRECISION, node.s)),
+            r2d(pdd(node.f - GRID_PRECISION, node.s - GRID_PRECISION)),
+            r2d(pdd(node.f + GRID_PRECISION, node.s + GRID_PRECISION)),
+            r2d(pdd(node.f + GRID_PRECISION, node.s - GRID_PRECISION)),
+            r2d(pdd(node.f - GRID_PRECISION, node.s + GRID_PRECISION))
         };
         for (const pdd& adjacent : adjacentNodes)
         {
@@ -911,7 +911,7 @@ void bfsRemoveOnWall(pdd cur, double radius)
 pdd pointTo(pdd point, double dir)
 {
     dir = clampAngle(dir);
-    return pdd(r2d(point.f + 0.01 * sin(dir)), r2d(point.s + 0.01 * cos(dir)));
+    return pdd(r2d(point.f + GRID_PRECISION * sin(dir)), r2d(point.s + GRID_PRECISION * cos(dir)));
 }
 
 pdd pointTo(pdd point, double dir, double dist)
