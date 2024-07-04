@@ -5,6 +5,8 @@ cmake_minimum_required(VERSION 3.6)
 get_filename_component(PROJECT ${CMAKE_SOURCE_DIR} NAME)
 project(${PROJECT})
 
+option(COMPMODE "Disables the UI" OFF)
+
 find_package(OpenCV REQUIRED)
 find_package(SDL2 REQUIRED)
 
@@ -15,6 +17,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if(NOT DEFINED WEBOTS_HOME)
   set(WEBOTS_HOME "/usr/local/webots")
 endif()
+
+if(COMPMODE)
+  add_definitions(-DCOMPMODE)
+endif(COMPMODE)
 
 # Get C or C++ sources in the current directory (only). Windows needs these cpp files compiled as well.
 file(GLOB C_SOURCES *.c)
