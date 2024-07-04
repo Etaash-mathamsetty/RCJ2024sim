@@ -301,7 +301,9 @@ int main(int argc, char **argv) {
         std::cout << "SDL Version: " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
 
 #ifdef __linux__
+#ifdef SDL_HINT_VIDEODRIVER
         SDL_SetHint(SDL_HINT_VIDEODRIVER, "wayland,x11");
+#endif
 #endif
     }
 
