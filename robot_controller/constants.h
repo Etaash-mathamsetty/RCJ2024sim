@@ -26,8 +26,6 @@ enum class DIR
 //radians
 #define LIDAR_TILT_ANGLE 0.05
 #define VICTIM_DELAY_TIME 1.3
-const double GRID_PRECISION = 0.01;
-
 #endif
 
 #ifndef M_PI

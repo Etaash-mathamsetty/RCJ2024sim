@@ -7,7 +7,7 @@
 
 double r2d(double decimal)
 {
-    return std::round(decimal / GRID_PRECISION) * GRID_PRECISION;
+    return std::round(decimal * 100) / 100.0;
 }
 
 double r3d(double decimal)
