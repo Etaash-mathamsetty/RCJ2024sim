@@ -15,10 +15,10 @@ class RobotInstance;
 
 void plotPoints(RobotInstance *rb, int w, int h);
 void update_regions_map(RobotInstance *rb, const float *lidar_image, float theta=0);
-std::pair<std::pair<double, double>, pdd> lidarToPoint(const pdd& pos, double dist, double absAngle);
+pdd lidarToPoint(const pdd& pos, double dist, double absAngle);
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getCameraPoints();
-void addLidarPoint(std::pair<double, double> point);
+void addLidarPoint(const std::pair<double, double>& point);
 void addVictim(std::pair<double, double> point);
 void reportVictim(std::pair<double, double> point);
 bool notBeenDetected(pdd victim);

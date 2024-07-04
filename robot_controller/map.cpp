@@ -55,27 +55,19 @@ std::vector<pdd> vecCameraPoints;
 std::vector<pdd> victims;
 std::vector<pdd> reportedVictims;
 
-std::pair<pdd, pdd> lidarToPoint(const pdd& pos, double dist, double absAngle)
+pdd lidarToPoint(const pdd& pos, double dist, double absAngle)
 {
-    pdd region_pos;
-
     double x = dist*sin(absAngle) + pos.first;
     double y = dist*cos(absAngle) + pos.second;
 
-    //x = round_to(x, 0.02);
-    //y = round_to(y, 0.02);
-
-    region_pos.second = floor_to(y, region_size);
-    region_pos.first = floor_to(x, region_size);
-
-    return std::make_pair(pdd(x, y), r2d(region_pos));
+    return pdd(x, y);
 }
 
 //theta is in radians
 void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta)
 {
     vecLidarPoints.reserve(20000);
-    
+
     pdd pos = rb->getRawGPSPosition();
 
     for(int i = 0; i < 512; i++)
@@ -92,9 +84,7 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
 
         const double angle = i/512.0 * 2.0 * M_PI;
 
-        const auto coord = lidarToPoint(pos, dist, angle - theta);
-        
-        addLidarPoint(coord.first);
+        addLidarPoint(lidarToPoint(pos, dist, angle - theta));
     }
 }
 
@@ -135,7 +125,7 @@ std::vector<std::pair<double, double>>& getCameraPoints()
     return vecCameraPoints;
 }
 
-void addLidarPoint(pdd point)
+void addLidarPoint(const pdd& point)
 {
     if(!isTraversableOpt(point, 0.005)) return;
 

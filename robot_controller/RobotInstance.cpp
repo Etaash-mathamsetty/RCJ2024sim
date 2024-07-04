@@ -916,8 +916,7 @@ pdd RobotInstance::victimToPoint(int rectCenterX, int frameCols, std::string sid
         thetaFromRobot += 2 * M_PI;
     }
     int rangeImgIdx = std::round(thetaFromRobot / (2 * M_PI / 512.0));
-    pdd point = lidarToPoint(getRawGPSPosition(), m_lidar->getRangeImage()[rangeImgIdx + 1024], clampAngle(thetaFromRobot + getYaw())).first;
-    return point;
+    return lidarToPoint(getRawGPSPosition(), m_lidar->getRangeImage()[rangeImgIdx + 1024], clampAngle(thetaFromRobot + getYaw()));
 }
 
 void RobotInstance::followVictim(pdd point, std::string side)
