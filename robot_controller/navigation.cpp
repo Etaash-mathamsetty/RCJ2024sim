@@ -176,7 +176,6 @@ bool midpoint_check(pdd a, pdd b)
     return midpoint_check(a, mid) && midpoint_check(mid, b);
 }
 
-unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
 bool isWallTracing = false;
 
 
@@ -355,20 +354,19 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
     return cur;
 }
 
-pdd findNearestTraversable(pdd cur)
+pdd findNearestTraversable(pdd cur, double rad, double inc)
 {
-    const double rad = 0.03;
     pdd cur2 = cur;
     cur2.first -= rad;
     cur2.second -= rad;
 
-    for( ;cur2.first <= cur.first + rad; cur2.first += 0.01 )
+    for( ;cur2.first <= cur.first + rad; cur2.first += inc)
     {
-        for(cur2.second = cur.second - rad; cur2.second <= cur.second + rad; cur2.second += 0.01)
+        for(cur2.second = cur.second - rad; cur2.second <= cur.second + rad; cur2.second += inc)
         {
-            if(isTraversableOpt(cur2))
+            if(isTraversableOpt(cur2) && cur != cur2)
             {
-                return r2d(cur2);
+                return cur2;
             }
         }
     }
@@ -376,10 +374,15 @@ pdd findNearestTraversable(pdd cur)
     return cur;
 }
 
+pdd findNearestTraversable(pdd cur)
+{
+    return r2d(findNearestTraversable(cur, 0.03, 0.01));
+}
+
 stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool wall)
 {
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
-    parent.clear();
+    unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
     parent.reserve(10000);
     unordered_set<pdd, pair_hash_combiner<double>> visited;
     queue<pdd> q;
@@ -416,7 +419,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     while (!q.empty())
     {
-        pdd node = r2d(q.front());
+        pdd node = q.front();
         q.pop();
         if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
@@ -428,10 +431,6 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             {
                 continue;
             }
-        }
-        if (wall && !isOnWall(node))
-        {
-            // continue;
         }
         visited.insert(node);
         if (!compPts(node, tar) || (isBlind && (isVisited(node) || isPseudoVisited(node))))
@@ -474,7 +473,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         while (pindex != cur)
         {
             route.push(pindex);
-            pindex = r2d(parent[pindex]);
+            pindex = parent[pindex];
         }
         // cout << "!!!!! successful bfs route length: " << route.size() << endl;
         route.push(cur);
@@ -521,6 +520,7 @@ pdd getClosestHeuristic(const unordered_set<pdd, pair_hash_combiner<double>>& po
 
 bool isOnWall(pdd node, double rad)
 {
+    node = r2d(node);
     if (!isTraversableOpt(node))
     {
         onWall.erase(node);
@@ -696,7 +696,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
     cout << (isLeft ? "left" : "right") << endl;
     pdd min = r2d({cur.f - wtRadius, cur.s - wtRadius}), max = r2d({cur.f + wtRadius, cur.s + wtRadius});
     stack<wallNode> st;
-    parent.clear();
+    unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
     parent.reserve(10000);
     unordered_set<pdd, pair_hash_combiner<double>> visited;
     st.push({cur, 0});
@@ -767,7 +767,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
 
 bool isVisited(const pdd& point)
 {
-    return visitedPoints.count(point) > 0;
+    return visitedPoints.count(r2d(point)) > 0;
 }
 
 void removeVisited(pdd point)
@@ -777,7 +777,7 @@ void removeVisited(pdd point)
 
 bool isPseudoVisited(const pdd& point)
 {
-    return pseudoVisited.count(point) > 0;
+    return pseudoVisited.count(r2d(point)) > 0;
 }
 
 void addVisited(pdd point)

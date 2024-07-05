@@ -332,10 +332,10 @@ REGION* get_region(webots::GPS *gps)
 
 std::pair<pdd, pdd> get_lidar_minmax_opt()
 {
-    double minx = 100000;
-    double maxx = -100000;
-    double miny = 100000;
-    double maxy = -100000;
+    double minx = DBL_MAX;
+    double maxx = -DBL_MAX;
+    double miny = DBL_MAX;
+    double maxy = -DBL_MAX;
     for(const auto& r : regions)
     {
         const pdd& pt = r.first;
