@@ -360,13 +360,13 @@ pdd findNearestTraversable(pdd cur, double rad, double inc)
     cur2.first -= rad;
     cur2.second -= rad;
 
-    for( ;cur2.first <= cur.first + rad; cur2.first += inc)
+    for( ;cur2.first <= cur.first + rad; cur2.first += inc, cur2.first = rgd(cur2.first))
     {
-        for(cur2.second = cur.second - rad; cur2.second <= cur.second + rad; cur2.second += inc)
+        for(cur2.second = cur.second - rad; cur2.second <= cur.second + rad; cur2.second += inc, cur.second = rgd(cur2.second))
         {
             if(isTraversableOpt(cur2) && cur != cur2)
             {
-                return cur2;
+                return rgd(cur2);
             }
         }
     }
