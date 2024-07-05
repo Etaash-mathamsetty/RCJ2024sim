@@ -20,21 +20,6 @@ using namespace webots;
 
 const double region_size = 0.1;
 
-inline double round_to(double value, const double precision = 0.01)
-{
-    return std::round(value / precision) * precision;
-}
-
-inline double floor_to(double value, const double precision = 0.01)
-{
-    return std::floor(value / precision) * precision;
-}
-
-inline double ceil_to(double value, const double precision = 0.01)
-{
-    return std::ceil(value / precision) * precision;
-}
-
 //does the opposite of truncation
 inline double anti_trunc_to(double value, const double precision = 0.01)
 {
@@ -127,7 +112,7 @@ std::vector<std::pair<double, double>>& getCameraPoints()
 
 void addLidarPoint(const pdd& point)
 {
-    if(!isTraversableOpt(point, 0.005)) return;
+    if(!isTraversableOpt(point, 0.0045)) return;
 
     pdd rcoord;
     rcoord.first = floor_to(point.first, region_size);

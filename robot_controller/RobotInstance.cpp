@@ -1065,7 +1065,7 @@ void RobotInstance::detectVictims()
 
 pdd RobotInstance::calcNextPos()
 {
-    pdd ret = r2d(chooseMove(this, getYaw()));
+    pdd ret = chooseMove(this, getYaw());
     // std::cout << "traversable: " << isTraversableOpt(ret) << std::endl;
     return ret;
 }

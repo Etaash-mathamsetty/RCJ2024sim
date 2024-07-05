@@ -417,6 +417,8 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         return stack<pdd>();
     }
 
+    pdd final_node;
+
     while (!q.empty())
     {
         pdd node = q.front();
@@ -433,7 +435,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             }
         }
         visited.insert(node);
-        if (!compPts(node, tar) || (isBlind && (isVisited(node) || isPseudoVisited(node))))
+        if (!midpoint_check(node, tar) || (isBlind && (isVisited(node) || isPseudoVisited(node))))
         {
             //north: +y, east: +x, south: -y, west: -x;
             pdd adjacentNodes[] = {
@@ -462,14 +464,16 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         else
         {
             targetFound = true;
-            tar = node;
+            final_node = node;
             break;
         }
     }
     if (targetFound)
     {
-        pdd pindex = tar;
+        pdd pindex = final_node;
         stack<pdd> route;
+        if(!compPts(final_node, tar))
+            route.push(tar);
         while (pindex != cur)
         {
             route.push(pindex);
