@@ -32,6 +32,17 @@ struct pair_hash_combiner
 inline SDL_Window *window;
 inline SDL_Renderer *renderer;
 
+
+inline double round_to(double value, const double precision = 0.01)
+{
+    return std::round(value / precision) * precision;
+}
+
+inline pdd round_to(const pdd& point, const double precision = 0.01)
+{
+    return pdd(round_to(point.first, precision), round_to(point.second, precision));
+}
+
 double r2d(double decimal);
 double r3d(double decimal);
 pdd midpoint(const pdd& pt1, const pdd& pt2);
