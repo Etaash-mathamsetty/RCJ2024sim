@@ -33,10 +33,12 @@ inline SDL_Window *window;
 inline SDL_Renderer *renderer;
 
 double r2d(double decimal);
+double rgd(double decimal);
 double r3d(double decimal);
 pdd midpoint(const pdd& pt1, const pdd& pt2);
 double inputModulus(double input, double minimumInput, double maximumInput);
 pdd r2d(pdd point);
+pdd rgd(pdd point);
 void printPoint(const pdd& point);
 std::string pointToString(const pdd& point);
 SDL_Texture *getTextureFromMat(SDL_Renderer *r, cv::Mat mat, SDL_PixelFormatEnum f);

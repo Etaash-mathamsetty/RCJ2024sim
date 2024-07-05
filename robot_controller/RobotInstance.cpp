@@ -526,6 +526,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
                 {
                     addLidarPoint(pdd(tileCenter.first + x, tileCenter.second + y));
                 }
+                removeOnWall(pdd(tileCenter.first + x, tileCenter.second + y));
             }
         }
         updateVisited();
@@ -1065,7 +1066,7 @@ void RobotInstance::detectVictims()
 
 pdd RobotInstance::calcNextPos()
 {
-    pdd ret = r2d(chooseMove(this, getYaw()));
+    pdd ret = rgd(chooseMove(this, getYaw()));
     // std::cout << "traversable: " << isTraversableOpt(ret) << std::endl;
     return ret;
 }
@@ -1135,10 +1136,13 @@ void RobotInstance::updateVisited()
     pdd cur = getCurrentGPSPosition();
     double rotation = getYaw();
     addVisited(cur);
-    addVisited(pointTo(cur, rotation + M_PI / 2));
-    addVisited(pointTo(cur, rotation - M_PI / 2));
-    addVisited(pointTo(cur, rotation + M_PI / 2, 0.02));
-    addVisited(pointTo(cur, rotation - M_PI / 2, 0.02));
+    double rad = GRID_PRECISION;
+    while(rad <= 0.027)
+    {
+        addVisited(pointTo(cur, rotation + M_PI / 2, rad));
+        addVisited(pointTo(cur, rotation - M_PI / 2, rad));
+        rad += GRID_PRECISION;
+    }
     if(cur != m_lastPos)
     {
         if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
@@ -1147,11 +1151,11 @@ void RobotInstance::updateVisited()
         const double radius = 0.08;
 
         double x = cur.first - radius, y = cur.second - radius;
-        for(; x <= cur.first + radius; x += 0.008)
+        for(; x <= cur.first + radius; x += GRID_PRECISION, x = rgd(x))
         {
-            for(y = cur.second - radius; y <= cur.second + radius; y += 0.008)
+            for(y = cur.second - radius; y <= cur.second + radius; y += GRID_PRECISION, y = rgd(y))
             {
-                pdd point = r2d(pdd(x, y));
+                pdd point = rgd(pdd(x, y));
                 bool traversable = isTraversableOpt(point);
                 if(!traversable)
                 {

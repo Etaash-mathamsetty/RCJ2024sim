@@ -117,7 +117,7 @@ public:
 
     pdd getCurrentGPSPosition()
     {
-        return r2d(getRawGPSPosition());
+        return rgd(getRawGPSPosition());
     }
 
     pdd getRawGPSPosition()

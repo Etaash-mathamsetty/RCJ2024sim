@@ -22,7 +22,8 @@ enum class DIR
 #define CAMERA_FOV 1 //yep that's the actual number
 #define pdd std::pair<double, double>
 #define pii std::pair<int, int>
-#define TRAVERSABLE_RADIUS 0.0368
+#define TRAVERSABLE_RADIUS 0.0374
+#define GRID_PRECISION 0.00625
 //radians
 #define LIDAR_TILT_ANGLE 0.05
 #define VICTIM_DELAY_TIME 1.3

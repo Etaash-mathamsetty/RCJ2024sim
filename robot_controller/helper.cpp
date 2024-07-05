@@ -7,7 +7,13 @@
 
 double r2d(double decimal)
 {
-    return std::round(decimal * 100) / 100.0;
+    return std::round(decimal / 0.01) * 0.01;
+}
+
+double rgd(double decimal)
+{
+    // return std::round(decimal * 100) / 100.0;
+    return std::round(decimal / GRID_PRECISION) * GRID_PRECISION;
 }
 
 double r3d(double decimal)
@@ -23,6 +29,11 @@ pdd midpoint(const pdd& pt1, const pdd& pt2)
 pdd r2d(pdd point)
 {
     return pdd(r2d(point.first), r2d(point.second));
+}
+
+pdd rgd(pdd point)
+{
+    return pdd(rgd(point.first), rgd(point.second));
 }
 
 double inputModulus(double input, double minimumInput, double maximumInput)
