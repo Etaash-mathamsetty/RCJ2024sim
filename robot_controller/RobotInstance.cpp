@@ -526,6 +526,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
                 {
                     addLidarPoint(pdd(tileCenter.first + x, tileCenter.second + y));
                 }
+                removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
             }
         }
         updateVisited();
