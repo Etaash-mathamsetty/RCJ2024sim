@@ -490,9 +490,9 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         return route;
     }
 
-    removeOnWall(tar);
-    bfsRemoveOnWall(tar, 0.05);
-    addVisited(tar);
+    // removeOnWall(tar);
+    // bfsRemoveOnWall(tar, 0.05);
+    // addVisited(tar);
     cout << "Route not found:" << endl;
     printPoint(cur);
     printPoint(tar);
