@@ -103,7 +103,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
                 }
             }
             int y = 4 * i, x = 4 * j;
-            if (map[y + 2][x + 2] == "0")
+            if (map[y + 2][x + 2] == "0" && !(((state[10] && state[11]) || (state[13] && state[14])) && ((state[2] && state[7]) || (state[17] && state[22]))))
             {
                 map[y + 1][x + 2] = "0";
                 map[y + 2][x + 1] = "0";
@@ -454,7 +454,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                 }
             }
             int y = 4 * i, x = 4 * j;
-            if (map[y + 2][x + 2] == "0")
+            if (map[y + 2][x + 2] == "0" && !(((state[10] && state[11]) || (state[13] && state[14])) && ((state[2] && state[7]) || (state[17] && state[22]))))
             {
                 map[y + 1][x + 2] = "0";
                 map[y + 2][x + 1] = "0";
