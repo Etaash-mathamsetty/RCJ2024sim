@@ -806,11 +806,16 @@ void removeOnWall(pdd point)
 
 void pruneOnWall()
 {
-    for (auto it = onWall.begin(); it != onWall.end(); it++)
+    for (auto it = onWall.begin(); it != onWall.end();)
     {
         if (!isTraversableOpt(*it))
         {
+            addVisited(*it);
             it = onWall.erase(it);
+        }
+        else
+        {
+            it++;
         }
     }
 }

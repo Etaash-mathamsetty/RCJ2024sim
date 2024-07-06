@@ -312,6 +312,9 @@ RobotInstance::RobotInstance()
     m_startPos = this->getCurrentGPSPosition();
     m_timeLeft = 800;
     realtime = 0;
+
+    update_lidar_cloud();
+    bfsAddOnWall(getCurrentGPSPosition(), 0.4);
 }
 
 RobotInstance::~RobotInstance()
