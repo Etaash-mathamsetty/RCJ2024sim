@@ -36,6 +36,7 @@ inline double anti_trunc_to(double value, const double precision = 0.01)
 
 std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
+std::vector<pdd> blackHolePoints;
 std::vector<pdd> vecCameraPoints;
 std::vector<pdd> victims;
 std::vector<pdd> reportedVictims;
@@ -105,6 +106,11 @@ std::vector<std::pair<double, double>>& getLidarPoints()
     return vecLidarPoints;
 }
 
+std::vector<std::pair<double, double>>& getBlackHoles()
+{
+    return blackHolePoints;
+}
+
 std::vector<std::pair<double, double>>& getCameraPoints()
 {
     return vecCameraPoints;
@@ -122,6 +128,22 @@ void addLidarPoint(const pdd& point)
     if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
     {
         vecLidarPoints.push_back(point);
+        regions[rcoord].points[point].wall = true;
+    }
+}
+
+void addBlackHolePoint(const pdd& point)
+{
+    if(!isTraversableOpt(point, 0.0045)) return;
+
+    pdd rcoord;
+    rcoord.first = floor_to(point.first, region_size);
+    rcoord.second = floor_to(point.second, region_size);
+    rcoord = r2d(rcoord);
+
+    if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
+    {
+        blackHolePoints.push_back(point);
         regions[rcoord].points[point].wall = true;
     }
 }
@@ -151,6 +173,10 @@ bool notBeenDetected(pdd victim)
 
 ImPlotPoint getPointFromMap(int idx, void *_map)
 {
+    if (idx >= vecLidarPoints.size())
+    {
+        return {blackHolePoints[idx - vecLidarPoints.size()].first, blackHolePoints[idx - vecLidarPoints.size()].second};
+    }
     return {vecLidarPoints[idx].first, vecLidarPoints[idx].second};
 }
 
@@ -180,7 +206,7 @@ ImPlotPoint getVictimPoint(int idx, void *param)
 
 size_t getCount()
 {
-    return vecLidarPoints.size();
+    return vecLidarPoints.size() + blackHolePoints.size();
 }
 
 size_t getCameraCount()

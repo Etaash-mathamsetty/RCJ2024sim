@@ -462,7 +462,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     {
         /*if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
         else col(m_color, m_gps, m_imu, m_startPos, 1);*/
-        if (!isTraversable(target, getLidarPoints()))
+        if (!isTraversableOpt(target))
         {
             // std::cout << "path to target is not traversable!" << std::endl;
             clearBfsResult();
@@ -523,7 +523,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
             {
                 if (x == -rad || x == rad || y == -rad || y == rad)
                 {
-                    addLidarPoint(pdd(tileCenter.first + x, tileCenter.second + y));
+                    addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
                 }
                 removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
             }
@@ -1143,6 +1143,7 @@ void RobotInstance::updateVisited()
         if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
         else col(m_color, m_gps, m_imu, m_startPos, 1);
         bfsAddOnWall(cur, 0.08);
+        pruneOnWall();
         const double radius = 0.08;
 
         double x = cur.first - radius, y = cur.second - radius;

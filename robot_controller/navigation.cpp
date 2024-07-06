@@ -408,14 +408,15 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         return path;
     }
 
-    if(!isTraversable(tar, getLidarPoints()))
+    if(!isTraversableOpt(tar))
     {
-        std::cout << "target is not traversable!" << std::endl;
-        std::cout << "target: " << pointToString(tar) << std::endl;
-        cout << isTraversableOpt(tar) << endl;
-        removeOnWall(tar);
-        addVisited(tar);
-        return stack<pdd>();
+        // std::cout << "target is not traversable!" << std::endl;
+        // std::cout << "target: " << pointToString(tar) << std::endl;
+        // cout << isTraversableOpt(tar) << endl;
+        // removeOnWall(tar);
+        // addVisited(tar);
+        // return stack<pdd>();
+        tar = nearestTraversable(tar, tar, get_lidar_minmax_opt());
     }
 
     pdd final_node;
@@ -801,6 +802,17 @@ void addOnWall(pdd point)
 void removeOnWall(pdd point)
 {
     onWall.erase(r2d(point));
+}
+
+void pruneOnWall()
+{
+    for (auto it = onWall.begin(); it != onWall.end(); it++)
+    {
+        if (!isTraversableOpt(*it))
+        {
+            it = onWall.erase(it);
+        }
+    }
 }
 
 void clearOnWall()
