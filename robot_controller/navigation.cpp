@@ -390,7 +390,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     queue<pdd> q;
     q.push(cur);
     tar = r2d(tar);
-    parent[r3d(cur)] = pdd(DBL_MAX, DBL_MAX);
+    parent[r2d(cur)] = pdd(DBL_MAX, DBL_MAX);
     bool targetFound = false;
 
     if(!isTraversableOpt(cur))
@@ -441,23 +441,38 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         if (!midpoint_check(node, tar) || (isBlind && (isVisited(node) || isPseudoVisited(node))))
         {
             //north: +y, east: +x, south: -y, west: -x;
-            pdd adjacentNodes[] = {
-                pointTo(node, angle, 0.009),
-                pointTo(node, angle + M_PI / 2, 0.009),
-                pointTo(node, angle - M_PI / 2, 0.009),
-                pointTo(node, angle + M_PI, 0.009),
-                pointTo(node, angle + M_PI / 4, 0.009),
-                pointTo(node, angle - M_PI / 4, 0.009),
-                pointTo(node, angle + 3 * M_PI / 4, 0.009),
-                pointTo(node, angle - 3 * M_PI / 4, 0.009),
+            pdd adjacents[] = {
+                r3d(pdd(node.f, node.s - 0.005)),
+                r3d(pdd(node.f, node.s + 0.005)),
+                r3d(pdd(node.f + 0.005, node.s)),
+                r3d(pdd(node.f - 0.005, node.s))
             };
 
-            for (const pdd& adjacent : adjacentNodes)
+            bool childAlive = false;
+            for (const pdd& adjacent : adjacents)
             {
                 if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent) && isTraversableOpt(r3d(adjacent)))
                 {
                     q.push(adjacent);
                     parent[r3d(adjacent)] = node;
+                    childAlive = true;
+                }
+            }
+            if (!childAlive)
+            {
+                pdd diagonals[] = {
+                    r3d(pdd(node.f - 0.005, node.s - 0.005)),
+                    r3d(pdd(node.f + 0.005, node.s + 0.005)),
+                    r3d(pdd(node.f + 0.005, node.s - 0.005)),
+                    r3d(pdd(node.f - 0.005, node.s + 0.005))
+                };
+                for (const pdd& adjacent : diagonals)
+                {
+                    if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent) && isTraversableOpt(r3d(adjacent)))
+                    {
+                        q.push(adjacent);
+                        parent[r3d(adjacent)] = node;
+                    }
                 }
             }
         }
@@ -590,7 +605,7 @@ bool checkNearbyVisited(pdd point)
 // rotation already multiplied by -1
 pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
 {
-    return getClosestHeuristic(onWall, cur, start);
+    // return getClosestHeuristic(onWall, cur, start);
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
     rotation = clampAngle(round(rotation / (M_PI / 2)) * M_PI / 2);
     queue<pdd> q;
@@ -621,14 +636,10 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
         else
         {
             // prioritizing forward
-            pdd adjacentNodes[8] = {
+            pdd adjacentNodes[] = {
                 pointTo(node, rotation),
-                pointTo(node, rotation + M_PI / 4, hypot(0.01, 0.01)),
-                pointTo(node, rotation - M_PI / 4, hypot(0.01, 0.01)),
                 pointTo(node, rotation + M_PI / 2),
                 pointTo(node, rotation - M_PI / 2),
-                pointTo(node, rotation + 3 * M_PI / 4, hypot(0.01, 0.01)),
-                pointTo(node, rotation - 3 * M_PI / 4, hypot(0.01, 0.01)),
                 pointTo(node, rotation + M_PI)
             };
             for (const pdd& adjacent : adjacentNodes)
