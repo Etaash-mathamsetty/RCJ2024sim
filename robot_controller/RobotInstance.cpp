@@ -518,7 +518,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         pdd colorSensorLoc = pdd(cur.first + 0.03 * sin(getYaw()), cur.second + 0.03 * cos(getYaw()));
         pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
             std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
-        double rad = 0.045;
+        double rad = 0.055;
         double x = -rad, y = -rad;
         for(; x <= rad; x += 0.005, x = std::round(x / 0.005) * 0.005)
         {
@@ -533,8 +533,12 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         }
         updateVisited();
         resetPosition();
-        while(traveled >= -2 && step() != -1)
+        while(!isTraversableOpt(getRawGPSPosition()) && step() != -1)
         {
+            if (traveled <= -4)
+            {
+                break;
+            }
             forward(-vel * 0.5);
             cur = getRawGPSPosition();
             getPosition(&traveled, nullptr);
