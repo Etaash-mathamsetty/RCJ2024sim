@@ -44,7 +44,7 @@ bool isFollowingBfs();
 bool isAllDone();
 void clearBfsResult();
 void moveToPoint(RobotInstance *rb, pdd point, bool wall = false);
-pdd chooseMove(RobotInstance *rb, double currentRotation);
+pdd chooseMove(RobotInstance *rb);
 const std::unordered_set<pdd, pair_hash_combiner<double>>& getVisited();
 const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall();
 const std::stack<pdd>& getBfsPath();

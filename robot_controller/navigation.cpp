@@ -389,6 +389,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     unordered_set<pdd, pair_hash_combiner<double>> visited;
     queue<pdd> q;
     q.push(cur);
+    tar = r2d(tar);
     parent[r3d(cur)] = pdd(DBL_MAX, DBL_MAX);
     bool targetFound = false;
 
@@ -407,10 +408,11 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         return path;
     }
 
-    if(!isTraversableOpt(tar))
+    if(!isTraversable(tar, getLidarPoints()))
     {
         std::cout << "target is not traversable!" << std::endl;
         std::cout << "target: " << pointToString(tar) << std::endl;
+        cout << isTraversableOpt(tar) << endl;
         removeOnWall(tar);
         addVisited(tar);
         return stack<pdd>();
@@ -439,14 +441,14 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         {
             //north: +y, east: +x, south: -y, west: -x;
             pdd adjacentNodes[] = {
-                pointTo(node, angle, 0.007),
-                pointTo(node, angle + M_PI / 2, 0.007),
-                pointTo(node, angle - M_PI / 2, 0.007),
-                pointTo(node, angle + M_PI, 0.007),
-                pointTo(node, angle + M_PI / 4, 0.007),
-                pointTo(node, angle - M_PI / 4, 0.007),
-                pointTo(node, angle + 3 * M_PI / 4, 0.007),
-                pointTo(node, angle - 3 * M_PI / 4, 0.007),
+                pointTo(node, angle, 0.009),
+                pointTo(node, angle + M_PI / 2, 0.009),
+                pointTo(node, angle - M_PI / 2, 0.009),
+                pointTo(node, angle + M_PI, 0.009),
+                pointTo(node, angle + M_PI / 4, 0.009),
+                pointTo(node, angle - M_PI / 4, 0.009),
+                pointTo(node, angle + 3 * M_PI / 4, 0.009),
+                pointTo(node, angle - 3 * M_PI / 4, 0.009),
             };
 
             for (const pdd& adjacent : adjacentNodes)
@@ -524,7 +526,7 @@ bool isOnWall(pdd node, double rad)
     node = r2d(node);
     if (!isTraversableOpt(node))
     {
-        onWall.erase(node);
+        removeOnWall(node);
         return false;
     }
 
@@ -547,6 +549,7 @@ bool isOnWall(pdd node, double rad)
             return true;
         }
     }
+    removeOnWall(node);
     return false;
 }
 
@@ -586,7 +589,7 @@ bool checkNearbyVisited(pdd point)
 // rotation already multiplied by -1
 pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
 {
-    // return getClosestHeuristic(onWall, cur, start);
+    return getClosestHeuristic(onWall, cur, start);
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
     rotation = clampAngle(round(rotation / (M_PI / 2)) * M_PI / 2);
     queue<pdd> q;
@@ -620,26 +623,16 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
             pdd adjacentNodes[8] = {
                 pointTo(node, rotation),
                 pointTo(node, rotation + M_PI / 4, hypot(0.01, 0.01)),
-                pointTo(node, rotation + M_PI / 2),
-                pointTo(node, rotation + 3 * M_PI / 4, hypot(0.01, 0.01)),
                 pointTo(node, rotation - M_PI / 4, hypot(0.01, 0.01)),
+                pointTo(node, rotation + M_PI / 2),
                 pointTo(node, rotation - M_PI / 2),
+                pointTo(node, rotation + 3 * M_PI / 4, hypot(0.01, 0.01)),
                 pointTo(node, rotation - 3 * M_PI / 4, hypot(0.01, 0.01)),
                 pointTo(node, rotation + M_PI)
             };
-            // pdd adjacentNodes[8] = {
-            //     r2d(pdd(node.f, node.s - 0.01)),
-            //     r2d(pdd(node.f, node.s + 0.01)),
-            //     r2d(pdd(node.f + 0.01, node.s)),
-            //     r2d(pdd(node.f - 0.01, node.s)),
-            //     r2d(pdd(node.f - 0.01, node.s - 0.01)),
-            //     r2d(pdd(node.f + 0.01, node.s + 0.01)),
-            //     r2d(pdd(node.f + 0.01, node.s - 0.01)),
-            //     r2d(pdd(node.f - 0.01, node.s + 0.01))
-            // };
             for (const pdd& adjacent : adjacentNodes)
             {
-                if (!visited.count(r2d(adjacent)))
+                if (!visited.count(r2d(adjacent)) && isTraversableOpt(r2d(adjacent)))
                 {
                     q.push(r2d(adjacent));
                 }
@@ -683,7 +676,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
     cur = r2d(cur);
     if (!isOnWall(cur))
     {
-        cur = nearestIsOnWall(cur, get_lidar_minmax_opt(), -rb->getYaw(), rb->getStartPos());
+        cur = nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos());
     }
     checkSide(rb->getLidar()->getRangeImage() + 1024, rb->getLidar()->getHorizontalResolution());
     double offset = isLeft ? -M_PI / 2 : M_PI / 2;
@@ -982,7 +975,7 @@ void moveToPoint(RobotInstance *rb, pdd point, bool wall)
 
 stack<pdd> wallTracePath;
 
-pdd chooseMove(RobotInstance *rb, double rotation)
+pdd chooseMove(RobotInstance *rb)
 {
     pdd cur = rb->getRawGPSPosition();
     // pdd nearestOnWall = nearestIsOnWall(cur, getMinMax(getLidarPoints()), rotation, rb->getStartPos());
@@ -1001,6 +994,20 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     // }
 
     // pdd nearestUnseen = getClosestHeuristic(getCameraToVisit(), cur, rb->getStartPos());
+
+    if (!isTraversableOpt(cur))
+    {
+        pdd traversable = nearestTraversable(cur, cur, get_lidar_minmax_opt());
+        if (!compPts(traversable, cur))
+        {
+            return traversable;
+        }
+    }
+
+    if (!compPts(cur, rb->getStartPos()) && onWall.empty())
+    {
+        return rb->getStartPos();
+    }
 
     if (!wallTracePath.empty())
     {
