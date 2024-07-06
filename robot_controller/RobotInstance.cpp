@@ -1002,7 +1002,6 @@ void RobotInstance::lookForLetter()
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
                 std::cout << "victim dist: " << getDist(cur, point) << std::endl;
-                addVictim(point);
                 followVictim(point, "L");
             }
             return;
@@ -1051,7 +1050,6 @@ void RobotInstance::lookForLetter()
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
                 std::cout << "victim dist: " << getDist(cur, point) << std::endl;
-                addVictim(point);
                 followVictim(point, "R");
             }
             return;
