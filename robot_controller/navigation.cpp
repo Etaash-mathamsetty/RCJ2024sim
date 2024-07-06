@@ -429,7 +429,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         {
             continue;
         }
-        if (!isTraversableOpt(node))
+        if (!isTraversableOpt(node) || !isTraversableOpt(r3d(node)))
         {
             if (!compPts(node, cur))
             {
@@ -453,7 +453,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
             for (const pdd& adjacent : adjacentNodes)
             {
-                if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent))
+                if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent) && isTraversableOpt(r3d(adjacent)))
                 {
                     q.push(adjacent);
                     parent[r3d(adjacent)] = node;
