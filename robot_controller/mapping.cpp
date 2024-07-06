@@ -83,7 +83,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
                     double checkX = minX + TILE_LENGTH * j + x * 0.03, checkY = maxY - TILE_LENGTH * i - y * 0.03;
-                    if (!isTraversable(pdd(checkX, checkY), pList, 0.01)) map[yidx][xidx] = "1";
+                    if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
                 }
             }
         }
@@ -404,7 +404,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
                     double checkX = minX + TILE_LENGTH * j + x * 0.03, checkY = maxY - TILE_LENGTH * i - y * 0.03;
-                    if (!isTraversable(pdd(checkX, checkY), pList, 0.01)) map[yidx][xidx] = "1";
+                    if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
                 }
             }
         }
