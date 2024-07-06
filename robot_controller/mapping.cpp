@@ -88,36 +88,6 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
             }
         }
     }
-    for (int i = 0; i < worldH; i++)
-    {
-        for (int j = 0; j < worldW; j++)
-        {
-            bool state[25];
-            for (int y = 0; y < 5; y++)
-            {
-                for (int x = 0; x < 5; x++)
-                {
-                    int yidx = 4 * i + y, xidx = 4 * j + x;
-                    state[y * 5 + x] = map[yidx][xidx] == "1";
-                    if (((x == 1 || x == 3) && (y == 1 || y == 3)) && map[yidx][xidx] == "1") map[yidx][xidx] = "0";
-                }
-            }
-            int y = 4 * i, x = 4 * j;
-            if (map[y + 2][x + 2] == "0" && !(((state[10] && state[11]) || (state[13] && state[14])) && ((state[2] && state[7]) || (state[17] && state[22]))))
-            {
-                map[y + 1][x + 2] = "0";
-                map[y + 2][x + 1] = "0";
-                map[y + 2][x + 2] = "0";
-                map[y + 2][x + 3] = "0";
-                map[y + 3][x + 2] = "0";
-            }
-            if (!(state[2] && state[7])) map[y + 1][x + 2] = "0";
-            if (!(state[10] && state[11])) map[y + 2][x + 1] = "0";
-            if (!(state[13] && state[14])) map[y + 2][x + 3] = "0";
-            if (!(state[17] && state[22])) map[y + 3][x + 2] = "0";
-            if (map[y + 1][x + 2] == "0" && map[y + 2][x + 1] == "0" && map[y + 2][x + 3] == "0" && map[y + 3][x + 2] == "0") map[y + 2][x + 2] = "0";
-        }
-    }
     for (const auto& tile : tilemap)
     {
         pii pos = pii(tile.first.first, tile.first.second);
@@ -437,36 +407,6 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                     if (!isTraversable(pdd(checkX, checkY), pList, 0.01)) map[yidx][xidx] = "1";
                 }
             }
-        }
-    }
-    for (int i = 0; i < worldH; i++)
-    {
-        for (int j = 0; j < worldW; j++)
-        {
-            bool state[25];
-            for (int y = 0; y < 5; y++) 
-            {
-                for (int x = 0; x < 5; x++)
-                {
-                    int yidx = 4 * i + y, xidx = 4 * j + x;
-                    state[y * 5 + x] = map[yidx][xidx] == "1";
-                    if (((x == 1 || x == 3) && (y == 1 || y == 3)) && map[yidx][xidx] == "1") map[yidx][xidx] = "0";
-                }
-            }
-            int y = 4 * i, x = 4 * j;
-            if (map[y + 2][x + 2] == "0" && !(((state[10] && state[11]) || (state[13] && state[14])) && ((state[2] && state[7]) || (state[17] && state[22]))))
-            {
-                map[y + 1][x + 2] = "0";
-                map[y + 2][x + 1] = "0";
-                map[y + 2][x + 2] = "0";
-                map[y + 2][x + 3] = "0";
-                map[y + 3][x + 2] = "0";
-            }
-            if (!(state[2] && state[7])) map[y + 1][x + 2] = "0";
-            if (!(state[10] && state[11])) map[y + 2][x + 1] = "0";
-            if (!(state[13] && state[14])) map[y + 2][x + 3] = "0";
-            if (!(state[17] && state[22])) map[y + 3][x + 2] = "0";
-            if (map[y + 1][x + 2] == "0" && map[y + 2][x + 1] == "0" && map[y + 2][x + 3] == "0" && map[y + 3][x + 2] == "0") map[y + 2][x + 2] = "0";
         }
     }
     for (const auto& tile : tilemap)
