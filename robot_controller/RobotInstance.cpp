@@ -377,13 +377,12 @@ void RobotInstance::turnTo(double speed, double target_angle)
 }
 
 int RobotInstance::step() {
+    this->m_emitter->send("G", 1);
     int ret = m_robot->step(m_timestep);
     if(ret == -1)
         return -1;
 
     run_callbacks();
-
-    this->m_emitter->send("G", 1);
     while(this->m_receiver->getQueueLength() > 0) { // If receiver queue is not empty
         char *message = (char *)m_receiver->getData(); // Grab data as a string
         if (message[0] == 'L') { // 'L' means a lack of progress occurred
@@ -548,6 +547,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 
 void RobotInstance::delay(double seconds)
 {
+    m_robot->step(m_timestep);
     double current = m_robot->getTime();
     while(m_robot->step(m_timestep) != -1 && m_robot->getTime() < current + seconds);
 }
