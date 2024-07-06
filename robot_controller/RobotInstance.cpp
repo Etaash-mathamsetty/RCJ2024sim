@@ -1157,7 +1157,6 @@ void RobotInstance::updateVisited()
                 if(!traversable)
                 {
                     removeOnWall(point);
-                    addVisited(point);
                 }
                 if (checkNearbyVisited(point))
                 {

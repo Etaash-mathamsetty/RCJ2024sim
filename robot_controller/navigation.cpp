@@ -189,7 +189,7 @@ stack<pdd> optimizeRoute(stack<pdd> route)
 
     while (!route.empty())
     {
-        pdd cur = r2d(route.top());
+        pdd cur = route.top();
         route.pop();
         ret.push(cur);
     }
@@ -248,7 +248,7 @@ stack<pdd> optimizeRouteOnWall(stack<pdd> route)
 
     while (!route.empty())
     {
-        pdd cur = r2d(route.top());
+        pdd cur = route.top();
         route.pop();
         ret.push(cur);
     }
@@ -318,7 +318,7 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
     q.push(point);
     while (!q.empty())
     {
-        pdd node = r2d(q.front());
+        pdd node = q.front();
         q.pop();
         if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
@@ -376,7 +376,9 @@ pdd findNearestTraversable(pdd cur, double rad, double inc)
 
 pdd findNearestTraversable(pdd cur)
 {
-    return r2d(findNearestTraversable(cur, 0.03, 0.01));
+    // return r2d(findNearestTraversable(cur, 0.03, 0.01));
+    double rad = 0.05;
+    return nearestTraversable(cur, cur, {pdd(cur.f - rad, cur.s - rad), pdd(cur.f + rad, cur.s + rad)});
 }
 
 stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool wall)
@@ -386,17 +388,14 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     parent.reserve(10000);
     unordered_set<pdd, pair_hash_combiner<double>> visited;
     queue<pdd> q;
-    cur = r2d(cur);
-    tar = r2d(tar);
     q.push(cur);
-    parent[cur] = pdd(DBL_MAX, DBL_MAX);
+    parent[r3d(cur)] = pdd(DBL_MAX, DBL_MAX);
     bool targetFound = false;
-
 
     if(!isTraversableOpt(cur))
     {
         pdd traversable = findNearestTraversable(cur);
-        if(traversable == cur)
+        if(compPts(traversable, cur))
         {
             std::cout << "cur is not traversable!" << std::endl;
             return stack<pdd>();
@@ -418,46 +417,44 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     }
 
     pdd final_node;
+    double angle = -atan2(tar.f - cur.f, tar.s - cur.s);
 
     while (!q.empty())
     {
         pdd node = q.front();
         q.pop();
-        if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
+        if (visited.count(r3d(node)) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
             continue;
         }
         if (!isTraversableOpt(node))
         {
-            if (node != cur)
+            if (!compPts(node, cur))
             {
                 continue;
             }
         }
-        visited.insert(node);
+        visited.insert(r3d(node));
         if (!midpoint_check(node, tar) || (isBlind && (isVisited(node) || isPseudoVisited(node))))
         {
             //north: +y, east: +x, south: -y, west: -x;
             pdd adjacentNodes[] = {
-                r2d(pdd(node.f, node.s - 0.01)),
-                r2d(pdd(node.f, node.s + 0.01)),
-                r2d(pdd(node.f + 0.01, node.s)),
-                r2d(pdd(node.f - 0.01, node.s))
+                pointTo(node, angle, 0.007),
+                pointTo(node, angle + M_PI / 2, 0.007),
+                pointTo(node, angle - M_PI / 2, 0.007),
+                pointTo(node, angle + M_PI, 0.007),
+                pointTo(node, angle + M_PI / 4, 0.007),
+                pointTo(node, angle - M_PI / 4, 0.007),
+                pointTo(node, angle + 3 * M_PI / 4, 0.007),
+                pointTo(node, angle - 3 * M_PI / 4, 0.007),
             };
-
-            // pdd adjacentNodes[4] = {
-            //     r2d(pdd(node.f, node.s + 0.01)),
-            //     r2d(pdd(node.f + 0.01, node.s)),
-            //     r2d(pdd(node.f, node.s - 0.01)),
-            //     r2d(pdd(node.f - 0.01, node.s))
-            // };
 
             for (const pdd& adjacent : adjacentNodes)
             {
-                if (!visited.count(adjacent) && isTraversableOpt(adjacent))
+                if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent))
                 {
                     q.push(adjacent);
-                    parent[adjacent] = node;
+                    parent[r3d(adjacent)] = node;
                 }
             }
         }
@@ -474,10 +471,10 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         stack<pdd> route;
         if(!compPts(final_node, tar))
             route.push(tar);
-        while (pindex != cur)
+        while (!compPts(pindex, cur))
         {
             route.push(pindex);
-            pindex = parent[pindex];
+            pindex = parent[r3d(pindex)];
         }
         // cout << "!!!!! successful bfs route length: " << route.size() << endl;
         route.push(cur);
@@ -513,7 +510,7 @@ pdd getClosestHeuristic(const unordered_set<pdd, pair_hash_combiner<double>>& po
     for (const pdd& point : points)
     {
         double dist = getDist(cur, point)/* + cbrt(getDist(start, point))*/;
-        if (dist < minDist)
+        if (dist < minDist && isTraversableOpt(point))
         {
             minDist = dist;
             closest = point;
@@ -536,16 +533,6 @@ bool isOnWall(pdd node, double rad)
         return true;
     }
 
-    // pdd adjacents[8] = {
-    //     r2d(pdd(node.f, node.s - 0.01)),
-    //     r2d(pdd(node.f, node.s + 0.01)),
-    //     r2d(pdd(node.f + 0.01, node.s)),
-    //     r2d(pdd(node.f - 0.01, node.s)),
-    //     r2d(pdd(node.f - 0.01, node.s - 0.01)),
-    //     r2d(pdd(node.f + 0.01, node.s + 0.01)),
-    //     r2d(pdd(node.f + 0.01, node.s - 0.01)),
-    //     r2d(pdd(node.f - 0.01, node.s + 0.01))
-    // };
     pdd adjacents[4] = {
         r2d(pdd(node.f, node.s - 0.01)),
         r2d(pdd(node.f, node.s + 0.01)),
@@ -566,6 +553,7 @@ bool isOnWall(pdd node, double rad)
 // check if there is enough visited points nearby to count as visited
 bool checkNearbyVisited(pdd point)
 {
+    point = r2d(point);
     if (!isTraversableOpt(point) || isVisited(point) || isPseudoVisited(point))
     {
         return false;
@@ -615,14 +603,15 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
         }
         if (!isTraversableOpt(node))
         {
-            if (node != cur)
+            if (!compPts(node, cur))
             {
                 continue;
             }
         }
         visited.insert(node);
-        if (isOnWall(node) && node != cur && !isVisited(node) && !isPseudoVisited(node))
+        if (onWall.count(node) && !compPts(node, cur) && !isVisited(node) && !isPseudoVisited(node) && isTraversableOpt(node))
         {
+            cout << "nearest on wall found " << isTraversableOpt(node) << endl;
             return node;
         }
         else
@@ -650,15 +639,16 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
             // };
             for (const pdd& adjacent : adjacentNodes)
             {
-                if (!visited.count(adjacent))
+                if (!visited.count(r2d(adjacent)))
                 {
-                    q.push(adjacent);
+                    q.push(r2d(adjacent));
                 }
             }
         }
     }
     if (!onWall.empty())
     {
+        cout << "getting closest heuristic" << endl;
         return getClosestHeuristic(onWall, cur, start);
     }
     return start;
@@ -788,7 +778,7 @@ void addVisited(pdd point)
 {
     if (isTraversableOpt(point))
     {
-        visitedPoints.insert(point);
+        visitedPoints.insert(r2d(point));
     }
 }
 
@@ -796,13 +786,13 @@ void addPseudoVisited(pdd point)
 {
     if (isTraversableOpt(point))
     {
-        pseudoVisited.insert(point);
+        pseudoVisited.insert(r2d(point));
     }
 }
 
 void removePseudoVisited(pdd point)
 {
-    pseudoVisited.erase(point);
+    pseudoVisited.erase(r2d(point));
 }
 
 const unordered_set<pdd, pair_hash_combiner<double>>& getVisited()
@@ -812,12 +802,12 @@ const unordered_set<pdd, pair_hash_combiner<double>>& getVisited()
 
 void addOnWall(pdd point)
 {
-    onWall.insert(point);
+    onWall.insert(r2d(point));
 }
 
 void removeOnWall(pdd point)
 {
-    onWall.erase(point);
+    onWall.erase(r2d(point));
 }
 
 void clearOnWall()
@@ -915,13 +905,13 @@ void bfsRemoveOnWall(pdd cur, double radius)
 pdd pointTo(pdd point, double dir)
 {
     dir = clampAngle(dir);
-    return pdd(r2d(point.f + 0.01 * sin(dir)), r2d(point.s + 0.01 * cos(dir)));
+    return pdd(point.f + 0.01 * sin(dir), point.s + 0.01 * cos(dir));
 }
 
 pdd pointTo(pdd point, double dir, double dist)
 {
     dir = clampAngle(dir);
-    return pdd(r2d(point.f + dist * sin(dir)), r2d(point.s + dist * cos(dir)));
+    return pdd(point.f + dist * sin(dir), point.s + dist * cos(dir));
 }
 
 const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall()
@@ -964,7 +954,7 @@ void moveToPoint(RobotInstance *rb, pdd point, bool wall)
     if (bfsResult.empty())
     {
         removeOnWall(point);
-        bfsRemoveOnWall(point, 0.05);
+        // bfsRemoveOnWall(point, 0.05);
         addVisited(point);
         return;
     }
@@ -994,7 +984,7 @@ stack<pdd> wallTracePath;
 
 pdd chooseMove(RobotInstance *rb, double rotation)
 {
-    pdd cur = rb->getCurrentGPSPosition();
+    pdd cur = rb->getRawGPSPosition();
     // pdd nearestOnWall = nearestIsOnWall(cur, getMinMax(getLidarPoints()), rotation, rb->getStartPos());
 
     // for(auto it = onWall.begin(); it != onWall.end();)
@@ -1046,7 +1036,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     {
         cout << "no move found" << endl;
 
-        if(cur == rb->getStartPos())
+        if(compPts(cur, rb->getStartPos()))
             allDone = true;
 
         return cur;

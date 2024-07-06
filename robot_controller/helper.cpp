@@ -25,6 +25,11 @@ pdd r2d(pdd point)
     return pdd(r2d(point.first), r2d(point.second));
 }
 
+pdd r3d(pdd point)
+{
+    return pdd(r3d(point.first), r3d(point.second));
+}
+
 double inputModulus(double input, double minimumInput, double maximumInput)
 {
     double modulus = maximumInput - minimumInput;
