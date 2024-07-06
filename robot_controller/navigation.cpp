@@ -410,17 +410,18 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     if(!isTraversableOpt(tar))
     {
-        // std::cout << "target is not traversable!" << std::endl;
-        // std::cout << "target: " << pointToString(tar) << std::endl;
+        std::cout << "target is not traversable!" << std::endl;
+        std::cout << "target: " << pointToString(tar) << std::endl;
         // cout << isTraversableOpt(tar) << endl;
         // removeOnWall(tar);
         // addVisited(tar);
         // return stack<pdd>();
         tar = nearestTraversable(tar, tar, get_lidar_minmax_opt());
+
+        std::cout << "new target: " << pointToString(tar) << std::endl;
     }
 
     pdd final_node;
-    double angle = -atan2(tar.f - cur.f, tar.s - cur.s);
 
     while (!q.empty())
     {
