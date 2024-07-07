@@ -529,8 +529,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
 unordered_set<pdd, pair_hash_combiner<double>> visitedPoints;
 unordered_set<pdd, pair_hash_combiner<double>> pseudoVisited;
-stack<pdd> bfsResult = {};
-stack<pdd> wallTracePath = {};
+stack<pdd> currentPath = {};
 unordered_set<pdd, pair_hash_combiner<double>> onWall;
 
 pdd getClosestHeuristic(const unordered_set<pdd, pair_hash_combiner<double>>& points, pdd cur, pdd start)
@@ -966,27 +965,26 @@ bool isAllDone()
     return allDone;
 }
 
-void clearBfsResult()
+void clearcurrentPath()
 {
-    bfsResult = stack<pdd>();
-    wallTracePath = stack<pdd>();
+    currentPath = stack<pdd>();
 }
 
 const stack<pdd>& getBfsPath()
 {
-    return wallTracePath;
+    return currentPath;
 }
 
 void moveToPoint(RobotInstance *rb, pdd point, bool wall)
 {
     point = r2d(point);
-    bfsResult = pointBfs(rb->getRawGPSPosition(), point, get_lidar_minmax_opt(), false, wall);
-    if(wall && bfsResult.empty())
+    currentPath = pointBfs(rb->getRawGPSPosition(), point, get_lidar_minmax_opt(), false, wall);
+    if(wall && currentPath.empty())
     {
         //fallback
-        bfsResult = pointBfs(rb->getRawGPSPosition(), point, get_lidar_minmax_opt(), false);
+        currentPath = pointBfs(rb->getRawGPSPosition(), point, get_lidar_minmax_opt(), false);
     }
-    if (bfsResult.empty())
+    if (currentPath.empty())
     {
         removeOnWall(point);
         // bfsRemoveOnWall(point, 0.05);
@@ -994,22 +992,22 @@ void moveToPoint(RobotInstance *rb, pdd point, bool wall)
         return;
     }
     // cout << "done" << endl;
-    while(!bfsResult.empty())
+    while(!currentPath.empty())
     {
-        pdd next = bfsResult.top();
+        pdd next = currentPath.top();
         // if(!midpoint_check(point, next))
         // {
-        //     clearBfsResult();
+        //     clearcurrentPath();
         //     return;
         // }
         rb->moveToPos(next);
-        if (!bfsResult.empty() && compPts(rb->getRawGPSPosition(), next))
+        if (!currentPath.empty() && compPts(rb->getRawGPSPosition(), next))
         {
-            bfsResult.pop();
+            currentPath.pop();
         }
-        else if (!bfsResult.empty() && !isTraversableOpt(next))
+        else if (!currentPath.empty() && !isTraversableOpt(next))
         {
-            bfsResult.pop();
+            currentPath.pop();
         }
         point = next;
     }
@@ -1060,37 +1058,37 @@ pdd chooseMove(RobotInstance *rb)
         }
     }
 
-    if (!wallTracePath.empty())
+    if (!currentPath.empty())
     {
-        if (compPts(rb->getRawGPSPosition(), wallTracePath.top()))
+        if (compPts(rb->getRawGPSPosition(), currentPath.top()))
         {
-            wallTracePath.pop();
+            currentPath.pop();
         }
-        else if(!isTraversableOpt(wallTracePath.top()))
+        else if(!isTraversableOpt(currentPath.top()))
         {
-            wallTracePath.pop();
+            currentPath.pop();
         }
         else
         {
             pdd temp;
-            while (!wallTracePath.empty())
+            while (!currentPath.empty())
             {
-                temp = wallTracePath.top();
-                wallTracePath.pop();
+                temp = currentPath.top();
+                currentPath.pop();
             }
             stack<pdd> res = pointBfs(cur, temp, get_lidar_minmax_opt(), false, false);
             if (res.empty())
             {
-                wallTracePath = stack<pdd>();
+                currentPath = stack<pdd>();
             }
         }
-        if (!wallTracePath.empty())
+        if (!currentPath.empty())
         {
-            return wallTracePath.top();
+            return currentPath.top();
         }
     }
-    wallTracePath = dfsWallTrace(rb, cur);
-    if (wallTracePath.empty())
+    currentPath = dfsWallTrace(rb, cur);
+    if (currentPath.empty())
     {
         cout << "no move found" << endl;
 
@@ -1099,7 +1097,7 @@ pdd chooseMove(RobotInstance *rb)
 
         return cur;
     }
-    return wallTracePath.top();
+    return currentPath.top();
 }
 
 bool isTraversable(const pdd& pos, const vector<pdd>& points, double robotRadius)
