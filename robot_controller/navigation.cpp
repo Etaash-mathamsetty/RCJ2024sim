@@ -451,10 +451,10 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         {
             //north: +y, east: +x, south: -y, west: -x;
             pdd adjacents[] = {
-                r3d(pdd(node.f, node.s - 0.005)),
-                r3d(pdd(node.f, node.s + 0.005)),
-                r3d(pdd(node.f + 0.005, node.s)),
-                r3d(pdd(node.f - 0.005, node.s))
+                r3d(pdd(node.f, node.s - 0.001)),
+                r3d(pdd(node.f, node.s + 0.001)),
+                r3d(pdd(node.f + 0.001, node.s)),
+                r3d(pdd(node.f - 0.001, node.s))
             };
 
             bool childAlive = false;
@@ -470,10 +470,10 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             if (!childAlive)
             {
                 pdd diagonals[] = {
-                    r3d(pdd(node.f - 0.005, node.s - 0.005)),
-                    r3d(pdd(node.f + 0.005, node.s + 0.005)),
-                    r3d(pdd(node.f + 0.005, node.s - 0.005)),
-                    r3d(pdd(node.f - 0.005, node.s + 0.005))
+                    r3d(pdd(node.f - 0.001, node.s - 0.001)),
+                    r3d(pdd(node.f + 0.001, node.s + 0.001)),
+                    r3d(pdd(node.f + 0.001, node.s - 0.001)),
+                    r3d(pdd(node.f - 0.001, node.s + 0.001))
                 };
                 for (const pdd& adjacent : diagonals)
                 {
@@ -1043,7 +1043,17 @@ pdd chooseMove(RobotInstance *rb)
 
     if (!compPts(cur, rb->getStartPos()) && onWall.empty())
     {
-        return pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false, false).top();
+        static stack<pdd> path{};
+        if(!path.empty())
+        {
+            path.pop();
+            return path.top();
+        }
+        path = pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false, false);
+        if(!path.empty())
+        {
+            return path.top();
+        }
     }
 
     if (!wallTracePath.empty())
