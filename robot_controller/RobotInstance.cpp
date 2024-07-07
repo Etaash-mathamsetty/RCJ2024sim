@@ -312,6 +312,9 @@ RobotInstance::RobotInstance()
     m_startPos = this->getCurrentGPSPosition();
     m_timeLeft = 800;
     realtime = 0;
+
+    update_lidar_cloud();
+    bfsAddOnWall(getCurrentGPSPosition(), 0.4);
 }
 
 RobotInstance::~RobotInstance()
@@ -377,13 +380,12 @@ void RobotInstance::turnTo(double speed, double target_angle)
 }
 
 int RobotInstance::step() {
+    this->m_emitter->send("G", 1);
     int ret = m_robot->step(m_timestep);
     if(ret == -1)
         return -1;
 
     run_callbacks();
-
-    this->m_emitter->send("G", 1);
     while(this->m_receiver->getQueueLength() > 0) { // If receiver queue is not empty
         char *message = (char *)m_receiver->getData(); // Grab data as a string
         if (message[0] == 'L') { // 'L' means a lack of progress occurred
@@ -463,7 +465,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     {
         /*if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
         else col(m_color, m_gps, m_imu, m_startPos, 1);*/
-        if (!isTraversable(target, getLidarPoints()))
+        if (!isTraversableOpt(target))
         {
             // std::cout << "path to target is not traversable!" << std::endl;
             clearBfsResult();
@@ -477,7 +479,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         }
         if(ticks - traveled <= 0.01)
         {
-            double vel2 = std::max(0.75, vel - pow((traveled - (ticks - 0.01))/0.01, 2) * drive_kp * vel);
+            double vel2 = std::max(0.5, vel - pow((traveled - (ticks - 0.01))/0.01, 2) * drive_kp * vel);
             double cur_angle = getYaw();
             double err = angle - cur_angle;
             if(err > M_PI)
@@ -516,7 +518,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         pdd colorSensorLoc = pdd(cur.first + 0.03 * sin(getYaw()), cur.second + 0.03 * cos(getYaw()));
         pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
             std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
-        double rad = 0.045;
+        double rad = 0.055;
         double x = -rad, y = -rad;
         for(; x <= rad; x += 0.005, x = std::round(x / 0.005) * 0.005)
         {
@@ -524,15 +526,19 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
             {
                 if (x == -rad || x == rad || y == -rad || y == rad)
                 {
-                    addLidarPoint(pdd(tileCenter.first + x, tileCenter.second + y));
+                    addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
                 }
-                removeOnWall(pdd(tileCenter.first + x, tileCenter.second + y));
+                removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
             }
         }
         updateVisited();
         resetPosition();
-        while(traveled >= -2 && step() != -1)
+        while(!isTraversableOpt(getRawGPSPosition()) && step() != -1)
         {
+            if (traveled <= -4)
+            {
+                break;
+            }
             forward(-vel * 0.5);
             cur = getRawGPSPosition();
             getPosition(&traveled, nullptr);
@@ -548,6 +554,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 
 void RobotInstance::delay(double seconds)
 {
+    m_robot->step(m_timestep);
     double current = m_robot->getTime();
     while(m_robot->step(m_timestep) != -1 && m_robot->getTime() < current + seconds);
 }
@@ -1002,7 +1009,6 @@ void RobotInstance::lookForLetter()
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
                 std::cout << "victim dist: " << getDist(cur, point) << std::endl;
-                addVictim(point);
                 followVictim(point, "L");
             }
             return;
@@ -1051,7 +1057,6 @@ void RobotInstance::lookForLetter()
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
                 std::cout << "victim dist: " << getDist(cur, point) << std::endl;
-                addVictim(point);
                 followVictim(point, "R");
             }
             return;
@@ -1066,7 +1071,7 @@ void RobotInstance::detectVictims()
 
 pdd RobotInstance::calcNextPos()
 {
-    pdd ret = rgd(chooseMove(this, getYaw()));
+    pdd ret = chooseMove(this);
     // std::cout << "traversable: " << isTraversableOpt(ret) << std::endl;
     return ret;
 }
@@ -1125,7 +1130,7 @@ void RobotInstance::moveToNextPos()
         updateTargetPos();
     }
 
-    moveToPoint(this, getTargetPos(), false);
+    moveToPos(getTargetPos());
 }
 
 void RobotInstance::updateVisited()
@@ -1136,31 +1141,28 @@ void RobotInstance::updateVisited()
     pdd cur = getCurrentGPSPosition();
     double rotation = getYaw();
     addVisited(cur);
-    double rad = GRID_PRECISION;
-    while(rad <= 0.027)
-    {
-        addVisited(pointTo(cur, rotation + M_PI / 2, rad));
-        addVisited(pointTo(cur, rotation - M_PI / 2, rad));
-        rad += GRID_PRECISION;
-    }
+    addVisited(pointTo(cur, rotation + M_PI / 2));
+    addVisited(pointTo(cur, rotation - M_PI / 2));
+    addVisited(pointTo(cur, rotation + M_PI / 2, 0.02));
+    addVisited(pointTo(cur, rotation - M_PI / 2, 0.02));
     if(cur != m_lastPos)
     {
         if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
         else col(m_color, m_gps, m_imu, m_startPos, 1);
         bfsAddOnWall(cur, 0.08);
+        pruneOnWall();
         const double radius = 0.08;
 
         double x = cur.first - radius, y = cur.second - radius;
-        for(; x <= cur.first + radius; x += GRID_PRECISION, x = rgd(x))
+        for(; x <= cur.first + radius; x += 0.008)
         {
-            for(y = cur.second - radius; y <= cur.second + radius; y += GRID_PRECISION, y = rgd(y))
+            for(y = cur.second - radius; y <= cur.second + radius; y += 0.008)
             {
-                pdd point = rgd(pdd(x, y));
+                pdd point = r2d(pdd(x, y));
                 bool traversable = isTraversableOpt(point);
                 if(!traversable)
                 {
                     removeOnWall(point);
-                    addVisited(point);
                 }
                 if (checkNearbyVisited(point))
                 {

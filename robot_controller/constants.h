@@ -17,15 +17,14 @@ enum class DIR
 #define TILE_LENGTH 0.12
 #define ADJ_WALL 0.05
 #define MAX_VIC_DETECTION_RANGE 0.1
-#define MAX_VIC_IDENTIFICATION_RANGE 0.0725
+#define MAX_VIC_IDENTIFICATION_RANGE 0.072
 //vertical and horizontal
 #define CAMERA_FOV 1 //yep that's the actual number
 #define pdd std::pair<double, double>
 #define pii std::pair<int, int>
-#define TRAVERSABLE_RADIUS 0.0372
-#define GRID_PRECISION 0.00625
+#define TRAVERSABLE_RADIUS 0.0369
 //radians
-#define LIDAR_TILT_ANGLE 0.05
+#define LIDAR_TILT_ANGLE 1.0/30.0
 #define VICTIM_DELAY_TIME 1.3
 #endif
 

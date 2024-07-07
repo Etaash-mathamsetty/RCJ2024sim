@@ -39,7 +39,7 @@ inline bool compPts(const pdd& pt1, const pdd& pt2, double thresh)
 
 bool compPts(const pdd& pt1, const pdd& pt2)
 {
-    return compPts(pt1, pt2, GRID_PRECISION / 2);
+    return compPts(pt1, pt2, 0.005);
 }
 
 pair<pdd, pdd> getMinMax(const vector<pdd>& list)
@@ -168,7 +168,7 @@ bool midpoint_check(pdd a, pdd b)
         return false;
     }
 
-    if(rgd(a) == rgd(b) || rgd(mid) == rgd(a) || rgd(mid) == rgd(b))
+    if(r2d(a) == r2d(b) || r2d(mid) == r2d(a) || r2d(mid) == r2d(b))
     {
         return true;
     }
@@ -189,7 +189,7 @@ stack<pdd> optimizeRoute(stack<pdd> route)
 
     while (!route.empty())
     {
-        pdd cur = rgd(route.top());
+        pdd cur = route.top();
         route.pop();
         ret.push(cur);
     }
@@ -248,7 +248,7 @@ stack<pdd> optimizeRouteOnWall(stack<pdd> route)
 
     while (!route.empty())
     {
-        pdd cur = rgd(route.top());
+        pdd cur = route.top();
         route.pop();
         ret.push(cur);
     }
@@ -273,7 +273,7 @@ stack<pdd> optimizeRouteOnWall(stack<pdd> route)
                 {
                     maxDist = max(maxDist, minDist(cur, next, p));
                 }
-                if (maxDist < GRID_PRECISION)
+                if (maxDist < 0.01)
                 {
                     last_pt = next;
                     ret.pop();
@@ -310,15 +310,15 @@ stack<pdd> optimizeRouteOnWall(stack<pdd> route)
 
 pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
 {
-    pdd min = rgd(minMax.f), max = rgd(minMax.s);
+    pdd min = r2d(minMax.f), max = r2d(minMax.s);
     queue<pdd> q;
     unordered_set<pdd, pair_hash_combiner<double>> visited;
-    point = rgd(point);
-    cur = rgd(cur);
+    point = r2d(point);
+    cur = r2d(cur);
     q.push(point);
     while (!q.empty())
     {
-        pdd node = rgd(q.front());
+        pdd node = q.front();
         q.pop();
         if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
@@ -333,14 +333,14 @@ pdd nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
         else
         {
             pdd adjacentNodes[8] = {
-                rgd(pdd(node.f, node.s - GRID_PRECISION)),
-                rgd(pdd(node.f, node.s + GRID_PRECISION)),
-                rgd(pdd(node.f + GRID_PRECISION, node.s)),
-                rgd(pdd(node.f - GRID_PRECISION, node.s)),
-                rgd(pdd(node.f - GRID_PRECISION, node.s - GRID_PRECISION)),
-                rgd(pdd(node.f + GRID_PRECISION, node.s + GRID_PRECISION)),
-                rgd(pdd(node.f + GRID_PRECISION, node.s - GRID_PRECISION)),
-                rgd(pdd(node.f - GRID_PRECISION, node.s + GRID_PRECISION))
+                r2d(pdd(node.f, node.s - 0.01)),
+                r2d(pdd(node.f, node.s + 0.01)),
+                r2d(pdd(node.f + 0.01, node.s)),
+                r2d(pdd(node.f - 0.01, node.s)),
+                r2d(pdd(node.f - 0.01, node.s - 0.01)),
+                r2d(pdd(node.f + 0.01, node.s + 0.01)),
+                r2d(pdd(node.f + 0.01, node.s - 0.01)),
+                r2d(pdd(node.f - 0.01, node.s + 0.01))
             };
             for (const pdd& adjacent : adjacentNodes)
             {
@@ -360,13 +360,13 @@ pdd findNearestTraversable(pdd cur, double rad, double inc)
     cur2.first -= rad;
     cur2.second -= rad;
 
-    for( ;cur2.first <= cur.first + rad; cur2.first += inc, cur2.first = rgd(cur2.first))
+    for( ;cur2.first <= cur.first + rad; cur2.first += inc)
     {
-        for(cur2.second = cur.second - rad; cur2.second <= cur.second + rad; cur2.second += inc, cur.second = rgd(cur2.second))
+        for(cur2.second = cur.second - rad; cur2.second <= cur.second + rad; cur2.second += inc)
         {
             if(isTraversableOpt(cur2) && cur != cur2)
             {
-                return rgd(cur2);
+                return cur2;
             }
         }
     }
@@ -374,30 +374,31 @@ pdd findNearestTraversable(pdd cur, double rad, double inc)
     return cur;
 }
 
-pdd findNearestTraversable(pdd point)
+pdd findNearestTraversable(pdd cur)
 {
-    // return rgd(findNearestTraversable(cur, 0.03, GRID_PRECISION));
+    // return r2d(findNearestTraversable(cur, 0.03, 0.01));
     double rad = 0.05;
-    return nearestTraversable(point, point, {pdd(point.f - rad, point.s - rad), pdd(point.f + rad, point.s + rad)});
+    return nearestTraversable(cur, cur, {pdd(cur.f - rad, cur.s - rad), pdd(cur.f + rad, cur.s + rad)});
 }
 
 stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool wall)
 {
-    pdd min = rgd(minMax.f), max = rgd(minMax.s);
+    pdd min = r2d(minMax.f), max = r2d(minMax.s);
     unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
     parent.reserve(10000);
     unordered_set<pdd, pair_hash_combiner<double>> visited;
     queue<pdd> q;
-    cur = rgd(cur);
-    tar = rgd(tar);
     q.push(cur);
-    parent[cur] = pdd(DBL_MAX, DBL_MAX);
+    tar = r2d(tar);
+    parent[r2d(cur)] = pdd(DBL_MAX, DBL_MAX);
     bool targetFound = false;
+
+    std::cout << "TRACE: pointBfs(" << pointToString(cur) << ", " << pointToString(tar) << ")" << std::endl;
 
     if(!isTraversableOpt(cur))
     {
         pdd traversable = findNearestTraversable(cur);
-        if(traversable == cur)
+        if(compPts(traversable, cur))
         {
             std::cout << "cur is not traversable!" << std::endl;
             return stack<pdd>();
@@ -413,68 +414,96 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     {
         std::cout << "target is not traversable!" << std::endl;
         std::cout << "target: " << pointToString(tar) << std::endl;
-        removeOnWall(tar);
-        addVisited(tar);
+        // cout << isTraversableOpt(tar) << endl;
+        // removeOnWall(tar);
+        // addVisited(tar);
+        // return stack<pdd>();
+        tar = nearestTraversable(tar, cur, minMax);
+
+        std::cout << "new target: " << pointToString(tar) << std::endl;
+    }
+
+    if(compPts(cur, tar))
+    {
+        std::cout << "cur and target are the same!" << std::endl;
         return stack<pdd>();
     }
+
+    pdd final_node;
+
+    const double grid_spacing = 0.002;
 
     while (!q.empty())
     {
         pdd node = q.front();
         q.pop();
-        if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
+        if (visited.count(r3d(node)) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
             continue;
         }
-        if (!isTraversableOpt(node))
+        if (!isTraversableOpt(node) || !isTraversableOpt(r3d(node)))
         {
-            if (node != cur)
+            if (!compPts(node, cur))
             {
                 continue;
             }
         }
-        visited.insert(node);
-        if (!compPts(node, tar) || (isBlind && (isVisited(node) || isPseudoVisited(node))))
+        visited.insert(r3d(node));
+        if (!midpoint_check(node, tar) || (isBlind && (isVisited(node) || isPseudoVisited(node))))
         {
             //north: +y, east: +x, south: -y, west: -x;
-            pdd adjacentNodes[] = {
-                rgd(pdd(node.f, node.s - GRID_PRECISION)),
-                rgd(pdd(node.f, node.s + GRID_PRECISION)),
-                rgd(pdd(node.f + GRID_PRECISION, node.s)),
-                rgd(pdd(node.f - GRID_PRECISION, node.s))
+            pdd adjacents[] = {
+                r3d(pdd(node.f, node.s - grid_spacing)),
+                r3d(pdd(node.f, node.s + grid_spacing)),
+                r3d(pdd(node.f + grid_spacing, node.s)),
+                r3d(pdd(node.f - grid_spacing, node.s))
             };
 
-            // pdd adjacentNodes[4] = {
-            //     rgd(pdd(node.f, node.s + GRID_PRECISION)),
-            //     rgd(pdd(node.f + GRID_PRECISION, node.s)),
-            //     rgd(pdd(node.f, node.s - GRID_PRECISION)),
-            //     rgd(pdd(node.f - GRID_PRECISION, node.s))
-            // };
-
-            for (const pdd& adjacent : adjacentNodes)
+            bool childAlive = false;
+            for (const pdd& adjacent : adjacents)
             {
-                if (!visited.count(adjacent) && isTraversableOpt(adjacent))
+                if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent) && isTraversableOpt(r3d(adjacent)))
                 {
                     q.push(adjacent);
-                    parent[adjacent] = node;
+                    parent[r3d(adjacent)] = node;
+                    childAlive = true;
+                }
+            }
+            if (!childAlive)
+            {
+                pdd diagonals[] = {
+                    r3d(pdd(node.f - grid_spacing, node.s - grid_spacing)),
+                    r3d(pdd(node.f + grid_spacing, node.s + grid_spacing)),
+                    r3d(pdd(node.f + grid_spacing, node.s - grid_spacing)),
+                    r3d(pdd(node.f - grid_spacing, node.s + grid_spacing))
+                };
+                for (const pdd& adjacent : diagonals)
+                {
+                    if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent) && isTraversableOpt(r3d(adjacent)))
+                    {
+                        q.push(adjacent);
+                        parent[r3d(adjacent)] = node;
+                    }
                 }
             }
         }
         else
         {
             targetFound = true;
-            tar = node;
+            final_node = node;
             break;
         }
     }
     if (targetFound)
     {
-        pdd pindex = tar;
+        pdd pindex = final_node;
         stack<pdd> route;
-        while (pindex != cur)
+        if(!compPts(final_node, tar))
+            route.push(tar);
+        while (!compPts(pindex, cur))
         {
             route.push(pindex);
-            pindex = parent[pindex];
+            pindex = parent[r3d(pindex)];
         }
         // cout << "!!!!! successful bfs route length: " << route.size() << endl;
         route.push(cur);
@@ -487,9 +516,9 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         return route;
     }
 
-    removeOnWall(tar);
-    bfsRemoveOnWall(tar, 0.05);
-    addVisited(tar);
+    // removeOnWall(tar);
+    // bfsRemoveOnWall(tar, 0.05);
+    // addVisited(tar);
     cout << "Route not found:" << endl;
     printPoint(cur);
     printPoint(tar);
@@ -510,7 +539,7 @@ pdd getClosestHeuristic(const unordered_set<pdd, pair_hash_combiner<double>>& po
     for (const pdd& point : points)
     {
         double dist = getDist(cur, point)/* + cbrt(getDist(start, point))*/;
-        if (dist < minDist)
+        if (dist < minDist && isTraversableOpt(point))
         {
             minDist = dist;
             closest = point;
@@ -521,10 +550,10 @@ pdd getClosestHeuristic(const unordered_set<pdd, pair_hash_combiner<double>>& po
 
 bool isOnWall(pdd node, double rad)
 {
-    node = rgd(node);
+    node = r2d(node);
     if (!isTraversableOpt(node))
     {
-        onWall.erase(node);
+        removeOnWall(node);
         return false;
     }
 
@@ -533,21 +562,11 @@ bool isOnWall(pdd node, double rad)
         return true;
     }
 
-    // pdd adjacents[8] = {
-    //     rgd(pdd(node.f, node.s - GRID_PRECISION)),
-    //     rgd(pdd(node.f, node.s + GRID_PRECISION)),
-    //     rgd(pdd(node.f + GRID_PRECISION, node.s)),
-    //     rgd(pdd(node.f - GRID_PRECISION, node.s)),
-    //     rgd(pdd(node.f - GRID_PRECISION, node.s - GRID_PRECISION)),
-    //     rgd(pdd(node.f + GRID_PRECISION, node.s + GRID_PRECISION)),
-    //     rgd(pdd(node.f + GRID_PRECISION, node.s - GRID_PRECISION)),
-    //     rgd(pdd(node.f - GRID_PRECISION, node.s + GRID_PRECISION))
-    // };
     pdd adjacents[4] = {
-        rgd(pdd(node.f, node.s - GRID_PRECISION)),
-        rgd(pdd(node.f, node.s + GRID_PRECISION)),
-        rgd(pdd(node.f + GRID_PRECISION, node.s)),
-        rgd(pdd(node.f - GRID_PRECISION, node.s))
+        r2d(pdd(node.f, node.s - 0.01)),
+        r2d(pdd(node.f, node.s + 0.01)),
+        r2d(pdd(node.f + 0.01, node.s)),
+        r2d(pdd(node.f - 0.01, node.s))
     };
 
     for (const pdd& adjacent : adjacents)
@@ -557,25 +576,27 @@ bool isOnWall(pdd node, double rad)
             return true;
         }
     }
+    removeOnWall(node);
     return false;
 }
 
 // check if there is enough visited points nearby to count as visited
 bool checkNearbyVisited(pdd point)
 {
+    point = r2d(point);
     if (!isTraversableOpt(point) || isVisited(point) || isPseudoVisited(point))
     {
         return false;
     }
     pdd adjacents[8] = {
-        rgd(pdd(point.f, point.s - GRID_PRECISION)),
-        rgd(pdd(point.f, point.s + GRID_PRECISION)),
-        rgd(pdd(point.f + GRID_PRECISION, point.s)),
-        rgd(pdd(point.f - GRID_PRECISION, point.s)),
-        rgd(pdd(point.f - GRID_PRECISION, point.s - GRID_PRECISION)),
-        rgd(pdd(point.f + GRID_PRECISION, point.s + GRID_PRECISION)),
-        rgd(pdd(point.f + GRID_PRECISION, point.s - GRID_PRECISION)),
-        rgd(pdd(point.f - GRID_PRECISION, point.s + GRID_PRECISION))
+        r2d(pdd(point.f, point.s - 0.01)),
+        r2d(pdd(point.f, point.s + 0.01)),
+        r2d(pdd(point.f + 0.01, point.s)),
+        r2d(pdd(point.f - 0.01, point.s)),
+        r2d(pdd(point.f - 0.01, point.s - 0.01)),
+        r2d(pdd(point.f + 0.01, point.s + 0.01)),
+        r2d(pdd(point.f + 0.01, point.s - 0.01)),
+        r2d(pdd(point.f - 0.01, point.s + 0.01))
     };
     int totalTraversable = 0, visited = 0;
     for (const pdd& adjacent : adjacents)
@@ -596,15 +617,15 @@ bool checkNearbyVisited(pdd point)
 pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
 {
     // return getClosestHeuristic(onWall, cur, start);
-    pdd min = rgd(minMax.f), max = rgd(minMax.s);
+    pdd min = r2d(minMax.f), max = r2d(minMax.s);
     rotation = clampAngle(round(rotation / (M_PI / 2)) * M_PI / 2);
     queue<pdd> q;
     unordered_set<pdd, pair_hash_combiner<double>> visited;
-    cur = rgd(cur);
+    cur = r2d(cur);
     q.push(cur);
     while (!q.empty())
     {
-        pdd node = rgd(q.front());
+        pdd node = r2d(q.front());
         q.pop();
         if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
@@ -612,50 +633,38 @@ pdd nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
         }
         if (!isTraversableOpt(node))
         {
-            if (node != cur)
+            if (!compPts(node, cur))
             {
                 continue;
             }
         }
         visited.insert(node);
-        if (isOnWall(node) && node != cur && !isVisited(node) && !isPseudoVisited(node))
+        if (onWall.count(node) && !compPts(node, cur) && !isVisited(node) && !isPseudoVisited(node) && isTraversableOpt(node))
         {
+            cout << "nearest on wall found " << isTraversableOpt(node) << endl;
             return node;
         }
         else
         {
             // prioritizing forward
-            pdd adjacentNodes[8] = {
+            pdd adjacentNodes[] = {
                 pointTo(node, rotation),
-                pointTo(node, rotation + M_PI / 4, hypot(GRID_PRECISION, GRID_PRECISION)),
                 pointTo(node, rotation + M_PI / 2),
-                pointTo(node, rotation + 3 * M_PI / 4, hypot(GRID_PRECISION, GRID_PRECISION)),
-                pointTo(node, rotation - M_PI / 4, hypot(GRID_PRECISION, GRID_PRECISION)),
                 pointTo(node, rotation - M_PI / 2),
-                pointTo(node, rotation - 3 * M_PI / 4, hypot(GRID_PRECISION, GRID_PRECISION)),
                 pointTo(node, rotation + M_PI)
             };
-            // pdd adjacentNodes[8] = {
-            //     rgd(pdd(node.f, node.s - GRID_PRECISION)),
-            //     rgd(pdd(node.f, node.s + GRID_PRECISION)),
-            //     rgd(pdd(node.f + GRID_PRECISION, node.s)),
-            //     rgd(pdd(node.f - GRID_PRECISION, node.s)),
-            //     rgd(pdd(node.f - GRID_PRECISION, node.s - GRID_PRECISION)),
-            //     rgd(pdd(node.f + GRID_PRECISION, node.s + GRID_PRECISION)),
-            //     rgd(pdd(node.f + GRID_PRECISION, node.s - GRID_PRECISION)),
-            //     rgd(pdd(node.f - GRID_PRECISION, node.s + GRID_PRECISION))
-            // };
             for (const pdd& adjacent : adjacentNodes)
             {
-                if (!visited.count(adjacent))
+                if (!visited.count(r2d(adjacent)) && isTraversableOpt(r2d(adjacent)))
                 {
-                    q.push(adjacent);
+                    q.push(r2d(adjacent));
                 }
             }
         }
     }
     if (!onWall.empty())
     {
+        cout << "getting closest heuristic" << endl;
         return getClosestHeuristic(onWall, cur, start);
     }
     return start;
@@ -667,7 +676,7 @@ struct wallNode
     double direction; // direction from previous point to current
 };
 
-const double wtRadius = 0.04;
+const double wtRadius = 0.05;
 bool isLeft = true;
 
 void checkSide(const float* rangeImage, int hr)
@@ -687,15 +696,15 @@ void checkSide(const float* rangeImage, int hr)
 stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
 {
     isWallTracing = true;
-    cur = rgd(cur);
+    cur = r2d(cur);
     if (!isOnWall(cur))
     {
-        cur = nearestIsOnWall(cur, get_lidar_minmax_opt(), -rb->getYaw(), rb->getStartPos());
+        cur = nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos());
     }
     checkSide(rb->getLidar()->getRangeImage() + 1024, rb->getLidar()->getHorizontalResolution());
     double offset = isLeft ? -M_PI / 2 : M_PI / 2;
     cout << (isLeft ? "left" : "right") << endl;
-    pdd min = rgd({cur.f - wtRadius, cur.s - wtRadius}), max = rgd({cur.f + wtRadius, cur.s + wtRadius});
+    pdd min = r2d({cur.f - wtRadius, cur.s - wtRadius}), max = r2d({cur.f + wtRadius, cur.s + wtRadius});
     stack<wallNode> st;
     unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
     parent.reserve(10000);
@@ -768,7 +777,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
 
 bool isVisited(const pdd& point)
 {
-    return visitedPoints.count(rgd(point)) > 0;
+    return visitedPoints.count(r2d(point)) > 0;
 }
 
 void removeVisited(pdd point)
@@ -778,14 +787,14 @@ void removeVisited(pdd point)
 
 bool isPseudoVisited(const pdd& point)
 {
-    return pseudoVisited.count(rgd(point)) > 0;
+    return pseudoVisited.count(r2d(point)) > 0;
 }
 
 void addVisited(pdd point)
 {
     if (isTraversableOpt(point))
     {
-        visitedPoints.insert(point);
+        visitedPoints.insert(r2d(point));
     }
 }
 
@@ -793,13 +802,13 @@ void addPseudoVisited(pdd point)
 {
     if (isTraversableOpt(point))
     {
-        pseudoVisited.insert(point);
+        pseudoVisited.insert(r2d(point));
     }
 }
 
 void removePseudoVisited(pdd point)
 {
-    pseudoVisited.erase(point);
+    pseudoVisited.erase(r2d(point));
 }
 
 const unordered_set<pdd, pair_hash_combiner<double>>& getVisited()
@@ -809,12 +818,28 @@ const unordered_set<pdd, pair_hash_combiner<double>>& getVisited()
 
 void addOnWall(pdd point)
 {
-    onWall.insert(point);
+    onWall.insert(r2d(point));
 }
 
 void removeOnWall(pdd point)
 {
-    onWall.erase(point);
+    onWall.erase(r2d(point));
+}
+
+void pruneOnWall()
+{
+    for (auto it = onWall.begin(); it != onWall.end();)
+    {
+        if (!isTraversableOpt(*it))
+        {
+            addVisited(*it);
+            it = onWall.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+    }
 }
 
 void clearOnWall()
@@ -828,11 +853,11 @@ void bfsAddOnWall(pdd cur, double radius)
     pdd max = {cur.f + radius, cur.s + radius};
     queue<pdd> q;
     unordered_set<pdd, pair_hash_combiner<double>> visited;
-    cur = rgd(cur);
+    cur = r2d(cur);
     q.push(cur);
     while (!q.empty())
     {
-        pdd node = rgd(q.front());
+        pdd node = r2d(q.front());
         q.pop();
         if (visited.count(node) > 0 || !isTraversableOpt(node) || !canSee(cur, node) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
@@ -848,14 +873,14 @@ void bfsAddOnWall(pdd cur, double radius)
             removeOnWall(node);
         }
         pdd adjacentNodes[8] = {
-            rgd(pdd(node.f, node.s - GRID_PRECISION)),
-            rgd(pdd(node.f, node.s + GRID_PRECISION)),
-            rgd(pdd(node.f + GRID_PRECISION, node.s)),
-            rgd(pdd(node.f - GRID_PRECISION, node.s)),
-            rgd(pdd(node.f - GRID_PRECISION, node.s - GRID_PRECISION)),
-            rgd(pdd(node.f + GRID_PRECISION, node.s + GRID_PRECISION)),
-            rgd(pdd(node.f + GRID_PRECISION, node.s - GRID_PRECISION)),
-            rgd(pdd(node.f - GRID_PRECISION, node.s + GRID_PRECISION))
+            r2d(pdd(node.f, node.s - 0.01)),
+            r2d(pdd(node.f, node.s + 0.01)),
+            r2d(pdd(node.f + 0.01, node.s)),
+            r2d(pdd(node.f - 0.01, node.s)),
+            r2d(pdd(node.f - 0.01, node.s - 0.01)),
+            r2d(pdd(node.f + 0.01, node.s + 0.01)),
+            r2d(pdd(node.f + 0.01, node.s - 0.01)),
+            r2d(pdd(node.f - 0.01, node.s + 0.01))
         };
         for (const pdd& adjacent : adjacentNodes)
         {
@@ -873,11 +898,11 @@ void bfsRemoveOnWall(pdd cur, double radius)
     pdd max = {cur.f + radius, cur.s + radius};
     queue<pdd> q;
     unordered_set<pdd, pair_hash_combiner<double>> visited;
-    cur = rgd(cur);
+    cur = r2d(cur);
     q.push(cur);
     while (!q.empty())
     {
-        pdd node = rgd(q.front());
+        pdd node = r2d(q.front());
         q.pop();
         if (visited.count(node) > 0 || !isTraversableOpt(node) || !canSee(cur, node) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
@@ -890,14 +915,14 @@ void bfsRemoveOnWall(pdd cur, double radius)
             addVisited(node);
         }
         pdd adjacentNodes[8] = {
-            rgd(pdd(node.f, node.s - GRID_PRECISION)),
-            rgd(pdd(node.f, node.s + GRID_PRECISION)),
-            rgd(pdd(node.f + GRID_PRECISION, node.s)),
-            rgd(pdd(node.f - GRID_PRECISION, node.s)),
-            rgd(pdd(node.f - GRID_PRECISION, node.s - GRID_PRECISION)),
-            rgd(pdd(node.f + GRID_PRECISION, node.s + GRID_PRECISION)),
-            rgd(pdd(node.f + GRID_PRECISION, node.s - GRID_PRECISION)),
-            rgd(pdd(node.f - GRID_PRECISION, node.s + GRID_PRECISION))
+            r2d(pdd(node.f, node.s - 0.01)),
+            r2d(pdd(node.f, node.s + 0.01)),
+            r2d(pdd(node.f + 0.01, node.s)),
+            r2d(pdd(node.f - 0.01, node.s)),
+            r2d(pdd(node.f - 0.01, node.s - 0.01)),
+            r2d(pdd(node.f + 0.01, node.s + 0.01)),
+            r2d(pdd(node.f + 0.01, node.s - 0.01)),
+            r2d(pdd(node.f - 0.01, node.s + 0.01))
         };
         for (const pdd& adjacent : adjacentNodes)
         {
@@ -912,13 +937,13 @@ void bfsRemoveOnWall(pdd cur, double radius)
 pdd pointTo(pdd point, double dir)
 {
     dir = clampAngle(dir);
-    return pdd(rgd(point.f + GRID_PRECISION * sin(dir)), rgd(point.s + GRID_PRECISION * cos(dir)));
+    return pdd(point.f + 0.01 * sin(dir), point.s + 0.01 * cos(dir));
 }
 
 pdd pointTo(pdd point, double dir, double dist)
 {
     dir = clampAngle(dir);
-    return pdd(rgd(point.f + dist * sin(dir)), rgd(point.s + dist * cos(dir)));
+    return pdd(point.f + dist * sin(dir), point.s + dist * cos(dir));
 }
 
 const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall()
@@ -951,7 +976,7 @@ const stack<pdd>& getBfsPath()
 
 void moveToPoint(RobotInstance *rb, pdd point, bool wall)
 {
-    point = rgd(point);
+    point = r2d(point);
     bfsResult = pointBfs(rb->getCurrentGPSPosition(), point, get_lidar_minmax_opt(), false, wall);
     if(wall && bfsResult.empty())
     {
@@ -989,9 +1014,9 @@ void moveToPoint(RobotInstance *rb, pdd point, bool wall)
 
 stack<pdd> wallTracePath;
 
-pdd chooseMove(RobotInstance *rb, double rotation)
+pdd chooseMove(RobotInstance *rb)
 {
-    pdd cur = rb->getCurrentGPSPosition();
+    pdd cur = rb->getRawGPSPosition();
     // pdd nearestOnWall = nearestIsOnWall(cur, getMinMax(getLidarPoints()), rotation, rb->getStartPos());
 
     // for(auto it = onWall.begin(); it != onWall.end();)
@@ -1008,6 +1033,31 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     // }
 
     // pdd nearestUnseen = getClosestHeuristic(getCameraToVisit(), cur, rb->getStartPos());
+
+    if (!isTraversableOpt(cur))
+    {
+        pdd traversable = nearestTraversable(cur, cur, get_lidar_minmax_opt());
+        if (!compPts(traversable, cur))
+        {
+            return traversable;
+        }
+    }
+
+    if (!compPts(cur, rb->getStartPos()) && onWall.empty())
+    {
+        static stack<pdd> path{};
+        if(!path.empty())
+        {
+            path.pop();
+            if (!path.empty())
+                return path.top();
+        }
+        path = pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false, false);
+        if(!path.empty())
+        {
+            return path.top();
+        }
+    }
 
     if (!wallTracePath.empty())
     {
@@ -1027,8 +1077,8 @@ pdd chooseMove(RobotInstance *rb, double rotation)
                 temp = wallTracePath.top();
                 wallTracePath.pop();
             }
-            stack<pdd> bfsResult = pointBfs(cur, temp, get_lidar_minmax_opt(), false, false);
-            if (bfsResult.empty())
+            stack<pdd> res = pointBfs(cur, temp, get_lidar_minmax_opt(), false, false);
+            if (res.empty())
             {
                 wallTracePath = stack<pdd>();
             }
@@ -1043,7 +1093,7 @@ pdd chooseMove(RobotInstance *rb, double rotation)
     {
         cout << "no move found" << endl;
 
-        if(cur == rb->getStartPos())
+        if(compPts(cur, rb->getStartPos()))
             allDone = true;
 
         return cur;
@@ -1082,7 +1132,7 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points, double robotRadius
     
 //     pdd cur = { 0.02, 0.06 },
 //         tar = { 0.1, -0.05 };
-//     pdd curPos = { rgd(getMinMax(points).f.f), rgd(getMinMax(points).s.s)};
+//     pdd curPos = { r2d(getMinMax(points).f.f), r2d(getMinMax(points).s.s)};
 //     stack<pdd> route = pointBfs(cur, tar, getMinMax(points));
 //     cout << "done" << endl;
 //     while (curPos.s >= getMinMax(points).f.s)
@@ -1107,11 +1157,11 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points, double robotRadius
 //                 cout << "+";
 //             }
            
-//             curPos.f += GRID_PRECISION;
+//             curPos.f += 0.01;
 //         }
 //         cout << endl;
-//         curPos.s -= GRID_PRECISION;
-//         curPos.f = rgd(getMinMax(points).f.f);
+//         curPos.s -= 0.01;
+//         curPos.f = r2d(getMinMax(points).f.f);
 //     }
 //     cout << curPos.f << " " << curPos.s << endl;
 // }
