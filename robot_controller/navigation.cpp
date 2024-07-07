@@ -498,8 +498,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     {
         pdd pindex = final_node;
         stack<pdd> route;
-        if(!compPts(final_node, tar))
-            route.push(tar);
+        route.push(tar);
         while (!compPts(pindex, cur))
         {
             route.push(pindex);
@@ -967,6 +966,7 @@ bool isAllDone()
 void clearBfsResult()
 {
     bfsResult = stack<pdd>();
+    wallTracePath = stack<pdd>();
 }
 
 const stack<pdd>& getBfsPath()
