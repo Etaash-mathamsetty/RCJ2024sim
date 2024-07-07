@@ -397,7 +397,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     if(!isTraversableOpt(cur))
     {
-        pdd traversable = findNearestTraversable(cur);
+        pdd traversable = findNearestTraversable(cur, 0.05, 0.01);
         if(compPts(traversable, cur))
         {
             std::cout << "cur is not traversable!" << std::endl;
