@@ -965,7 +965,7 @@ bool isAllDone()
     return allDone;
 }
 
-void clearcurrentPath()
+void clearBfsResult()
 {
     currentPath = stack<pdd>();
 }
