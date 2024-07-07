@@ -388,7 +388,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     parent.reserve(10000);
     unordered_set<pdd, pair_hash_combiner<double>> visited;
     queue<pdd> q;
-    q.push(cur);
+    q.push(r3d(cur));
     tar = r2d(tar);
     parent[r2d(cur)] = pdd(DBL_MAX, DBL_MAX);
     bool targetFound = false;
@@ -431,7 +431,8 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     pdd final_node;
 
-    const double grid_spacing = 0.002;
+    const double grid_spacing = 0.001;
+    const double angle = -atan2(tar.f - cur.f, tar.s - cur.s);
 
     while (!q.empty())
     {
@@ -462,7 +463,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             bool childAlive = false;
             for (const pdd& adjacent : adjacents)
             {
-                if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent) && isTraversableOpt(r3d(adjacent)))
+                if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent))
                 {
                     q.push(adjacent);
                     parent[r3d(adjacent)] = node;
@@ -472,14 +473,14 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             if (!childAlive)
             {
                 pdd diagonals[] = {
-                    r3d(pdd(node.f - grid_spacing, node.s - grid_spacing)),
-                    r3d(pdd(node.f + grid_spacing, node.s + grid_spacing)),
-                    r3d(pdd(node.f + grid_spacing, node.s - grid_spacing)),
-                    r3d(pdd(node.f - grid_spacing, node.s + grid_spacing))
+                    r3d(pointTo(node, angle - M_PI / 4, grid_spacing)),
+                    r3d(pointTo(node, angle + M_PI / 4, grid_spacing)),
+                    r3d(pointTo(node, angle + M_PI * 3 / 4, grid_spacing)),
+                    r3d(pointTo(node, angle - M_PI * 3 / 4, grid_spacing))
                 };
                 for (const pdd& adjacent : diagonals)
                 {
-                    if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent) && isTraversableOpt(r3d(adjacent)))
+                    if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent))
                     {
                         q.push(adjacent);
                         parent[r3d(adjacent)] = node;
@@ -529,7 +530,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 unordered_set<pdd, pair_hash_combiner<double>> visitedPoints;
 unordered_set<pdd, pair_hash_combiner<double>> pseudoVisited;
 stack<pdd> bfsResult = {};
-stack<pdd> wallTracePath;
+stack<pdd> wallTracePath = {};
 unordered_set<pdd, pair_hash_combiner<double>> onWall;
 
 pdd getClosestHeuristic(const unordered_set<pdd, pair_hash_combiner<double>>& points, pdd cur, pdd start)
@@ -693,10 +694,10 @@ void checkSide(const float* rangeImage, int hr)
     }
 }
 
-stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
+stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
 {
     isWallTracing = true;
-    cur = r2d(cur);
+    pdd cur = r2d(_cur);
     if (!isOnWall(cur))
     {
         cur = nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos());
@@ -772,7 +773,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd cur)
         return res;
     }
     cout << "no traceable wall found" << endl;
-    return pointBfs(cur, nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos()), get_lidar_minmax_opt(), false);
+    return pointBfs(_cur, nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos()), get_lidar_minmax_opt(), false);
 }
 
 bool isVisited(const pdd& point)
@@ -978,11 +979,11 @@ const stack<pdd>& getBfsPath()
 void moveToPoint(RobotInstance *rb, pdd point, bool wall)
 {
     point = r2d(point);
-    bfsResult = pointBfs(rb->getCurrentGPSPosition(), point, get_lidar_minmax_opt(), false, wall);
+    bfsResult = pointBfs(rb->getRawGPSPosition(), point, get_lidar_minmax_opt(), false, wall);
     if(wall && bfsResult.empty())
     {
         //fallback
-        bfsResult = pointBfs(rb->getCurrentGPSPosition(), point, get_lidar_minmax_opt(), false);
+        bfsResult = pointBfs(rb->getRawGPSPosition(), point, get_lidar_minmax_opt(), false);
     }
     if (bfsResult.empty())
     {
