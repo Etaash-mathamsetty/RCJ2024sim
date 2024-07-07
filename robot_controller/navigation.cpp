@@ -431,7 +431,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     pdd final_node;
 
-    const double grid_spacing = 0.001;
+    const double grid_spacing = 0.005;
     const double angle = -atan2(tar.f - cur.f, tar.s - cur.s);
 
     while (!q.empty())
@@ -858,7 +858,7 @@ void bfsAddOnWall(pdd cur, double radius)
     q.push(cur);
     while (!q.empty())
     {
-        pdd node = r2d(q.front());
+        pdd node = r3d(q.front());
         q.pop();
         if (visited.count(node) > 0 || !isTraversableOpt(node) || !canSee(cur, node) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
@@ -873,15 +873,16 @@ void bfsAddOnWall(pdd cur, double radius)
         {
             removeOnWall(node);
         }
-        pdd adjacentNodes[8] = {
-            r2d(pdd(node.f, node.s - 0.01)),
-            r2d(pdd(node.f, node.s + 0.01)),
-            r2d(pdd(node.f + 0.01, node.s)),
-            r2d(pdd(node.f - 0.01, node.s)),
-            r2d(pdd(node.f - 0.01, node.s - 0.01)),
-            r2d(pdd(node.f + 0.01, node.s + 0.01)),
-            r2d(pdd(node.f + 0.01, node.s - 0.01)),
-            r2d(pdd(node.f - 0.01, node.s + 0.01))
+        const double spacing = 0.005;
+        pdd adjacentNodes[] = {
+            r3d(pdd(node.f, node.s - spacing)),
+            r3d(pdd(node.f, node.s + spacing)),
+            r3d(pdd(node.f + spacing, node.s)),
+            r3d(pdd(node.f - spacing, node.s)),
+            r3d(pdd(node.f - spacing, node.s - spacing)),
+            r3d(pdd(node.f + spacing, node.s + spacing)),
+            r3d(pdd(node.f + spacing, node.s - spacing)),
+            r3d(pdd(node.f - spacing, node.s + spacing))
         };
         for (const pdd& adjacent : adjacentNodes)
         {
@@ -973,7 +974,7 @@ void clearBfsResult()
 
 const stack<pdd>& getBfsPath()
 {
-    return bfsResult;
+    return wallTracePath;
 }
 
 void moveToPoint(RobotInstance *rb, pdd point, bool wall)
