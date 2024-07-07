@@ -529,6 +529,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 unordered_set<pdd, pair_hash_combiner<double>> visitedPoints;
 unordered_set<pdd, pair_hash_combiner<double>> pseudoVisited;
 stack<pdd> bfsResult = {};
+stack<pdd> wallTracePath;
 unordered_set<pdd, pair_hash_combiner<double>> onWall;
 
 pdd getClosestHeuristic(const unordered_set<pdd, pair_hash_combiner<double>>& points, pdd cur, pdd start)
@@ -1011,8 +1012,6 @@ void moveToPoint(RobotInstance *rb, pdd point, bool wall)
         point = next;
     }
 }
-
-stack<pdd> wallTracePath;
 
 pdd chooseMove(RobotInstance *rb)
 {

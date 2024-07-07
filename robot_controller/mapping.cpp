@@ -83,7 +83,48 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
                     double checkX = minX + TILE_LENGTH * j + x * 0.03, checkY = maxY - TILE_LENGTH * i - y * 0.03;
-                    if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
+                    if ((x == 1 || x == 3) && (y == 1 || y == 3))
+                    {
+                        if (!isTraversable(pdd(checkX, checkY), pList, 0.02)) map[yidx][xidx] = "1";
+                    }
+                    else
+                    {
+                        if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
+                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < worldH; i++)
+    {
+        for (int j = 0; j < worldW; j++)
+        {
+            for (int y = 0; y < 5; y++)
+            {
+                for (int x = 0; x < 5; x++)
+                {
+                    int yidx = 4 * i + y, xidx = 4 * j + x;
+
+                    if (x == 1 && y == 1 && map[yidx][xidx] == "1")
+                    {
+                        map[yidx][xidx] = "0";
+                        map[yidx - 1][xidx - 1] = "0";
+                    }
+                    if (x == 3 && y == 1 && map[yidx][xidx] == "1")
+                    {
+                        map[yidx][xidx] = "0";
+                        map[yidx - 1][xidx + 1] = "0";
+                    }
+                    if (x == 1 && y == 3 && map[yidx][xidx] == "1")
+                    {
+                        map[yidx][xidx] = "0";
+                        map[yidx + 1][xidx - 1] = "0";
+                    }
+                    if (x == 3 && y == 3 && map[yidx][xidx] == "1")
+                    {
+                        map[yidx][xidx] = "0";
+                        map[yidx + 1][xidx + 1] = "0";
+                    }
                 }
             }
         }
@@ -404,7 +445,48 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
                     double checkX = minX + TILE_LENGTH * j + x * 0.03, checkY = maxY - TILE_LENGTH * i - y * 0.03;
-                    if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
+                    if ((x == 1 || x == 3) && (y == 1 || y == 3))
+                    {
+                        if (!isTraversable(pdd(checkX, checkY), pList, 0.02)) map[yidx][xidx] = "1";
+                    }
+                    else
+                    {
+                        if (!isTraversable(pdd(checkX, checkY), pList, 0.015)) map[yidx][xidx] = "1";
+                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < worldH; i++)
+    {
+        for (int j = 0; j < worldW; j++)
+        {
+            for (int y = 0; y < 5; y++)
+            {
+                for (int x = 0; x < 5; x++)
+                {
+                    int yidx = 4 * i + y, xidx = 4 * j + x;
+                    
+                    if (x == 1 && y == 1 && map[yidx][xidx] == "1")
+                    {
+                        map[yidx][xidx] = "0";
+                        map[yidx - 1][xidx - 1] = "0";
+                    }
+                    if (x == 3 && y == 1 && map[yidx][xidx] == "1")
+                    {
+                        map[yidx][xidx] = "0";
+                        map[yidx - 1][xidx + 1] = "0";
+                    }
+                    if (x == 1 && y == 3 && map[yidx][xidx] == "1")
+                    {
+                        map[yidx][xidx] = "0";
+                        map[yidx + 1][xidx - 1] = "0";
+                    }
+                    if (x == 3 && y == 3 && map[yidx][xidx] == "1")
+                    {
+                        map[yidx][xidx] = "0";
+                        map[yidx + 1][xidx + 1] = "0";
+                    }
                 }
             }
         }
