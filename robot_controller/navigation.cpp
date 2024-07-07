@@ -393,6 +393,8 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     parent[r2d(cur)] = pdd(DBL_MAX, DBL_MAX);
     bool targetFound = false;
 
+    std::cout << "TRACE: pointBfs(" << pointToString(cur) << ", " << pointToString(tar) << ")" << std::endl;
+
     if(!isTraversableOpt(cur))
     {
         pdd traversable = findNearestTraversable(cur);
@@ -416,9 +418,15 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         // removeOnWall(tar);
         // addVisited(tar);
         // return stack<pdd>();
-        tar = nearestTraversable(tar, tar, get_lidar_minmax_opt());
+        tar = nearestTraversable(tar, cur, minMax);
 
         std::cout << "new target: " << pointToString(tar) << std::endl;
+    }
+
+    if(compPts(cur, tar))
+    {
+        std::cout << "cur and target are the same!" << std::endl;
+        return stack<pdd>();
     }
 
     pdd final_node;
@@ -1035,7 +1043,7 @@ pdd chooseMove(RobotInstance *rb)
 
     if (!compPts(cur, rb->getStartPos()) && onWall.empty())
     {
-        return rb->getStartPos();
+        return pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false, false).top();
     }
 
     if (!wallTracePath.empty())
@@ -1056,8 +1064,8 @@ pdd chooseMove(RobotInstance *rb)
                 temp = wallTracePath.top();
                 wallTracePath.pop();
             }
-            stack<pdd> bfsResult = pointBfs(cur, temp, get_lidar_minmax_opt(), false, false);
-            if (bfsResult.empty())
+            stack<pdd> res = pointBfs(cur, temp, get_lidar_minmax_opt(), false, false);
+            if (res.empty())
             {
                 wallTracePath = stack<pdd>();
             }

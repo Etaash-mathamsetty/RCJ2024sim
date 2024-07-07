@@ -1130,7 +1130,7 @@ void RobotInstance::moveToNextPos()
         updateTargetPos();
     }
 
-    moveToPoint(this, getTargetPos(), false);
+    moveToPos(getTargetPos());
 }
 
 void RobotInstance::updateVisited()
