@@ -431,6 +431,8 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     pdd final_node;
 
+    const double grid_spacing = 0.002;
+
     while (!q.empty())
     {
         pdd node = q.front();
@@ -451,10 +453,10 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         {
             //north: +y, east: +x, south: -y, west: -x;
             pdd adjacents[] = {
-                r3d(pdd(node.f, node.s - 0.001)),
-                r3d(pdd(node.f, node.s + 0.001)),
-                r3d(pdd(node.f + 0.001, node.s)),
-                r3d(pdd(node.f - 0.001, node.s))
+                r3d(pdd(node.f, node.s - grid_spacing)),
+                r3d(pdd(node.f, node.s + grid_spacing)),
+                r3d(pdd(node.f + grid_spacing, node.s)),
+                r3d(pdd(node.f - grid_spacing, node.s))
             };
 
             bool childAlive = false;
@@ -470,10 +472,10 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             if (!childAlive)
             {
                 pdd diagonals[] = {
-                    r3d(pdd(node.f - 0.001, node.s - 0.001)),
-                    r3d(pdd(node.f + 0.001, node.s + 0.001)),
-                    r3d(pdd(node.f + 0.001, node.s - 0.001)),
-                    r3d(pdd(node.f - 0.001, node.s + 0.001))
+                    r3d(pdd(node.f - grid_spacing, node.s - grid_spacing)),
+                    r3d(pdd(node.f + grid_spacing, node.s + grid_spacing)),
+                    r3d(pdd(node.f + grid_spacing, node.s - grid_spacing)),
+                    r3d(pdd(node.f - grid_spacing, node.s + grid_spacing))
                 };
                 for (const pdd& adjacent : diagonals)
                 {
