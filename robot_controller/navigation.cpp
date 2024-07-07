@@ -431,7 +431,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     pdd final_node;
 
-    const double grid_spacing = 0.005;
+    const double grid_spacing = 0.002;
     const double angle = -atan2(tar.f - cur.f, tar.s - cur.s);
 
     while (!q.empty())
