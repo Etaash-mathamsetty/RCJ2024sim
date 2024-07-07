@@ -1049,7 +1049,8 @@ pdd chooseMove(RobotInstance *rb)
         if(!path.empty())
         {
             path.pop();
-            return path.top();
+            if (!path.empty())
+                return path.top();
         }
         path = pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false, false);
         if(!path.empty())
