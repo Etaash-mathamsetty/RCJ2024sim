@@ -136,7 +136,7 @@ double minDist(pdd a, pdd b, pdd p)
     return getDist(p, pdd(projx, projy));
 }
 
-bool canSee(pdd cur, pdd tar)
+bool canSee(pdd cur, pdd tar, double radius)
 {
     for (const auto& r : get_neighboring_regions(midpoint(tar, cur), getDist(cur, tar)/2.0))
     {
@@ -144,7 +144,7 @@ bool canSee(pdd cur, pdd tar)
         {
             for(const auto& pair: r->points)
             {
-                if(minDist(cur, tar, pair.first) < 0.01 && pair.second.wall)
+                if(minDist(cur, tar, pair.first) < radius && pair.second.wall)
                 {
                     return false;
                 }
@@ -1125,7 +1125,7 @@ pdd chooseMove(RobotInstance *rb)
         {
             currentPath.pop();
         }
-        else if(canSee(currentPath.top(), cur))
+        else if(canSee(currentPath.top(), cur, TRAVERSABLE_RADIUS))
         {
             return currentPath.top();
         }
