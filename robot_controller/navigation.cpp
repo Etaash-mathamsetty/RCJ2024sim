@@ -318,7 +318,7 @@ stack<pdd> nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
     point = r2d(point);
     cur = r2d(cur);
     q.push(point);
-    parent[point] = pdd(DBL_MAX, DBL_MAX);
+    parent[point] = cur;
     bool isFound = false;
     pdd tar;
     while (!q.empty())
