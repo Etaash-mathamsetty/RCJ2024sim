@@ -1125,7 +1125,7 @@ pdd chooseMove(RobotInstance *rb)
         {
             currentPath.pop();
         }
-        else if(midpoint_check(currentPath.top(), cur))
+        else if(canSee(currentPath.top(), cur))
         {
             return currentPath.top();
         }
