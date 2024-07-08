@@ -156,24 +156,7 @@ bool canSee(pdd cur, pdd tar, double radius)
 
 bool midpoint_check(pdd a, pdd b)
 {
-    if(!isTraversableOpt(a) || !isTraversableOpt(b))
-    {
-        return false;
-    }
-
-    pdd mid = midpoint(a, b);
-
-    if(!isTraversableOpt(mid))
-    {
-        return false;
-    }
-
-    if(r2d(a) == r2d(b) || r2d(mid) == r2d(a) || r2d(mid) == r2d(b))
-    {
-        return true;
-    }
-
-    return midpoint_check(a, mid) && midpoint_check(mid, b);
+    return canSee(a, b, TRAVERSABLE_RADIUS);
 }
 
 bool isWallTracing = false;
