@@ -1110,31 +1110,24 @@ pdd chooseMove(RobotInstance *rb)
         }
     }
 
-    if (!compPts(cur, rb->getStartPos()) && onWall.empty())
+    if (!compPts(cur, rb->getStartPos()) && onWall.empty() && currentPath.empty())
     {
-        static stack<pdd> path{};
-        if(!path.empty())
-        {
-            path.pop();
-            if (!path.empty())
-                return path.top();
-        }
-        path = pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false, false);
-        if(!path.empty())
-        {
-            return path.top();
-        }
+        currentPath = pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false, false);
     }
 
     if (!currentPath.empty())
     {
-        if (compPts(rb->getRawGPSPosition(), currentPath.top()))
+        if (compPts(cur, currentPath.top()))
         {
             currentPath.pop();
         }
         else if(!isTraversableOpt(currentPath.top()))
         {
             currentPath.pop();
+        }
+        else if(midpoint_check(currentPath.top(), cur))
+        {
+            return currentPath.top();
         }
         else
         {
