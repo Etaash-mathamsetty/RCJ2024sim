@@ -85,7 +85,10 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
                     double checkX = minX + TILE_LENGTH * j + x * 0.03, checkY = maxY - TILE_LENGTH * i - y * 0.03;
                     if ((x == 1 || x == 3) && (y == 1 || y == 3))
                     {
-                        if (!isTraversable(pdd(checkX, checkY), pList, 0.02)) map[yidx][xidx] = "1";
+                        if (!isTraversable(pdd(checkX - 0.01, checkY + 0.01), pList, 0.005)) map[yidx][xidx] = "w";
+                        if (!isTraversable(pdd(checkX + 0.01, checkY + 0.01), pList, 0.005)) map[yidx][xidx] = "x";
+                        if (!isTraversable(pdd(checkX - 0.01, checkY - 0.01), pList, 0.005)) map[yidx][xidx] = "y";
+                        if (!isTraversable(pdd(checkX + 0.01, checkY - 0.01), pList, 0.005)) map[yidx][xidx] = "z";
                     }
                     else
                     {
@@ -105,22 +108,22 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
 
-                    if (x == 1 && y == 1 && map[yidx][xidx] == "1")
+                    if (map[yidx][xidx] == "w")
                     {
                         map[yidx][xidx] = "0";
                         map[yidx - 1][xidx - 1] = "0";
                     }
-                    if (x == 3 && y == 1 && map[yidx][xidx] == "1")
+                    if (map[yidx][xidx] == "x")
                     {
                         map[yidx][xidx] = "0";
                         map[yidx - 1][xidx + 1] = "0";
                     }
-                    if (x == 1 && y == 3 && map[yidx][xidx] == "1")
+                    if (map[yidx][xidx] == "y")
                     {
                         map[yidx][xidx] = "0";
                         map[yidx + 1][xidx - 1] = "0";
                     }
-                    if (x == 3 && y == 3 && map[yidx][xidx] == "1")
+                    if (map[yidx][xidx] == "z")
                     {
                         map[yidx][xidx] = "0";
                         map[yidx + 1][xidx + 1] = "0";
@@ -447,7 +450,10 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                     double checkX = minX + TILE_LENGTH * j + x * 0.03, checkY = maxY - TILE_LENGTH * i - y * 0.03;
                     if ((x == 1 || x == 3) && (y == 1 || y == 3))
                     {
-                        if (!isTraversable(pdd(checkX, checkY), pList, 0.02)) map[yidx][xidx] = "1";
+                        if (!isTraversable(pdd(checkX - 0.01, checkY + 0.01), pList, 0.005)) map[yidx][xidx] = "w";
+                        if (!isTraversable(pdd(checkX + 0.01, checkY + 0.01), pList, 0.005)) map[yidx][xidx] = "x";
+                        if (!isTraversable(pdd(checkX - 0.01, checkY - 0.01), pList, 0.005)) map[yidx][xidx] = "y";
+                        if (!isTraversable(pdd(checkX + 0.01, checkY - 0.01), pList, 0.005)) map[yidx][xidx] = "z";
                     }
                     else
                     {
@@ -466,23 +472,23 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                 for (int x = 0; x < 5; x++)
                 {
                     int yidx = 4 * i + y, xidx = 4 * j + x;
-                    
-                    if (x == 1 && y == 1 && map[yidx][xidx] == "1")
+
+                    if (map[yidx][xidx] == "w")
                     {
                         map[yidx][xidx] = "0";
                         map[yidx - 1][xidx - 1] = "0";
                     }
-                    if (x == 3 && y == 1 && map[yidx][xidx] == "1")
+                    if (map[yidx][xidx] == "x")
                     {
                         map[yidx][xidx] = "0";
                         map[yidx - 1][xidx + 1] = "0";
                     }
-                    if (x == 1 && y == 3 && map[yidx][xidx] == "1")
+                    if (map[yidx][xidx] == "y")
                     {
                         map[yidx][xidx] = "0";
                         map[yidx + 1][xidx - 1] = "0";
                     }
-                    if (x == 3 && y == 3 && map[yidx][xidx] == "1")
+                    if (map[yidx][xidx] == "z")
                     {
                         map[yidx][xidx] = "0";
                         map[yidx + 1][xidx + 1] = "0";
