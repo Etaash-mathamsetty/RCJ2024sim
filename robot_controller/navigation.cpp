@@ -323,7 +323,7 @@ stack<pdd> nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
     pdd tar;
     while (!q.empty())
     {
-        pdd node = q.front();
+        pdd node = r2d(q.front());
         q.pop();
         if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
@@ -332,7 +332,7 @@ stack<pdd> nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
         visited.insert(node);
         if (isTraversableOpt(node, TRAVERSABLE_RADIUS) && canSee(cur, node))
         {
-            // cout << "nearest traversable found" << endl;
+            cout << "nearest traversable found" << endl;
             tar = node;
             isFound = true;
             break;
@@ -363,7 +363,7 @@ stack<pdd> nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
     {
         stack<pdd> res;
         pdd pindex = tar;
-        while (pindex != cur)
+        while (!compPts(pindex, cur))
         {
             res.push(pindex);
             pindex = parent[pindex];
@@ -371,6 +371,7 @@ stack<pdd> nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
         res.push(cur);
         res = optimizeRoute(res);
         res.pop();
+        cout << "traversable path found" << endl;
         return res;
     }
     return stack<pdd>();
