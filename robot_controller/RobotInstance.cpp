@@ -930,7 +930,13 @@ pdd RobotInstance::victimToPoint(int rectCenterX, int frameCols, std::string sid
 void RobotInstance::followVictim(pdd point, std::string side)
 {
     if(m_disableEmit) return;
-    pdd nearest = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
+    std::stack<pdd> path = nearestTraversable(point, getCurrentGPSPosition(), get_lidar_minmax_opt());
+    pdd nearest = point;
+    while (!path.empty())
+    {
+        nearest = path.top();
+        path.pop();
+    }
     if (isTraversableOpt(nearest) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
     {
         std::cout << "following victim" << std::endl;
