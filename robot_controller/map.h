@@ -15,7 +15,7 @@ class RobotInstance;
 
 void plotPoints(RobotInstance *rb, int w, int h);
 void update_regions_map(RobotInstance *rb, const float *lidar_image, float theta=0);
-pdd lidarToPoint(const pdd& pos, double dist, double absAngle);
+pdd lidarToPoint(const pdd& pos, long double dist, long double absAngle);
 std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getBlackHoles();
 std::vector<std::pair<double, double>>& getCameraPoints();

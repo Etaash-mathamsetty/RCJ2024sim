@@ -148,15 +148,15 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
 
                 for(int i = 0; i < 512; i++)
                 {
-                    double dist = image[i];
-                    dist *= cos(LIDAR_TILT_ANGLE);
+                    long double dist = image[i];
+                    dist *= std::cosl(LIDAR_TILT_ANGLE);
 
                     if(std::isinf(dist))
                         continue;
 
-                    double angle = 2 * M_PI * i / 512.0;
-                    xs[i] = dist * sin(angle);
-                    ys[i] = dist * cos(angle);
+                    long double angle = 2 * M_PI * i / 512.0;
+                    xs[i] = dist * std::sinl(angle);
+                    ys[i] = dist * std::cosl(angle);
                 }
 
                 if(ImPlot::BeginPlot("Lidar", ImVec2(-1, 0), ImPlotAxisFlags_AutoFit))

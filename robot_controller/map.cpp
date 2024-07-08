@@ -41,10 +41,10 @@ std::vector<pdd> vecCameraPoints;
 std::vector<pdd> victims;
 std::vector<pdd> reportedVictims;
 
-pdd lidarToPoint(const pdd& pos, double dist, double absAngle)
+pdd lidarToPoint(const pdd& pos, long double dist, long double absAngle)
 {
-    double x = dist*sin(absAngle) + pos.first;
-    double y = dist*cos(absAngle) + pos.second;
+    double x = dist*std::sinl(absAngle) + pos.first;
+    double y = dist*std::cosl(absAngle) + pos.second;
 
     return pdd(x, y);
 }
@@ -58,17 +58,17 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
 
     for(int i = 0; i < 512; i++)
     {
-        double dist = lidar_image[i];
+        long double dist = lidar_image[i];
 
         if(std::isinf(dist))
             continue;
 
-        dist *= cos(LIDAR_TILT_ANGLE);
+        dist *= std::cosl(LIDAR_TILT_ANGLE);
 
         if(dist > 0.3)
             continue;
 
-        const double angle = i/512.0 * 2.0 * M_PI;
+        const long double angle = i/512.0 * 2.0 * M_PI;
 
         addLidarPoint(lidarToPoint(pos, dist, angle - theta));
     }
