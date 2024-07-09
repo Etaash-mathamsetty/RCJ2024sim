@@ -138,7 +138,7 @@ double minDist(pdd a, pdd b, pdd p)
 
 bool canSee(pdd cur, pdd tar, double radius)
 {
-    for (const auto& r : get_neighboring_regions(midpoint(tar, cur), getDist(cur, tar)/2.0))
+    for (const auto& r : get_neighboring_regions(midpoint(tar, cur), getDist(cur, tar)/2.0 + radius))
     {
         if(r)
         {
