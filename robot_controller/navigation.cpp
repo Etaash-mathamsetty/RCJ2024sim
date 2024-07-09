@@ -221,7 +221,7 @@ void updateGrid(const pdd& pos)
 
         if(adjacents.size() < 4)
         {
-            //check for diagonals in any direction, but make sure getAdjacent is not equal to 4 and within minmax
+            //check for diagonals in any angle, but make sure getAdjacent is not equal to 4 and within minmax
             
         }
     }
