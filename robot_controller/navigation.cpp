@@ -162,7 +162,7 @@ bool midpoint_check(pdd a, pdd b)
 std::unordered_map<pdd, REGION, pair_hash_combiner<double>> grid_map;
 const double grid_size = 0.005;
 
-//up to 4 adacent points in the grid
+//up to 4 adacent points in the grid, pos should be a grid position
 std::vector<pdd> getAdjacents(const pdd& pos)
 {
     std::vector<pdd> adjacents;
@@ -197,6 +197,7 @@ std::vector<pdd> getAdjacents(const pdd& pos)
 void updateGrid(const pdd& pos)
 {
     std::vector<pdd> adjacents = getAdjacents(pos);
+    std::pair<pdd, pdd> minmax = get_lidar_minmax_opt();
 
     if(adjacents.size() < 4)
     {
@@ -209,13 +210,19 @@ void updateGrid(const pdd& pos)
 
         for(const pdd& p : adj)
         {
-            if(!isTraversableOpt(p))
+            if(!isTraversableOpt(p) || p.first < minmax.f.first || p.first > minmax.s.first || p.second < minmax.f.second || p.second > minmax.s.second)
                 continue;
             pdd rcoord = getRegionOfPoint(p);
             if(!grid_map.count(rcoord) || !grid_map[rcoord].points[p].point)
             {
                 grid_map[rcoord].points[p].point = true;
             }
+        }
+
+        if(adjacents.size() < 4)
+        {
+            //check for diagonals in any direction, but make sure getAdjacent is not equal to 4 and within minmax
+            
         }
     }
 }
