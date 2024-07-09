@@ -159,6 +159,7 @@ bool midpoint_check(pdd a, pdd b)
     return canSee(a, b, TRAVERSABLE_RADIUS);
 }
 
+std::vector<pdd> grid_pts;
 std::unordered_map<pdd, REGION, pair_hash_combiner<double>> grid_map;
 const double grid_size = 0.005;
 
@@ -175,6 +176,7 @@ std::vector<pdd> getAdjacents(const pdd& pos)
                 if(!isTraversableOpt(it->first))
                 {
                     it = r->points.erase(it);
+                    //remove from vector as well
                     continue;
                 }
                 if(getDist(pos, it->first) <= grid_size && it->second.point && r3d(pos) != r3d(it->first))
@@ -215,6 +217,7 @@ void updateGrid(const pdd& pos)
             pdd rcoord = getRegionOfPoint(p);
             if(!grid_map.count(rcoord) || !grid_map[rcoord].points[p].point)
             {
+                grid_pts.push_back(p);
                 grid_map[rcoord].points[p].point = true;
             }
         }
@@ -237,6 +240,11 @@ void initGrid(const pdd& pos)
     {
         updateGrid(p);
     }
+}
+
+std::vector<pdd>& getGridPts()
+{
+    return grid_pts;
 }
 
 bool isWallTracing = false;

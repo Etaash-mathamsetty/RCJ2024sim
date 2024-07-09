@@ -208,6 +208,11 @@ ImPlotPoint getVictimPoint(int idx, void *param)
     return {victims[idx].first, victims[idx].second};
 }
 
+ImPlotPoint getGridPoint(int idx, void *param)
+{
+    return {getGridPts()[idx].first, getGridPts()[idx].second};
+}
+
 size_t getCount()
 {
     return vecLidarPoints.size() + blackHolePoints.size();
@@ -268,6 +273,9 @@ void plotPoints(RobotInstance *rb, int w, int h)
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Diamond, 4);
             ImPlot::PlotScatterG("Victims", getVictimPoint, nullptr, getVictimCount(), ImPlotItemFlags_NoFit);
+        }
+        {
+            ImPlot::PlotScatterG("NavGrid pts", getGridPoint, nullptr, getGridPts().size(), ImPlotItemFlags_NoFit);
         }
         for(const auto& r : regions)
         {
