@@ -162,7 +162,7 @@ bool midpoint_check(pdd a, pdd b)
 std::unordered_map<pdd, REGION, pair_hash_combiner<double>> grid_map;
 const double grid_size = 0.005;
 
-//up to 4 adacent points in the grid (used for BFS)
+//up to 4 adacent points in the grid
 std::vector<pdd> getAdjacents(const pdd& pos)
 {
     std::vector<pdd> adjacents;
@@ -170,12 +170,18 @@ std::vector<pdd> getAdjacents(const pdd& pos)
     {
         if(r)
         {
-            for(const auto& p : r->points)
+            for(auto it = r->points.begin(); it != r->points.end();)
             {
-                if(getDist(pos, p.first) <= grid_size && p.second.point && !compPts(pos, p.first, 0.001))
+                if(!isTraversableOpt(it->first))
                 {
-                    adjacents.push_back(p.first);
+                    it = r->points.erase(it);
+                    continue;
                 }
+                if(getDist(pos, it->first) <= grid_size && it->second.point && r3d(pos) != r3d(it->first))
+                {
+                    adjacents.push_back(it->first);
+                }
+                it++;
             }
         }
     }
@@ -190,10 +196,29 @@ std::vector<pdd> getAdjacents(const pdd& pos)
 
 void updateGrid(const pdd& pos)
 {
-    
+    std::vector<pdd> adjacents = getAdjacents(pos);
+
+    if(adjacents.size() < 4)
+    {
+        pdd adj[4] = {
+            r3d(pdd(pos.f, pos.s - grid_size)),
+            r3d(pdd(pos.f, pos.s + grid_size)),
+            r3d(pdd(pos.f + grid_size, pos.s)),
+            r3d(pdd(pos.f - grid_size, pos.s))
+        };
+
+        for(const pdd& p : adj)
+        {
+            if(!isTraversableOpt(p))
+                continue;
+            pdd rcoord = getRegionOfPoint(p);
+            if(!grid_map.count(rcoord) || !grid_map[rcoord].points[p].point)
+            {
+                grid_map[rcoord].points[p].point = true;
+            }
+        }
+    }
 }
-
-
 
 bool isWallTracing = false;
 

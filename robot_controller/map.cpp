@@ -115,14 +115,19 @@ std::vector<std::pair<double, double>>& getCameraPoints()
     return vecCameraPoints;
 }
 
+pdd getRegionOfPoint(const pdd& pt)
+{
+    pdd rcoord;
+    rcoord.first = floor_to(pt.first, region_size);
+    rcoord.second = floor_to(pt.second, region_size);
+    return r2d(rcoord);
+}
+
 void addLidarPoint(const pdd& point)
 {
     if(!isTraversableOpt(point, 0.0045)) return;
 
-    pdd rcoord;
-    rcoord.first = floor_to(point.first, region_size);
-    rcoord.second = floor_to(point.second, region_size);
-    rcoord = r2d(rcoord);
+    pdd rcoord = getRegionOfPoint(point);
 
     if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].point)
     {
