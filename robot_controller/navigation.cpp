@@ -161,7 +161,7 @@ bool midpoint_check(pdd a, pdd b)
 
 std::vector<pdd> grid_pts;
 std::unordered_map<pdd, REGION, pair_hash_combiner<double>> grid_map;
-const double grid_size = 0.005;
+const double grid_size = 0.01;
 
 //up to 4 adacent points in the grid, pos should be a grid position
 std::vector<pdd> getAdjacents(const pdd& pos)
@@ -179,7 +179,7 @@ std::vector<pdd> getAdjacents(const pdd& pos)
                     //remove from vector as well
                     continue;
                 }
-                if(getDist(pos, it->first) <= grid_size && it->second.point && r3d(pos) != r3d(it->first))
+                if(getDist(pos, it->first) <= grid_size && it->second.point && !compPts(pos, it->first))
                 {
                     adjacents.push_back(it->first);
                 }
@@ -201,13 +201,25 @@ void updateGrid(const pdd& pos)
     std::vector<pdd> adjacents = getAdjacents(pos);
     std::pair<pdd, pdd> minmax = get_lidar_minmax_opt();
 
+    double min_dist = DBL_MAX;
+
+    for(const pdd& p : adjacents)
+    {
+        min_dist = std::min(min_dist, getDist(pos, p));
+    }
+
+    if(!nearly_equal(min_dist, grid_size, 0.01) && adjacents.size() > 0)
+    {
+        return;
+    }
+
     if(adjacents.size() < 4)
     {
         pdd adj[4] = {
-            r3d(pdd(pos.f, pos.s - grid_size)),
-            r3d(pdd(pos.f, pos.s + grid_size)),
-            r3d(pdd(pos.f + grid_size, pos.s)),
-            r3d(pdd(pos.f - grid_size, pos.s))
+            r2d(pdd(pos.f, pos.s - grid_size)),
+            r2d(pdd(pos.f, pos.s + grid_size)),
+            r2d(pdd(pos.f + grid_size, pos.s)),
+            r2d(pdd(pos.f - grid_size, pos.s))
         };
 
         for(const pdd& p : adj)

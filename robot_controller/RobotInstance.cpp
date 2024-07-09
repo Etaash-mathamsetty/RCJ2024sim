@@ -315,7 +315,7 @@ RobotInstance::RobotInstance()
 
     update_lidar_cloud();
     bfsAddOnWall(getCurrentGPSPosition(), 0.4);
-    initGrid(r3d(getRawGPSPosition()));
+    initGrid(getCurrentGPSPosition());
 }
 
 RobotInstance::~RobotInstance()
@@ -1152,6 +1152,9 @@ void RobotInstance::updateVisited()
     addVisited(pointTo(cur, rotation - M_PI / 2));
     addVisited(pointTo(cur, rotation + M_PI / 2, 0.02));
     addVisited(pointTo(cur, rotation - M_PI / 2, 0.02));
+
+    updateGrid(getCurrentGPSPosition());
+
     if(cur != m_lastPos)
     {
         if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
