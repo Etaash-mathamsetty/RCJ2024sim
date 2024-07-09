@@ -196,6 +196,7 @@ std::vector<pdd> getAdjacents(const pdd& pos)
     return adjacents;
 }
 
+//keeps updating until we hit minmax
 void updateGrid(const pdd& pos)
 {
     std::vector<pdd> adjacents = getAdjacents(pos);
@@ -251,6 +252,8 @@ void updateGrid(const pdd& pos)
                 pdd p = r3d(pointTo(pos, angle, grid_size));
                 if(!isTraversableOpt(p) || p.first < minmax.f.first || p.first > minmax.s.first || p.second < minmax.f.second || p.second > minmax.s.second)
                     continue;
+                if(!canSee(p, pos))
+                    continue;
                 pdd rcoord = getRegionOfPoint(p);
                 if(!grid_map.count(rcoord) || !grid_map[rcoord].points[p].point)
                 {
@@ -263,18 +266,6 @@ void updateGrid(const pdd& pos)
                 }
             }
         }
-    }
-}
-
-void initGrid(const pdd& pos)
-{
-    //need to create some sort of initial grid so that nav can do something at the beginning
-    updateGrid(pos);
-
-    auto adj = getAdjacents(pos);
-    for(const pdd& p : adj)
-    {
-        updateGrid(p);
     }
 }
 

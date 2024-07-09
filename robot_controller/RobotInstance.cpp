@@ -315,7 +315,7 @@ RobotInstance::RobotInstance()
 
     update_lidar_cloud();
     bfsAddOnWall(getCurrentGPSPosition(), 0.4);
-    initGrid(getCurrentGPSPosition());
+    updateGrid(getCurrentGPSPosition());
 }
 
 RobotInstance::~RobotInstance()
