@@ -214,6 +214,8 @@ void updateGrid(const pdd& pos)
         {
             if(!isTraversableOpt(p) || p.first < minmax.f.first || p.first > minmax.s.first || p.second < minmax.f.second || p.second > minmax.s.second)
                 continue;
+            if(!canSee(p, pos))
+                continue;
             pdd rcoord = getRegionOfPoint(p);
             if(!grid_map.count(rcoord) || !grid_map[rcoord].points[p].point)
             {
