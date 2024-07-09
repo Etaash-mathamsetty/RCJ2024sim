@@ -227,6 +227,11 @@ void updateGrid(const pdd& pos)
     }
 }
 
+void initGrid(const pdd& pos)
+{
+    //need to create some sort of initial grid so that nav can do something at the beginning
+}
+
 bool isWallTracing = false;
 
 
