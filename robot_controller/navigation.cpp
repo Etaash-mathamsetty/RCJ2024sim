@@ -219,10 +219,32 @@ void updateGrid(const pdd& pos)
             }
         }
 
+        adjacents = getAdjacents(pos);
         if(adjacents.size() < 4)
         {
             //check for diagonals in any angle, but make sure getAdjacent is not equal to 4 and within minmax
-            
+            const double increment = M_PI / 20;
+            double angle = increment;
+            for (; angle < 2 * M_PI; angle += increment)
+            {
+                if (angle == M_PI / 2 || angle == M_PI || angle == 3 * M_PI / 2)
+                {
+                    continue;
+                }
+                pdd p = r3d(pointTo(pos, angle, grid_size));
+                if(!isTraversableOpt(p) || p.first < minmax.f.first || p.first > minmax.s.first || p.second < minmax.f.second || p.second > minmax.s.second)
+                    continue;
+                pdd rcoord = getRegionOfPoint(p);
+                if(!grid_map.count(rcoord) || !grid_map[rcoord].points[p].point)
+                {
+                    grid_map[rcoord].points[p].point = true;
+                }
+                adjacents = getAdjacents(pos);
+                if(adjacents.size() >= 4)
+                {
+                    return;
+                }
+            }
         }
     }
 }
