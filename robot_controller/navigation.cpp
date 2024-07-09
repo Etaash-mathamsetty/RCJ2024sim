@@ -159,6 +159,42 @@ bool midpoint_check(pdd a, pdd b)
     return canSee(a, b, TRAVERSABLE_RADIUS);
 }
 
+std::unordered_map<pdd, REGION, pair_hash_combiner<double>> grid_map;
+const double grid_size = 0.005;
+
+//up to 4 adacent points in the grid (used for BFS)
+std::vector<pdd> getAdjacents(const pdd& pos)
+{
+    std::vector<pdd> adjacents;
+    for(const auto& r : get_neighboring_regions_g(grid_map, pos, grid_size))
+    {
+        if(r)
+        {
+            for(const auto& p : r->points)
+            {
+                if(getDist(pos, p.first) <= grid_size && p.second.point && !compPts(pos, p.first, 0.001))
+                {
+                    adjacents.push_back(p.first);
+                }
+            }
+        }
+    }
+
+    if(adjacents.size() > 4)
+    {
+        std::cerr << "ERROR: more than 4 adjacent points in the grid" << std::endl;
+    }
+
+    return adjacents;
+}
+
+void updateGrid(const pdd& pos)
+{
+    
+}
+
+
+
 bool isWallTracing = false;
 
 

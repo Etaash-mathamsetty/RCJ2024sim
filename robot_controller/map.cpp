@@ -18,7 +18,6 @@
 
 using namespace webots;
 
-const double region_size = 0.1;
 
 //does the opposite of truncation
 inline double anti_trunc_to(double value, const double precision = 0.01)
@@ -34,7 +33,7 @@ inline double anti_trunc_to(double value, const double precision = 0.01)
 }
 
 
-std::map<pdd, REGION> regions;
+std::unordered_map<pdd, REGION, pair_hash_combiner<double>> regions;
 std::vector<pdd> vecLidarPoints;
 std::vector<pdd> blackHolePoints;
 std::vector<pdd> vecCameraPoints;
@@ -375,7 +374,7 @@ std::pair<pdd, pdd> get_lidar_minmax_opt()
     return make_pair(pdd(minx, miny), pdd(maxx, maxy));
 }
 
-std::vector<REGION*> get_neighboring_regions(const pdd& pt, double rad)
+std::vector<REGION*> get_neighboring_regions_g(std::unordered_map<pdd, REGION, pair_hash_combiner<double>>& map, const pdd& pt, double rad)
 {
     pdd min;
     pdd max;
@@ -396,9 +395,9 @@ std::vector<REGION*> get_neighboring_regions(const pdd& pt, double rad)
         for(cur.second = min.second; cur.second <= max.second; cur.second = r2d(cur.second + region_size))
         {
             //printPoint(rcoord);
-            if(regions.count(cur) > 0)
+            if(map.count(cur) > 0)
             {
-                ret.push_back(&regions[cur]);
+                ret.push_back(&map[cur]);
             }
         }
      }
@@ -406,4 +405,9 @@ std::vector<REGION*> get_neighboring_regions(const pdd& pt, double rad)
     // std::cout << pointToString(pt) << " " << "nearest regions: " << ret.size() << std::endl;
 
     return ret;
+}
+
+std::vector<REGION*> get_neighboring_regions(const pdd& pt, double rad)
+{
+    return get_neighboring_regions_g(regions, pt, rad);
 }

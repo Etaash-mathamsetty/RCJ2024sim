@@ -71,5 +71,6 @@ struct REGION {
 
 REGION* get_region(webots::GPS *gps);
 std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt, double radius = TRAVERSABLE_RADIUS);
+std::vector<REGION*> get_neighboring_regions_g(std::unordered_map<pdd, REGION, pair_hash_combiner<double>>&, const std::pair<double, double>& pt, double radius);
 
 #endif
