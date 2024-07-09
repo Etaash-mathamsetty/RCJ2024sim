@@ -51,4 +51,9 @@ const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall();
 const std::stack<pdd>& getBfsPath();
 bool isTraversable(const pdd& pos, const std::vector<pdd>& points, double robotRadius);
 
+std::vector<pdd>& getGridPts();
+void initGrid(const pdd& pos);
+void updateGrid(const pdd& pts);
+std::vector<pdd> getAdjacents(const pdd& pt);
+
 #endif
