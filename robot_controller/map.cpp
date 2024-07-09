@@ -125,10 +125,10 @@ void addLidarPoint(const pdd& point)
     rcoord.second = floor_to(point.second, region_size);
     rcoord = r2d(rcoord);
 
-    if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
+    if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].point)
     {
         vecLidarPoints.push_back(point);
-        regions[rcoord].points[point].wall = true;
+        regions[rcoord].points[point].point = true;
     }
 }
 
@@ -141,10 +141,10 @@ void addBlackHolePoint(const pdd& point)
     rcoord.second = floor_to(point.second, region_size);
     rcoord = r2d(rcoord);
 
-    if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
+    if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].point)
     {
         blackHolePoints.push_back(point);
-        regions[rcoord].points[point].wall = true;
+        regions[rcoord].points[point].point = true;
     }
 }
 

@@ -108,7 +108,7 @@ bool isTraversableOpt(const pdd& pos, double rad)
         if(r)
         {
             for (const auto &pair: r->points) {
-                if (pair.second.wall && getDist(pos, pair.first) <= rad)
+                if (pair.second.point && getDist(pos, pair.first) <= rad)
                     return false;
             }
         }
@@ -144,7 +144,7 @@ bool canSee(pdd cur, pdd tar, double radius)
         {
             for(const auto& pair: r->points)
             {
-                if(minDist(cur, tar, pair.first) < radius && pair.second.wall)
+                if(minDist(cur, tar, pair.first) < radius && pair.second.point)
                 {
                     return false;
                 }

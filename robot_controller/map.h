@@ -30,10 +30,9 @@ double clampAngle(double theta);
 std::pair<pdd, pdd> get_lidar_minmax_opt();
 
 struct POINT_TYPE {
-  bool wall : 4;
-  bool camera : 4;
+  bool point;
 
-  POINT_TYPE() : wall(false), camera(false) {}
+  POINT_TYPE() : point(false) {}
 };
 
 inline bool nearly_equal(double a, double b, const double thresh = 0.02)
