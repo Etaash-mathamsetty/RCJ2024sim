@@ -230,6 +230,8 @@ void updateGrid(const pdd& pos)
 void initGrid(const pdd& pos)
 {
     //need to create some sort of initial grid so that nav can do something at the beginning
+    std::pair<pdd, pdd> minmax = get_lidar_minmax_opt();
+    updateGrid(pos);
 }
 
 bool isWallTracing = false;
