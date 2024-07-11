@@ -905,9 +905,12 @@ void RobotInstance::stopAndEmit(void* message)
     if(m_disableEmit)
         return;
 
+    m_robot->step(m_timestep);
     stopMotors();
+    m_robot->step(m_timestep);
     delay(VICTIM_DELAY_TIME);
     m_emitter->send(message, 9);
+    m_robot->step(m_timestep);
     m_robot->step(m_timestep);
 
     std::cout << "emitted" << std::endl;
