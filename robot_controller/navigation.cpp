@@ -507,7 +507,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             }
             if (numChild < 4)
             {
-                const double increment = M_PI / 30.0;
+                const double increment = M_PI / 40.0;
 
                 for(double i = increment * 2; i < M_PI * 2 - increment * 2; i += increment)
                 {
