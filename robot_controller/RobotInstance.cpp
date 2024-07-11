@@ -547,6 +547,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         clearBfsResult();
         stopMotors();
         runCallbacks = true;
+        updateVisited();
         return false;
     }
     return true;

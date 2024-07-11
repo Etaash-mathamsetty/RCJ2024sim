@@ -764,13 +764,19 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
 {
     isWallTracing = true;
     pdd cur = r2d(_cur);
+    pdd temp;
     if (!isOnWall(cur))
     {
         stack<pdd> path = nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos());
         while (!path.empty())
         {
-            cur = path.top();
+            temp = path.top();
             path.pop();
+        }
+
+        if(midpoint_check(cur, temp))
+        {
+            cur = temp;
         }
     }
     checkSide(rb->getLidar()->getRangeImage() + 1024, rb->getLidar()->getHorizontalResolution());
