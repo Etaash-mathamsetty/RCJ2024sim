@@ -478,30 +478,40 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
                 r3d(pdd(node.f - grid_spacing, node.s))
             };
 
-            bool childAlive = false;
+            int numChild = 0;
             for (const pdd& adjacent : adjacents)
             {
                 if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent))
                 {
                     q.push(adjacent);
                     parent[r3d(adjacent)] = node;
-                    childAlive = true;
+                    numChild++;
                 }
             }
-            if (!childAlive)
+            if (numChild < 4)
             {
-                pdd diagonals[] = {
-                    r3d(pointTo(node, angle - M_PI / 4, grid_spacing)),
-                    r3d(pointTo(node, angle + M_PI / 4, grid_spacing)),
-                    r3d(pointTo(node, angle + M_PI * 3 / 4, grid_spacing)),
-                    r3d(pointTo(node, angle - M_PI * 3 / 4, grid_spacing))
-                };
-                for (const pdd& adjacent : diagonals)
+                const double increment = M_PI / 30.0;
+
+                for(double i = increment * 2; i < M_PI * 2 - increment * 2; i += increment)
                 {
-                    if (!visited.count(r3d(adjacent)) && isTraversableOpt(adjacent))
+                    if(nearly_equal(i, M_PI, increment * 2) || nearly_equal(i, M_PI_2, increment * 2) || nearly_equal(i, 3 * M_PI_2, increment * 2))
                     {
-                        q.push(adjacent);
-                        parent[r3d(adjacent)] = node;
+                        continue;
+                    }
+
+                    if(numChild >= 4)
+                    {
+                        break;
+                    }
+
+                    pdd pt = r3d(pointTo(node, i, grid_spacing));
+
+                    if(!visited.count(pt) && isTraversableOpt(pt))
+                    {
+                        q.push(pt);
+                        parent[pt] = node;
+                        numChild++;
+                        i += M_PI_2;
                     }
                 }
             }

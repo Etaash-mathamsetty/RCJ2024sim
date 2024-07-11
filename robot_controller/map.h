@@ -36,7 +36,7 @@ struct POINT_TYPE {
   POINT_TYPE() : wall(false), camera(false) {}
 };
 
-inline bool nearly_equal(double a, double b, const double thresh = 0.02)
+inline bool nearly_equal(double a, double b, const double thresh = 0.01)
 {
     return std::abs(a-b) <= thresh;
 }
