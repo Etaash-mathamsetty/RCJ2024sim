@@ -168,7 +168,7 @@ bool midpoint_check(pdd a, pdd b)
         return false;
     }
 
-    if(r2d(a) == r2d(b) || r2d(mid) == r2d(a) || r2d(mid) == r2d(b))
+    if(compPts(a, b)|| compPts(mid, a) || compPts(mid, b))
     {
         return true;
     }
