@@ -1134,11 +1134,6 @@ void RobotInstance::moveToPos(pdd pos)
 
 void RobotInstance::moveToNextPos()
 {
-    if (getTimeLeft() <= 2 || getRealTime() >= 598)
-    {
-        send(getLidarPoints(), m_emitter, getStartPos(), m_robot);
-    }
-
     if(!isTraversableOpt(getTargetPos()))
     {
         std::cout << "recomputing target pos!" << std::endl;
