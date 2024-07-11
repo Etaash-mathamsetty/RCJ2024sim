@@ -602,7 +602,7 @@ bool isOnWall(pdd node, double rad)
         return false;
     }
 
-    if (onWall.find(node) != onWall.end())
+    if (onWall.count(node) > 0)
     {
         return true;
     }
@@ -789,26 +789,29 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
         wallNode node = st.top();
         pdd point = node.point;
         double rotation = node.direction;
-        bool midpoint = midpoint_check(cur, point);
         st.pop();
-        if (isOnWall(point) && (point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s) && midpoint)
+        if (visited.count(point) > 0 || !isOnWall(point) || point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s)
+        {
+            continue;
+        }
+        if(isVisited(point) || isPseudoVisited(point))
+        {
+            continue;
+        }
+        if (isOnWall(point) && point != cur)
         {
             isFound = true;
             tar = point;
             break;
         }
-        if (!midpoint || visited.count(point) > 0 || !isOnWall(point) || ((isVisited(point) || isPseudoVisited(point)) && point != cur) || point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s)
-        {
-            continue;
-        }
-        if (abs(rotation) > M_PI / 4 + 0.05 && midpoint)
+        if (abs(rotation) > M_PI / 4 + 0.05 && point != cur)
         {
             isFound = true;
             tar = point;
             break;
         }
         visited.insert(point);
-        double directions[8] = { // in order of priority
+        double directions[] = { // in order of priority
             rotation + offset,
             rotation + offset / 2,
             rotation,
@@ -820,7 +823,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
         };
         for (int i = 7; i >= 0; i--)
         {
-            pdd temp = pointTo(point, clampAngle(rb->getYaw() + directions[i]));
+            pdd temp = r2d(pointTo(point, clampAngle(rb->getYaw() + directions[i])));
             if(!isTraversableOpt(temp))
                 continue;
             if (visited.count(temp) == 0)
@@ -842,7 +845,9 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
         res.push(cur);
         res = optimizeRouteOnWall(res);
         res.pop();
-        return res;
+        std::cout << "dfs path len: " << res.size() << std::endl;
+        if(res.size() > 0)
+            return res;
     }
     cout << "no traceable wall found" << endl;
     return nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos());
