@@ -1139,11 +1139,6 @@ void RobotInstance::moveToNextPos()
     moveToPos(getTargetPos());
 }
 
-bool insideMinmax(pdd pt, std::pair<pdd, pdd> minmax)
-{
-    return pt.first >= minmax.first.first && pt.first <= minmax.second.first && pt.second >= minmax.first.second && pt.second <= minmax.second.second;
-}
-
 void RobotInstance::updateVisited()
 {
     std::pair<pdd, pdd> minMax = get_lidar_minmax_opt();
@@ -1160,7 +1155,7 @@ void RobotInstance::updateVisited()
     {
         if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
         else col(m_color, m_gps, m_imu, m_startPos, 1);
-        //bfsAddOnWall(cur, 0.08);
+        bfsAddOnWall(cur, 0.08);
         pruneOnWall();
         const double radius = 0.08;
 
@@ -1178,14 +1173,6 @@ void RobotInstance::updateVisited()
                 if (checkNearbyVisited(point))
                 {
                     addPseudoVisited(point);
-                    removeOnWall(point);
-                }
-                if(isOnWall(point) && !isVisited(point) && !isPseudoVisited(point) && insideMinmax(point, minMax) && canSee(cur, point))
-                {
-                    addOnWall(point);
-                }
-                else
-                {
                     removeOnWall(point);
                 }
             }
