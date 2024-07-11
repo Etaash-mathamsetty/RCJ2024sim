@@ -466,7 +466,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     pdd final_node;
 
-    const double grid_spacing = 0.002;
+    const double grid_spacing = 0.005;
     const double angle = -atan2(tar.f - cur.f, tar.s - cur.s);
 
     while (!q.empty())
@@ -507,7 +507,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             }
             if (numChild < 4)
             {
-                const double increment = M_PI / 40.0;
+                const double increment = M_PI / 50.0;
 
                 for(double i = increment * 2; i < M_PI * 2 - increment * 2; i += increment)
                 {
@@ -528,7 +528,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
                         q.push(pt);
                         parent[pt] = node;
                         numChild++;
-                        i += M_PI_2;
+                        i += M_PI_4;
                     }
                 }
             }
