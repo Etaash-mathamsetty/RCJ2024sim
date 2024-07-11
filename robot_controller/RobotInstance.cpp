@@ -330,7 +330,7 @@ double signsqrt(double x)
 }
 
 // turns shortest way to the direction
-void RobotInstance::turnTo(double speed, double target_angle)
+bool RobotInstance::turnTo(double speed, double target_angle)
 {
     target_angle = inputModulus(target_angle, -M_PI, M_PI);
     double current = m_imu->getRollPitchYaw()[2];
@@ -349,7 +349,7 @@ void RobotInstance::turnTo(double speed, double target_angle)
 
     //drive function should take care of it
     if(abs(current - target_angle) <= 0.015)
-        return;
+        return true;
 
     while(step() != -1 && abs(current - target_angle) > 0.01)
     {
@@ -372,11 +372,29 @@ void RobotInstance::turnTo(double speed, double target_angle)
         else
             calc_speed += std::max(0.2, 3.0 * abs(error));
 
+        if(abs(target_angle - current) > 0.4)
+        {
+            calc_speed = calc_speed < 0 ? -speed : speed;
+        }
+
+        if(blackDetected())
+        {
+            break;
+        }
+
         forward(-calc_speed, calc_speed);
         detectVictims();
     }
 
     stopMotors();
+
+    if(blackDetected())
+    {
+        black_detection_callback();
+        return false;
+    }
+
+    return true;
 }
 
 int RobotInstance::step() {
@@ -455,6 +473,48 @@ bool RobotInstance::alignmentNeeded()
 const double drive_kp = 1.2;
 const double turn_drive_kp = 1.5;
 
+void RobotInstance::black_detection_callback()
+{
+    runCallbacks = false;
+    std::cout << "black detected" << std::endl;
+    insert_tile("2", m_color, m_gps, m_imu, m_startPos);
+    pdd cur = getRawGPSPosition();
+    pdd colorSensorLoc = pdd(cur.first + 0.025 * sin(getYaw()), cur.second + 0.025 * cos(getYaw()));
+    pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
+        std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
+    double rad = 0.055;
+    double x = -rad, y = -rad;
+    for(; x <= rad; x += 0.005, x = std::round(x / 0.005) * 0.005)
+    {
+        for(y = -rad; y <= rad; y += 0.005, y = std::round(y / 0.005) * 0.005)
+        {
+            if (x == -rad || x == rad || y == -rad || y == rad)
+            {
+                addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
+            }
+            removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
+        }
+    }
+    updateVisited();
+    resetPosition();
+    double traveled = 0;
+    while(!isTraversableOpt(getRawGPSPosition()) && step() != -1)
+    {
+        if (traveled <= -4)
+        {
+            break;
+        }
+        forward(-MAX_VELOCITY / 2.0);
+        cur = getRawGPSPosition();
+        getPosition(&traveled, nullptr);
+    }
+
+    clearBfsResult();
+    stopMotors();
+    runCallbacks = true;
+    updateVisited();
+}
+
 bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 {
     double startTime = m_robot->getTime();
@@ -511,43 +571,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 
     if(blackDetected())
     {
-        runCallbacks = false;
-        std::cout << "black detected" << std::endl;
-        insert_tile("2", m_color, m_gps, m_imu, m_startPos);
-        pdd cur = getRawGPSPosition();
-        pdd colorSensorLoc = pdd(cur.first + 0.025 * sin(getYaw()), cur.second + 0.025 * cos(getYaw()));
-        pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
-            std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
-        double rad = 0.055;
-        double x = -rad, y = -rad;
-        for(; x <= rad; x += 0.005, x = std::round(x / 0.005) * 0.005)
-        {
-            for(y = -rad; y <= rad; y += 0.005, y = std::round(y / 0.005) * 0.005)
-            {
-                if (x == -rad || x == rad || y == -rad || y == rad)
-                {
-                    addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
-                }
-                removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
-            }
-        }
-        updateVisited();
-        resetPosition();
-        while(!isTraversableOpt(getRawGPSPosition()) && step() != -1)
-        {
-            if (traveled <= -4)
-            {
-                break;
-            }
-            forward(-vel * 0.5);
-            cur = getRawGPSPosition();
-            getPosition(&traveled, nullptr);
-        }
-
-        clearBfsResult();
-        stopMotors();
-        runCallbacks = true;
-        updateVisited();
+        black_detection_callback();
         return false;
     }
     return true;

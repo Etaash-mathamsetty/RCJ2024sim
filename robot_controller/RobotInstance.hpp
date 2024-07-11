@@ -192,7 +192,7 @@ private:
         setPosition(pos, pos);
     }
 
-    void turnTo(double speed, double target_angle);
+    bool turnTo(double speed, double target_angle);
 
     void delay(double seconds);
 
@@ -221,6 +221,8 @@ private:
 
     std::vector<cv::Point> getContour(std::string, cv::Mat);
     std::vector<cv::Point> getContour(cv::Mat);
+
+    void black_detection_callback();
 
     webots::Robot *m_robot;
     webots::Motor *m_lm;
