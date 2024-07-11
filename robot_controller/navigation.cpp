@@ -273,7 +273,7 @@ stack<pdd> optimizeRouteOnWall(stack<pdd> route)
                 {
                     maxDist = max(maxDist, minDist(cur, next, p));
                 }
-                if (maxDist < 0.01)
+                if (maxDist <= 0.015)
                 {
                     last_pt = next;
                     ret.pop();
