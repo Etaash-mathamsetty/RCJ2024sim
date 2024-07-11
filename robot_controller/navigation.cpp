@@ -32,7 +32,7 @@ double getDist2(const pdd& pt1, const pdd& pt2)
     return pow(pt2.f - pt1.f, 2) + pow(pt2.s - pt1.s, 2);
 }
 
-inline bool compPts(const pdd& pt1, const pdd& pt2, double thresh)
+bool compPts(const pdd& pt1, const pdd& pt2, double thresh)
 {
     return (abs(pt1.f - pt2.f) < thresh && abs(pt1.s - pt2.s) < thresh);
 }
