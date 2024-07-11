@@ -1089,7 +1089,7 @@ void RobotInstance::moveToPos(pdd pos)
 {
     pdd curPos = getRawGPSPosition();
 
-    if(compPts(curPos, pos))
+    if(compPts(curPos, pos, 0.001))
     {
         std::cout << "already at position!" << std::endl;
         return;

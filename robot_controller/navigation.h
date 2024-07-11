@@ -21,6 +21,7 @@ bool isTraversableOpt(const pdd& pos);
 bool isTraversableOpt(const pdd& pos, double rad);
 bool canSee(pdd cur, pdd tar, double radius = 0.01);
 bool compPts(const pdd& a,const pdd& b);
+bool compPts(const pdd& a,const pdd& b, double rad);
 pdd pointTo(pdd point, double dir);
 pdd pointTo(pdd point, double dir, double dist);
 bool midpoint_check(pdd a, pdd b);
