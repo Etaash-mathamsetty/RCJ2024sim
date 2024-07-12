@@ -776,13 +776,14 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
 
         if(midpoint_check(cur, temp))
         {
-            cur = temp;
+            cur = r2d(temp);
         }
     }
     checkSide(rb->getLidar()->getRangeImage() + 1024, rb->getLidar()->getHorizontalResolution());
     double offset = isLeft ? -M_PI / 2 : M_PI / 2;
     cout << (isLeft ? "left" : "right") << endl;
     pdd min = r2d({cur.f - wtRadius, cur.s - wtRadius}), max = r2d({cur.f + wtRadius, cur.s + wtRadius});
+    std::pair<pdd, pdd> real_minmax = get_lidar_minmax_opt();
     stack<wallNode> st;
     unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
     parent.reserve(10000);
@@ -796,17 +797,11 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
         pdd point = node.point;
         double rotation = node.direction;
         st.pop();
-        if (isOnWall(point) && (point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s))
-        {
-            isFound = true;
-            tar = point;
-            break;
-        }
-        if (visited.count(point) > 0 || !isOnWall(point) || ((isVisited(point) || isPseudoVisited(point)) && point != cur) || point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s)
+        if (visited.count(point) > 0 || !isOnWall(point) || ((isVisited(point) || isPseudoVisited(point)) && point != cur) || point.f < real_minmax.f.f || point.f > real_minmax.s.f || point.s < real_minmax.f.s || point.s > real_minmax.s.s)
         {
             continue;
         }
-        if (abs(rotation) > M_PI / 4 + 0.05)
+        if (isOnWall(point) && (point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s))
         {
             isFound = true;
             tar = point;
@@ -825,7 +820,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
         };
         for (int i = 7; i >= 0; i--)
         {
-            pdd temp = pointTo(point, clampAngle(rb->getYaw() + directions[i]));
+            pdd temp = r2d(pointTo(point, clampAngle(rb->getYaw() + directions[i])));
             if(!isTraversableOpt(temp))
                 continue;
             if (visited.count(temp) == 0)
