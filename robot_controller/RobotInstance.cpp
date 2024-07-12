@@ -483,16 +483,21 @@ void RobotInstance::black_detection_callback()
     pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
         std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
     double rad = 0.055;
-    double x = -rad;
-    for(; x <= rad; x += 0.005, x = std::round(x / 0.005) * 0.005)
+    const double outside = 0.04;
+    double x = -rad - outside;
+    for(; x <= rad + outside; x += 0.005, x = std::round(x / 0.005) * 0.005)
     {
-        for(double y = -rad; y <= rad; y += 0.005, y = std::round(y / 0.005) * 0.005)
+        for(double y = -rad - outside; y <= rad + outside; y += 0.005, y = std::round(y / 0.005) * 0.005)
         {
             if (x == -rad || x == rad || y == -rad || y == rad)
             {
-                addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
+                if(x >= -rad && x <= rad && y >= -rad && y <= rad)
+                {
+                    addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
+                }
             }
             removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
+            addVisited(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
         }
     }
     updateVisited();

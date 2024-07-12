@@ -769,7 +769,7 @@ struct wallNode
     double direction; // direction from previous point to current
 };
 
-const double wtRadius = 0.07;
+const double wtRadius = 0.08;
 bool isLeft = true;
 
 void checkSide(const float* rangeImage, int hr)
