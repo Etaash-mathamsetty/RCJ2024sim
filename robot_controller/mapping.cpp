@@ -26,7 +26,7 @@ void otherdelay(int ms, webots::Robot* rb)
         if ((rb->getTime() - init) * 1000 > ms) break;
     }
 }
-const std::vector<std::string> colored = {"2", "5", "6", "7", "8", "9", "o", "y", "p", "r", "g", "b"};
+const std::vector<std::string> colored = {"5", "6", "7", "8", "9", "o", "y", "p", "r", "g", "b"};
 std::map<pii, std::string> tilemap;
 std::map<pii, int> roommap;
 std::unordered_set<pii, pair_hash_combiner<int>> room4;
@@ -141,7 +141,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         if (x > arrW - 5) x = arrW - 5;
         if (y > arrH - 5) y = arrH - 5;
         std::string val = tile.second;
-        if (count(colored.begin(), colored.end(), val))
+        if (count(colored.begin(), colored.end(), val) || val == "2")
         {
             map[y + 1][x + 2] = "0";
             map[y + 2][x + 1] = "0";
@@ -163,6 +163,8 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         //second - angle
         pdd victim_pos = v.first;
         int victimX = int(round(((victim_pos.first - minX) / 0.03))), victimY = int(round(((maxY - victim_pos.second) / 0.03)));
+        if (victimY >= arrH) victimY = arrH - 1;
+        if (victimX >= arrH) victimX = arrW - 1;
         map[victimY][victimX] = v.second;
     }
     for (pii tile : room4)
@@ -419,7 +421,6 @@ void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* im
 
 void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos, webots::Robot* rb)
 {
-
     std::cout << "room: " << room << std::endl;
     double minX = getMinMax(pList).first.first, minY = getMinMax(pList).first.second, maxX = getMinMax(pList).second.first, maxY = getMinMax(pList).second.second;
     double w = maxX - minX, h = maxY - minY;
@@ -461,7 +462,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
             }
         }
     }
-    for (int i = 0; i < worldH; i++)
+    /*for (int i = 0; i < worldH; i++)
     {
         for (int j = 0; j < worldW; j++)
         {
@@ -494,7 +495,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                 }
             }
         }
-    }
+    }*/
     for (const auto& tile : tilemap)
     {
         pii pos = pii(tile.first.first, tile.first.second);
@@ -504,7 +505,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         if (x > arrW - 5) x = arrW - 5;
         if (y > arrH - 5) y = arrH - 5;
         std::string val = tile.second;
-        if (count(colored.begin(), colored.end(), val))
+        if (count(colored.begin(), colored.end(), val) || val == "2")
         {
             map[y + 1][x + 2] = "0";
             map[y + 2][x + 1] = "0";
@@ -526,6 +527,8 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         //second - angle
         pdd victim_pos = v.first;
         int victimX = int(round(((victim_pos.first - minX) / 0.03))), victimY = int(round(((maxY - victim_pos.second) / 0.03)));
+        if (victimY >= arrH) victimY = arrH - 1;
+        if (victimX >= arrH) victimX = arrW - 1;
         map[victimY][victimX] = v.second;
     }
     for (pii tile : room4)
@@ -546,6 +549,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                 }
             }
         }
+
     }
     if (r4passage.first != -1000 && !room4.empty())
     {
@@ -625,12 +629,9 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
     map[startTileY + 2][startTileX + 2] = "0";
     map[startTileY + 2][startTileX + 3] = "0";
     map[startTileY + 3][startTileX + 2] = "0";
-    std::string flattened = "";
-    //int width = map[0].size(),height=map.size();
     for (int i = 0; i < arrH; i++) {
         for (int j = 0; j < arrW; j++) {
             std::cout << map[i][j] + ",";
-            flattened += map[i][j] + ","; // Flatten the array with comma separators
         }
         std::cout << std::endl;
     }
