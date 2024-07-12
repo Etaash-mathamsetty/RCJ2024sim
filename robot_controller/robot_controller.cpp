@@ -351,7 +351,7 @@ int main(int argc, char **argv) {
 
     bool sent = false;
     rb->add_step_callback([&rb, &sent](){
-        if (rb->getTimeLeft() <= 2 || rb->getRealTime() >= 598) {
+        if (rb->getTimeLeft() <= 3 || rb->getRealTime() >= 597) {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;
         }

@@ -743,7 +743,7 @@ struct wallNode
     double direction; // direction from previous point to current
 };
 
-const double wtRadius = 0.05;
+const double wtRadius = 0.07;
 bool isLeft = true;
 
 void checkSide(const float* rangeImage, int hr)
@@ -783,32 +783,31 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
     double offset = isLeft ? -M_PI / 2 : M_PI / 2;
     cout << (isLeft ? "left" : "right") << endl;
     pdd min = r2d({cur.f - wtRadius, cur.s - wtRadius}), max = r2d({cur.f + wtRadius, cur.s + wtRadius});
-    std::pair<pdd, pdd> real_minmax = get_lidar_minmax_opt();
     stack<wallNode> st;
     unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
     parent.reserve(10000);
     unordered_set<pdd, pair_hash_combiner<double>> visited;
     st.push({cur, 0});
     bool isFound = false;
-    pdd tar;
-    while (!st.empty() && !isFound)
+    pdd tar = cur;
+    while (!st.empty())
     {
         wallNode node = st.top();
         pdd point = node.point;
         double rotation = node.direction;
         st.pop();
-        if (visited.count(point) > 0 || !isOnWall(point) || ((isVisited(point) || isPseudoVisited(point)) && point != cur) || point.f < real_minmax.f.f || point.f > real_minmax.s.f || point.s < real_minmax.f.s || point.s > real_minmax.s.s)
+        if (visited.count(point) > 0 || point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s)
         {
             continue;
         }
-        if (isOnWall(point) && (point.f < min.f || point.f > max.f || point.s < min.s || point.s > max.s))
+        if (isOnWall(point) && midpoint_check(point, cur) && point != cur)
         {
             isFound = true;
-            tar = point;
-            break;
+            if(getDist(point, cur) > getDist(tar, cur))
+                tar = point;
         }
         visited.insert(point);
-        double directions[8] = { // in order of priority
+        double directions[] = { // in order of priority
             rotation + offset,
             rotation + offset / 2,
             rotation,
@@ -823,7 +822,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
             pdd temp = r2d(pointTo(point, clampAngle(rb->getYaw() + directions[i])));
             if(!isTraversableOpt(temp))
                 continue;
-            if (visited.count(temp) == 0)
+            if (visited.count(temp) == 0 && !isVisited(temp) && !isPseudoVisited(temp) && isOnWall(temp))
             {
                 st.push({temp, directions[i]});
                 parent[temp] = point;
@@ -832,6 +831,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
     }
     if (isFound)
     {
+        std::cout << "dfs found: " << pointToString(tar) << std::endl;
         pdd pindex = tar;
         stack<pdd> res;
         while (pindex != cur)
@@ -842,7 +842,8 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
         res.push(cur);
         res = optimizeRouteOnWall(res);
         res.pop();
-        return res;
+        if(res.size() > 0)
+            return res;
     }
     cout << "no traceable wall found" << endl;
     return nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos());

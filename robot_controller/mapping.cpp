@@ -279,7 +279,6 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
     memcpy(&message[0], &arrH, sizeof(arrH)); // The first 2 integers in the message array are width, height
     memcpy(&message[4], &arrW, sizeof(arrW));
     memcpy(&message[8], flattened.c_str(), flattened.size()); // Copy in the flattened map afterwards
-    otherdelay(1000, rb);
     emitter->send(message, flattened.size() + 8); // Send map data
     char msg = 'M'; // Send map evaluate request
     emitter->send(&msg, sizeof(msg));
