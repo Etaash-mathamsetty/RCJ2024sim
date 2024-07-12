@@ -969,7 +969,17 @@ void RobotInstance::followVictim(pdd point, std::string side)
     {
         std::cout << "following victim" << std::endl;
         isFollowingVictim = true;
-        moveToPoint(this, nearest);
+        std::stack<pdd> path = pointBfs(getCurrentGPSPosition(), nearest, get_lidar_minmax_opt(), false);
+        while (!path.empty())
+        {
+            if (midpoint_check(getRawGPSPosition(), nearest) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
+            {
+                break;
+            }
+            pdd next = path.top();
+            path.pop();
+            moveToPos(next);
+        }
         pdd cur = getRawGPSPosition();
         turnTo(MAX_VELOCITY / 2, -std::atan2(point.first - cur.first, point.second - cur.second) + (side == "L" ? -M_PI : M_PI) / 2);
         stopMotors();
