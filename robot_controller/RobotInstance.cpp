@@ -877,7 +877,7 @@ char RobotInstance::checkHazard(cv::Mat roi, std::string side)
     if(ret == 'H' || ret == 'S' || ret == 'U')
         return 0;
 
-    if(dists[0] > 450000)
+    if(dists[0] > 500000)
         return 0;
 
 
