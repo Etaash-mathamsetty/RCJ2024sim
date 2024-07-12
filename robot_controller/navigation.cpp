@@ -985,7 +985,7 @@ void bfsAddOnWall(pdd cur, double radius)
         };
         for (const pdd& adjacent : adjacentNodes)
         {
-            if (!visited.count(adjacent) || !isTraversableOpt(adjacent) || !canSee(cur, adjacent))
+            if (!visited.count(adjacent) && isTraversableOpt(adjacent) && canSee(cur, adjacent))
             {
                 q.push(adjacent);
             }

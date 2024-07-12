@@ -483,10 +483,10 @@ void RobotInstance::black_detection_callback()
     pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
         std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
     double rad = 0.055;
-    double x = -rad, y = -rad;
+    double x = -rad;
     for(; x <= rad; x += 0.005, x = std::round(x / 0.005) * 0.005)
     {
-        for(y = -rad; y <= rad; y += 0.005, y = std::round(y / 0.005) * 0.005)
+        for(double y = -rad; y <= rad; y += 0.005, y = std::round(y / 0.005) * 0.005)
         {
             if (x == -rad || x == rad || y == -rad || y == rad)
             {
