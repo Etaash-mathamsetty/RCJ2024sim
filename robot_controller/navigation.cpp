@@ -655,7 +655,7 @@ bool isOnWall(pdd node, double rad)
 bool checkNearbyVisited(pdd point)
 {
     point = r2d(point);
-    if (!isTraversableOpt(point) || isVisited(point) || isPseudoVisited(point))
+    if (!isTraversableOpt(point))
     {
         return false;
     }
@@ -964,15 +964,17 @@ void bfsAddOnWall(pdd cur, double radius)
             continue;
         }
         visited.insert(node);
+        double spacing;
         if (isOnWall(node) && !isVisited(node) && !isPseudoVisited(node))
         {
             addOnWall(node);
+            spacing = 0.003;
         }
         else
         {
             removeOnWall(node);
+            spacing = 0.01;
         }
-        const double spacing = 0.003;
         pdd adjacentNodes[] = {
             r3d(pdd(node.f, node.s - spacing)),
             r3d(pdd(node.f, node.s + spacing)),
@@ -983,8 +985,13 @@ void bfsAddOnWall(pdd cur, double radius)
             r3d(pdd(node.f + spacing, node.s - spacing)),
             r3d(pdd(node.f - spacing, node.s + spacing))
         };
-        for (const pdd& adjacent : adjacentNodes)
+        for (const pdd& adj : adjacentNodes)
         {
+            pdd adjacent = adj;
+            if (spacing == 0.01)
+            {
+                adjacent = r2d(adjacent);
+            }
             if (!visited.count(adjacent) && isTraversableOpt(adjacent) && canSee(cur, adjacent))
             {
                 q.push(adjacent);
