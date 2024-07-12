@@ -507,7 +507,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             }
             if (numChild < 4)
             {
-                const double increment = M_PI / 50.0;
+                const double increment = M_PI / 80.0;
 
                 for(double i = increment * 2; i < M_PI * 2 - increment * 2; i += increment)
                 {
@@ -529,6 +529,32 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
                         parent[pt] = node;
                         numChild++;
                         i += M_PI_4;
+                    }
+                }
+            }
+
+            if(numChild < 4)
+            {
+                //half tile diagonals
+                pdd diag_adj[] = {
+                    r3d(pointTo(node, M_PI_4, 0.03)),
+                    r3d(pointTo(node, 3 * M_PI_4, 0.03)),
+                    r3d(pointTo(node, 5 * M_PI_4, 0.03)),
+                    r3d(pointTo(node, 7 * M_PI_4, 0.03))
+                };
+
+                for(const pdd& pt : diag_adj)
+                {
+                    if(numChild >= 4)
+                    {
+                        break;
+                    }
+
+                    if(!visited.count(pt) && isTraversableOpt(pt))
+                    {
+                        q.push(pt);
+                        parent[pt] = node;
+                        numChild++;
                     }
                 }
             }
