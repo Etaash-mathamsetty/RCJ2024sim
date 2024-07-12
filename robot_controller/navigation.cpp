@@ -972,7 +972,7 @@ void bfsAddOnWall(pdd cur, double radius)
         {
             removeOnWall(node);
         }
-        const double spacing = 0.004;
+        const double spacing = 0.003;
         pdd adjacentNodes[] = {
             r3d(pdd(node.f, node.s - spacing)),
             r3d(pdd(node.f, node.s + spacing)),
