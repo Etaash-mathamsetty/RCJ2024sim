@@ -23,8 +23,9 @@ enum class DIR
 #define pdd std::pair<double, double>
 #define pii std::pair<int, int>
 #define TRAVERSABLE_RADIUS 0.037
-//radians
-#define LIDAR_TILT_ANGLE 1.0/30.0
+
+#define LIDAR_TILT_ANGLE 0.1 //radians
+#define DISTANCE_TILE_ANGLE 0.17 //radians
 #define VICTIM_DELAY_TIME 1.3
 #endif
 

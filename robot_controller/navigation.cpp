@@ -594,6 +594,8 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     printPoint(cur);
     printPoint(tar);
     cout << " ---- " << std::endl;
+    removeOnWall(tar);
+    addVisited(tar);
 
     return stack<pdd>();
 }
@@ -659,26 +661,22 @@ bool checkNearbyVisited(pdd point)
     {
         return false;
     }
-    pdd adjacents[8] = {
-        r2d(pdd(point.f, point.s - 0.01)),
-        r2d(pdd(point.f, point.s + 0.01)),
-        r2d(pdd(point.f + 0.01, point.s)),
-        r2d(pdd(point.f - 0.01, point.s)),
-        r2d(pdd(point.f - 0.01, point.s - 0.01)),
-        r2d(pdd(point.f + 0.01, point.s + 0.01)),
-        r2d(pdd(point.f + 0.01, point.s - 0.01)),
-        r2d(pdd(point.f - 0.01, point.s + 0.01))
-    };
+    double rad = 0.03;
+    double x = -rad;
     int totalTraversable = 0, visited = 0;
-    for (const pdd& adjacent : adjacents)
+    for(; x <= rad; x += 0.01, x = r2d(x))
     {
-        if (isTraversableOpt(adjacent))
+        for(double y = -rad; y <= rad; y += 0.01, y = r2d(y))
         {
-            totalTraversable++;
-        }
-        if (isVisited(adjacent))
-        {
-            visited++;
+            pdd adj = pdd(point.f + x, point.s + y);
+            if (isTraversableOpt(adj))
+            {
+                totalTraversable++;
+            }
+            if (isVisited(adj))
+            {
+                visited++;
+            }
         }
     }
     return ((visited * 1.0) / (totalTraversable * 1.0) >= 0.5);

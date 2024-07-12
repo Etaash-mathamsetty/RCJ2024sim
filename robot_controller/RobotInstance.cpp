@@ -411,6 +411,9 @@ int RobotInstance::step() {
             this->m_receiver->nextPacket(); // Discard the current data packet
             this->m_robot->step(this->m_timestep); // update all the senors, for updated gps pos
             clearBfsResult();
+            removeOnWall(m_targetPos);
+            addVisited(m_targetPos);
+            bfsRemoveOnWall(m_targetPos, 0.03);
             this->updateTargetPos();
         }
         else if(message[0] == 'G')
@@ -534,6 +537,8 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         {
             // std::cout << "path to target is not traversable!" << std::endl;
             clearBfsResult();
+            removeOnWall(target);
+            addVisited(target);
             return false;
         }
         detectVictims();
@@ -544,7 +549,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         }
         if(ticks - traveled <= 0.01)
         {
-            double vel2 = std::max(0.5, vel - pow((traveled - (ticks - 0.01))/0.01, 2) * drive_kp * vel);
+            double vel2 = std::max(0.4, vel - pow((traveled - (ticks - 0.01))/0.01, 2) * drive_kp * vel);
             double cur_angle = getYaw();
             double err = angle - cur_angle;
             if(err > M_PI)
@@ -566,6 +571,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         pdd cur = getRawGPSPosition();
         if (m_robot->getTime() > startTime + 3)
         {
+            clearBfsResult();
             break;
         }
         traveled = hypot(cur.first - start.first, cur.second - start.second);
@@ -1191,7 +1197,7 @@ void RobotInstance::updateVisited()
                 {
                     removeOnWall(point);
                 }
-                if (checkNearbyVisited(point))
+                else if (isOnWall(point) && checkNearbyVisited(point))
                 {
                     addPseudoVisited(point);
                     removeOnWall(point);
@@ -1261,7 +1267,7 @@ void RobotInstance::update_lidar_cloud()
 {
     if(m_lastPos != getCurrentGPSPosition())
     {
-        update_regions_map(this, m_lidar->getRangeImage() + 1024, m_imu->getRollPitchYaw()[2]);
+        update_regions_map(this, m_lidar->getRangeImage() + 512 * 3, m_imu->getRollPitchYaw()[2]);
     }
     //update_camera_map(m_gps, m_lidar->getRangeImage() + 1024, m_leftCamera, m_imu->getRollPitchYaw()[2]);
 }
