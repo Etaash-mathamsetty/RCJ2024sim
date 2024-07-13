@@ -298,7 +298,7 @@ void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* im
     double angle = imu->getRollPitchYaw()[2];
     //pdd coords = pdd(pos[0]-0.06*sin(angle)-getMinMax(pList).first.first, pos[2] - 0.06 * cos(angle)- getMinMax(pList).first.second);
     //pii coords_int = pii(int(floor(coords.first / TILE_LENGTH)), int(ceil(coords.second / TILE_LENGTH)));
-    pdd coords = pdd(pos[0] - 0.0175 * sin(angle) * sign, -pos[2] + 0.0175 * cos(angle) * sign);
+    pdd coords = pdd(pos[0] - 0.025 * sin(angle) * sign, -pos[2] + 0.025 * cos(angle) * sign);
 
     pii coords_int = pii(int(round((coords.first - startpos.first) / TILE_LENGTH)), -int(round((coords.second - startpos.second) / TILE_LENGTH)));
     //std::cout << coords_int.first << " " << coords_int.second << std::endl;
@@ -462,7 +462,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
             }
         }
     }
-    /*for (int i = 0; i < worldH; i++)
+    for (int i = 0; i < worldH; i++)
     {
         for (int j = 0; j < worldW; j++)
         {
@@ -495,7 +495,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
                 }
             }
         }
-    }*/
+    }
     for (const auto& tile : tilemap)
     {
         pii pos = pii(tile.first.first, tile.first.second);
@@ -644,8 +644,9 @@ void insert_tile(std::string type, webots::Camera* colorsensor, webots::GPS* gps
     double angle = imu->getRollPitchYaw()[2];
     //pdd coords = pdd(pos[0]-0.06*sin(angle)-getMinMax(pList).first.first, pos[2] - 0.06 * cos(angle)- getMinMax(pList).first.second);
     //pii coords_int = pii(int(floor(coords.first / TILE_LENGTH)), int(ceil(coords.second / TILE_LENGTH)));
-    pdd coords = pdd(pos[0] - 0.035 * sin(angle), -pos[2] + 0.035 * cos(angle));
+    pdd coords = pdd(pos[0] - 0.025 * sin(angle), -pos[2] + 0.025 * cos(angle));
 
     pii coords_int = pii(int(round((coords.first - startpos.first) / TILE_LENGTH)), -int(round((coords.second - startpos.second) / TILE_LENGTH)));
     tilemap[coords_int] = type;
+    roommap[coords_int] = room;
 }
