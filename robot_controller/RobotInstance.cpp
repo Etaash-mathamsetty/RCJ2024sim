@@ -803,7 +803,7 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
         double asp_ratio = rect.width / (double)rect.height;
         if(asp_ratio <= 0.8 || asp_ratio >= 3.0)
             continue;
-        if(area >= 40 && area <= 3500 && (big_orange_c.size() == 0 || area > cv::contourArea(big_orange_c)))
+        if(area >= 30 && area <= 3500 && (big_orange_c.size() == 0 || area > cv::contourArea(big_orange_c)))
             big_orange_c = orange_c[i];
     }
 
@@ -814,7 +814,7 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
         double asp_ratio = rect.width / (double)rect.height;
         if(asp_ratio <= 0.8 || asp_ratio >= 3.0)
             continue;
-        if(area >= 40 && area <= 3500 && (big_red_c.size() == 0 || area > cv::contourArea(big_red_c)))
+        if(area >= 30 && area <= 3500 && (big_red_c.size() == 0 || area > cv::contourArea(big_red_c)))
             big_red_c = red_c[i];
     }
 
