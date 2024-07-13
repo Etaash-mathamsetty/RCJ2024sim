@@ -58,7 +58,7 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
 
     for(int i = 0; i < 512; i++)
     {
-        long double dist = lidar_image[i];
+        double dist = lidar_image[i];
 
         if(std::isinf(dist))
             continue;
@@ -68,7 +68,7 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
 
         dist *= std::cos(LIDAR_TILT_ANGLE);
 
-        const long double angle = i/512.0 * 2.0 * M_PI;
+        const double angle = (double)i * (rb->getLidar()->getFov() / rb->getLidar()->getHorizontalResolution());
 
         addLidarPoint(lidarToPoint(pos, dist, angle - theta));
     }

@@ -330,7 +330,7 @@ stack<pdd> nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
             continue;
         }
         visited.insert(node);
-        if (isTraversableOpt(node, TRAVERSABLE_RADIUS) && canSee(cur, node))
+        if (isTraversableOpt(node) && canSee(cur, node))
         {
             cout << "nearest traversable found" << endl;
             tar = node;
@@ -1138,20 +1138,21 @@ pdd chooseMove(RobotInstance *rb)
 
     // pdd nearestUnseen = getClosestHeuristic(getCameraToVisit(), cur, rb->getStartPos());
 
-    if (!isTraversableOpt(cur))
-    {
-        stack<pdd> path = nearestTraversable(cur, cur, get_lidar_minmax_opt());
-        pdd traversable = cur;
-        while (!path.empty())
-        {
-            traversable = path.top();
-            path.pop();
-        }
-        if (!compPts(traversable, cur))
-        {
-            return traversable;
-        }
-    }
+    // FIXME: causes spinning
+    // if (!isTraversableOpt(cur))
+    // {
+    //     stack<pdd> path = nearestTraversable(cur, cur, get_lidar_minmax_opt());
+    //     pdd traversable = cur;
+    //     while (!path.empty())
+    //     {
+    //         traversable = path.top();
+    //         path.pop();
+    //     }
+    //     if (!compPts(traversable, cur))
+    //     {
+    //         return traversable;
+    //     }
+    //}
 
     if (!compPts(cur, rb->getStartPos()) && onWall.empty() && currentPath.empty())
     {

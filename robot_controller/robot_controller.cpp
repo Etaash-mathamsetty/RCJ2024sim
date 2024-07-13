@@ -144,17 +144,18 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 std::array<double, 512> xs = {0};
                 std::array<double, 512> ys = {0};
 
-                const float *image = rb->getLidar()->getRangeImage() + 1024;
+                const float *image = rb->getLidar()->getLayerRangeImage(3);
 
                 for(int i = 0; i < 512; i++)
                 {
                     long double dist = image[i];
-                    dist *= std::cos(LIDAR_TILT_ANGLE);
 
                     if(std::isinf(dist))
                         continue;
 
-                    long double angle = 2 * M_PI * i / 512.0;
+                    dist *= std::cos(LIDAR_TILT_ANGLE);
+
+                    long double angle = (double)i * (rb->getLidar()->getFov() / rb->getLidar()->getHorizontalResolution());
                     xs[i] = dist * std::sin(angle);
                     ys[i] = dist * std::cos(angle);
                 }
@@ -351,7 +352,7 @@ int main(int argc, char **argv) {
 
     bool sent = false;
     rb->add_step_callback([&rb, &sent](){
-        if (rb->getTimeLeft() <= 3 || rb->getRealTime() >= 597) {
+        if (rb->getTimeLeft() <= 2 || rb->getRealTime() >= 598) {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;
         }
