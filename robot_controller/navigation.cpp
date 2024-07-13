@@ -508,53 +508,33 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             if (numChild < 4)
             {
                 const double increment = M_PI / 80.0;
+                double spacing = grid_spacing;
 
-                for(double i = increment * 2; i < M_PI * 2 - increment * 2; i += increment)
+                for(; spacing <= 0.035; spacing += 0.005)
                 {
-                    if(nearly_equal(i, M_PI, increment * 2) || nearly_equal(i, M_PI_2, increment * 2) || nearly_equal(i, 3 * M_PI_2, increment * 2))
+                    for(double i = increment * 2; i < M_PI * 2 - increment * 2; i += increment)
                     {
-                        continue;
-                    }
+                        if(nearly_equal(i, M_PI, increment * 2) || nearly_equal(i, M_PI_2, increment * 2) || nearly_equal(i, 3 * M_PI_2, increment * 2))
+                        {
+                            continue;
+                        }
 
-                    if(numChild >= 4)
-                    {
-                        break;
-                    }
+                        if(numChild >= 4)
+                        {
+                            //force break the loop without goto
+                            spacing = 0.5;
+                            break;
+                        }
 
-                    pdd pt = r3d(pointTo(node, i, grid_spacing));
+                        pdd pt = r3d(pointTo(node, i, spacing));
 
-                    if(!visited.count(pt) && isTraversableOpt(pt))
-                    {
-                        q.push(pt);
-                        parent[pt] = node;
-                        numChild++;
-                        i += M_PI_4;
-                    }
-                }
-            }
-
-            if(numChild < 4)
-            {
-                //half tile diagonals
-                pdd diag_adj[] = {
-                    r3d(pointTo(node, M_PI_4, 0.03)),
-                    r3d(pointTo(node, 3 * M_PI_4, 0.03)),
-                    r3d(pointTo(node, 5 * M_PI_4, 0.03)),
-                    r3d(pointTo(node, 7 * M_PI_4, 0.03))
-                };
-
-                for(const pdd& pt : diag_adj)
-                {
-                    if(numChild >= 4)
-                    {
-                        break;
-                    }
-
-                    if(!visited.count(pt) && isTraversableOpt(pt))
-                    {
-                        q.push(pt);
-                        parent[pt] = node;
-                        numChild++;
+                        if(!visited.count(pt) && isTraversableOpt(pt))
+                        {
+                            q.push(pt);
+                            parent[pt] = node;
+                            numChild++;
+                            i += M_PI_4;
+                        }
                     }
                 }
             }
@@ -594,8 +574,8 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     printPoint(cur);
     printPoint(tar);
     cout << " ---- " << std::endl;
-    removeOnWall(tar);
-    addVisited(tar);
+    //removeOnWall(tar);
+    //addVisited(tar);
 
     return stack<pdd>();
 }
