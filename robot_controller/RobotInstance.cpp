@@ -549,7 +549,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         }
         if(ticks - traveled <= 0.01)
         {
-            double vel2 = std::max(0.4, vel - pow((traveled - (ticks - 0.01))/0.01, 2) * drive_kp * vel);
+            double vel2 = std::max(0.4, vel - pow((traveled - (ticks - 0.01))/0.01, 3) * drive_kp * vel);
             double cur_angle = getYaw();
             double err = angle - cur_angle;
             if(err > M_PI)
