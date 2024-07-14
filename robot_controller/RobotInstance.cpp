@@ -1028,7 +1028,7 @@ void RobotInstance::lookForLetter()
         auto color = getContourColor("Left ColorH", frameL);
 
         auto boundRect = cv::boundingRect(contour);
-        if(boundRect.area() >= 200)
+        if(boundRect.area() >= 150)
         {
             cv::Mat roi(frameL, boundRect);
             message.letter = determineLetter(roi, "L");
@@ -1036,7 +1036,7 @@ void RobotInstance::lookForLetter()
         if(!message.letter)
         {
             boundRect = cv::boundingRect(color);
-            if(boundRect.area() >= 200)
+            if(boundRect.area() >= 150)
             {
                 cv::Mat roi(frameL, boundRect);
                 message.letter = checkHsv(roi, "L");
@@ -1045,7 +1045,7 @@ void RobotInstance::lookForLetter()
         if(!message.letter)
         {
             boundRect = cv::boundingRect(hazard);
-            if(boundRect.area() >= 200)
+            if(boundRect.area() >= 150)
             {
                 cv::Mat roi(frameL, boundRect);
                 message.letter = checkHazard(roi, "L");
@@ -1076,7 +1076,7 @@ void RobotInstance::lookForLetter()
         auto color = getContourColor("Right ColorH", frameR);
 
         auto boundRect = cv::boundingRect(contour);
-        if(boundRect.area() >= 200)
+        if(boundRect.area() >= 150)
         {
             cv::Mat roi(frameR, boundRect);
             message.letter = determineLetter(roi, "R");
@@ -1084,7 +1084,7 @@ void RobotInstance::lookForLetter()
         if(!message.letter)
         {
             boundRect = cv::boundingRect(color);
-            if(boundRect.area() >= 200)
+            if(boundRect.area() >= 150)
             {
                 cv::Mat roi(frameR, boundRect);
                 message.letter = checkHsv(roi, "R");
@@ -1093,7 +1093,7 @@ void RobotInstance::lookForLetter()
         if(!message.letter)
         {
             boundRect = cv::boundingRect(hazard);
-            if(boundRect.area() >= 200)
+            if(boundRect.area() >= 150)
             {
                 cv::Mat roi(frameR, boundRect);
                 message.letter = checkHazard(roi, "R");
