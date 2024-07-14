@@ -164,7 +164,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         pdd victim_pos = v.first;
         int victimX = int(round(((victim_pos.first - minX) / 0.03))), victimY = int(round(((maxY - victim_pos.second) / 0.03)));
         if (victimY >= arrH) victimY = arrH - 1;
-        if (victimX >= arrH) victimX = arrW - 1;
+        if (victimX >= arrW) victimX = arrW - 1;
         map[victimY][victimX] = v.second;
     }
     for (pii tile : room4)
@@ -528,7 +528,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         pdd victim_pos = v.first;
         int victimX = int(round(((victim_pos.first - minX) / 0.03))), victimY = int(round(((maxY - victim_pos.second) / 0.03)));
         if (victimY >= arrH) victimY = arrH - 1;
-        if (victimX >= arrH) victimX = arrW - 1;
+        if (victimX >= arrW) victimX = arrW - 1;
         map[victimY][victimX] = v.second;
     }
     for (pii tile : room4)
