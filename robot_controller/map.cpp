@@ -68,6 +68,9 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
 
         dist *= std::cos(LIDAR_TILT_ANGLE);
 
+        //small distance bias (thx argentina for the idea)
+        dist -= 0.001;
+
         const double angle = (double)i * (rb->getLidar()->getFov() / rb->getLidar()->getHorizontalResolution());
 
         addLidarPoint(lidarToPoint(pos, dist, angle - theta));
