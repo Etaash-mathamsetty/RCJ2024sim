@@ -486,7 +486,7 @@ void RobotInstance::black_detection_callback()
     pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
         std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
     double rad = 0.055;
-    const double outside = 0.04;
+    const double outside = 0.03;
     double x = -rad - outside;
     for(; x <= rad + outside; x += 0.005, x = std::round(x / 0.005) * 0.005)
     {
@@ -888,7 +888,7 @@ char RobotInstance::checkHazard(cv::Mat roi, std::string side)
     if(ret == 'H' || ret == 'S' || ret == 'U')
         return 0;
 
-    if(dists[0] > 500000)
+    if(dists[0] > 550000)
         return 0;
 
 
