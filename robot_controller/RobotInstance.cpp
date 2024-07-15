@@ -630,7 +630,8 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
         auto rect = cv::boundingRect(*it);
         double asp_ratio = rect.height / (double)rect.width;
         //std::cout << area << std::endl;
-        if(area >= 40 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
+        //std::cout << area << ", " << asp_ratio << std::endl;
+        if(area >= 20 && area <= 2500 && asp_ratio >= 0.5 && asp_ratio <= 2.0)
         {
             if(best_contour.size() == 0 || area > cv::contourArea(best_contour))
                 best_contour = *it;
