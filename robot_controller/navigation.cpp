@@ -404,6 +404,8 @@ pdd findNearestTraversable(pdd cur)
     // return nearestTraversable(cur, cur, {pdd(cur.f - rad, cur.s - rad), pdd(cur.f + rad, cur.s + rad)});
 }
 
+unordered_set<pdd, pair_hash_combiner<double>> onWall;
+
 stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool wall)
 {
     pdd min = r2d(minMax.f), max = r2d(minMax.s);
@@ -577,13 +579,20 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     //removeOnWall(tar);
     //addVisited(tar);
 
+    //recompute onWall when route not found to that onWall point, likely that it's become impossible to traverse 
+    if(onWall.count(r2d(tar)) > 0)
+    {
+        std::cout << "recomputing onWall!" << std::endl;
+        clearOnWall();
+        bfsAddOnWall(RobotInstance::getInstance()->getStartPos(), get_lidar_minmax_opt());
+    }
+
     return stack<pdd>();
 }
 
 unordered_set<pdd, pair_hash_combiner<double>> visitedPoints;
 unordered_set<pdd, pair_hash_combiner<double>> pseudoVisited;
 stack<pdd> currentPath = {};
-unordered_set<pdd, pair_hash_combiner<double>> onWall;
 
 pdd getClosestHeuristic(const unordered_set<pdd, pair_hash_combiner<double>>& points, pdd cur, pdd start)
 {
@@ -925,10 +934,10 @@ void clearOnWall()
     onWall.clear();
 }
 
-void bfsAddOnWall(pdd cur, double radius)
+void bfsAddOnWall(pdd cur, std::pair<pdd, pdd> minmax)
 {
-    pdd min = {cur.f - radius, cur.s - radius};
-    pdd max = {cur.f + radius, cur.s + radius};
+    pdd min = minmax.first;
+    pdd max = minmax.second;
     queue<pdd> q;
     unordered_set<pdd, pair_hash_combiner<double>> visited;
     cur = r2d(cur);
@@ -969,6 +978,13 @@ void bfsAddOnWall(pdd cur, double radius)
             }
         }
     }
+}
+
+void bfsAddOnWall(pdd cur, double radius)
+{
+    pdd min = {cur.f - radius, cur.s - radius};
+    pdd max = {cur.f + radius, cur.s + radius};
+    bfsAddOnWall(cur, {min, max});
 }
 
 void bfsRemoveOnWall(pdd cur, double radius)
@@ -1129,7 +1145,11 @@ pdd chooseMove(RobotInstance *rb)
 
     if (!compPts(cur, rb->getStartPos()) && onWall.empty() && currentPath.empty())
     {
-        currentPath = pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false, false);
+        bfsAddOnWall(cur, get_lidar_minmax_opt());
+        if(onWall.empty())
+        {
+            currentPath = pointBfs(cur, rb->getStartPos(), get_lidar_minmax_opt(), false, false);
+        }
     }
 
     if (!currentPath.empty())

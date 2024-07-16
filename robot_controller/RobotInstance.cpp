@@ -314,7 +314,7 @@ RobotInstance::RobotInstance()
     realtime = 0;
 
     update_lidar_cloud();
-    bfsAddOnWall(getCurrentGPSPosition(), 0.4);
+    bfsAddOnWall(getCurrentGPSPosition(), get_lidar_minmax_opt());
 }
 
 RobotInstance::~RobotInstance()
@@ -1183,9 +1183,9 @@ void RobotInstance::updateVisited()
     {
         if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
         else col(m_color, m_gps, m_imu, m_startPos, 1);
-        bfsAddOnWall(cur, 0.08);
-        pruneOnWall();
         const double radius = 0.08;
+        bfsAddOnWall(cur, radius);
+        pruneOnWall();
 
         double x = cur.first - radius, y = cur.second - radius;
         for(; x <= cur.first + radius; x += 0.008)

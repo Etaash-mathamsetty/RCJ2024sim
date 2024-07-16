@@ -41,6 +41,7 @@ void removeOnWall(pdd point);
 void pruneOnWall();
 void clearOnWall();
 void bfsAddOnWall(pdd cur, double radius);
+void bfsAddOnWall(pdd cur, std::pair<pdd,pdd> minmax);
 void bfsRemoveOnWall(pdd cur, double radius);
 bool isFollowingBfs();
 bool isAllDone();
