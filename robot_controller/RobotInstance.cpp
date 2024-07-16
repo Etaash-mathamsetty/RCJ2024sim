@@ -980,8 +980,10 @@ void RobotInstance::followVictim(pdd point, std::string side)
     if (isTraversableOpt(nearest) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
     {
         std::cout << "following victim" << std::endl;
+        pdd org = getCurrentGPSPosition();
+        double org_rot = getYaw();
         isFollowingVictim = true;
-        std::stack<pdd> path = pointBfs(getCurrentGPSPosition(), nearest, get_lidar_minmax_opt(), false);
+        std::stack<pdd> path = pointBfs(org, nearest, get_lidar_minmax_opt(), false);
         while (!path.empty())
         {
             if (midpoint_check(getRawGPSPosition(), nearest) && getDist(getRawGPSPosition(), point) <= MAX_VIC_IDENTIFICATION_RANGE)
@@ -995,6 +997,15 @@ void RobotInstance::followVictim(pdd point, std::string side)
         pdd cur = getRawGPSPosition();
         turnTo(MAX_VELOCITY / 2, -std::atan2(point.first - cur.first, point.second - cur.second) + (side == "L" ? -M_PI : M_PI) / 2);
         stopMotors();
+        //return to original pos to continue the path (otherwise nav bugs happen)
+        path = pointBfs(getCurrentGPSPosition(), org, get_lidar_minmax_opt(), false);
+        while (!path.empty())
+        {
+            pdd next = path.top();
+            path.pop();
+            moveToPos(next);
+        }
+        turnTo(MAX_VELOCITY, -org_rot);
         isFollowingVictim = false;
     }
     else
