@@ -141,7 +141,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         if (x > arrW - 5) x = arrW - 5;
         if (y > arrH - 5) y = arrH - 5;
         std::string val = tile.second;
-        if (count(colored.begin(), colored.end(), val) || val == "2")
+        if (count(colored.begin(), colored.end(), val) || val == "2" || roommap[pos] == 1)
         {
             map[y + 1][x + 2] = "0";
             map[y + 2][x + 1] = "0";
