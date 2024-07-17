@@ -675,76 +675,76 @@ bool checkNearbyVisited(pdd point)
 stack<pdd> nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd start)
 {
     // return getClosestHeuristic(onWall, cur, start);
-    // pdd min = r2d(minMax.f), max = r2d(minMax.s);
-    // rotation = clampAngle(round(rotation / (M_PI / 2)) * M_PI / 2);
-    // queue<pdd> q;
-    // unordered_set<pdd, pair_hash_combiner<double>> visited;
-    // unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
-    // parent.reserve(10000);
-    // cur = r2d(cur);
-    // q.push(cur);
-    // parent[cur] = pdd(DBL_MAX, DBL_MAX);
-    // bool isFound = false;
-    // pdd tar, actual_tar;
-    // while (!q.empty())
-    // {
-    //     pdd node = r3d(q.front());
-    //     q.pop();
-    //     if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
-    //     {
-    //         continue;
-    //     }
-    //     if (!isTraversableOpt(node))
-    //     {
-    //         if (!compPts(node, cur))
-    //         {
-    //             continue;
-    //         }
-    //     }
-    //     visited.insert(node);
-    //     if (onWall.count(r2d(node)) && !compPts(node, cur) && !isVisited(node) && !isPseudoVisited(node) && isTraversableOpt(r2d(node)))
-    //     {
-    //         cout << "nearest on wall found " << isTraversableOpt(node) << endl;
-    //         isFound = true;
-    //         tar = r2d(node);
-    //         actual_tar = node;
-    //         break;
-    //     }
-    //     else
-    //     {
-    //         const double grid_spacing = 0.005;
-    //         // prioritizing forward
-    //         pdd adjacentNodes[] = {
-    //             r3d(pointTo(node, rotation, grid_spacing)),
-    //             r3d(pointTo(node, rotation + M_PI / 2, grid_spacing)),
-    //             r3d(pointTo(node, rotation - M_PI / 2, grid_spacing)),
-    //             r3d(pointTo(node, rotation + M_PI, grid_spacing))
-    //         };
-    //         for (const pdd& adjacent : adjacentNodes)
-    //         {
-    //             if (!visited.count(adjacent) && isTraversableOpt(adjacent))
-    //             {
-    //                 q.push(adjacent);
-    //                 parent[adjacent] = node;
-    //             }
-    //         }
-    //     }
-    // }
-    // if (isFound)
-    // {
-    //     stack<pdd> res;
-    //     pdd pindex = actual_tar;
-    //     res.push(tar);
-    //     while (!compPts(pindex, cur))
-    //     {
-    //         res.push(pindex);
-    //         pindex = parent[pindex];
-    //     }
-    //     res.push(cur);
-    //     res = optimizeRoute(res);
-    //     res.pop();
-    //     return res;
-    // }
+    pdd min = r2d(minMax.f), max = r2d(minMax.s);
+    rotation = clampAngle(round(rotation / (M_PI / 2)) * M_PI / 2);
+    queue<pdd> q;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
+    unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
+    parent.reserve(10000);
+    cur = r2d(cur);
+    q.push(cur);
+    parent[cur] = pdd(DBL_MAX, DBL_MAX);
+    bool isFound = false;
+    pdd tar, actual_tar;
+    while (!q.empty())
+    {
+        pdd node = r3d(q.front());
+        q.pop();
+        if (visited.count(node) > 0 || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
+        {
+            continue;
+        }
+        if (!isTraversableOpt(node))
+        {
+            if (!compPts(node, cur))
+            {
+                continue;
+            }
+        }
+        visited.insert(node);
+        if (onWall.count(r2d(node)) && !compPts(node, cur) && !isVisited(node) && !isPseudoVisited(node) && isTraversableOpt(r2d(node)))
+        {
+            cout << "nearest on wall found " << isTraversableOpt(node) << endl;
+            isFound = true;
+            tar = r2d(node);
+            actual_tar = node;
+            break;
+        }
+        else
+        {
+            const double grid_spacing = 0.005;
+            // prioritizing forward
+            pdd adjacentNodes[] = {
+                r3d(pointTo(node, rotation, grid_spacing)),
+                r3d(pointTo(node, rotation + M_PI / 2, grid_spacing)),
+                r3d(pointTo(node, rotation - M_PI / 2, grid_spacing)),
+                r3d(pointTo(node, rotation + M_PI, grid_spacing))
+            };
+            for (const pdd& adjacent : adjacentNodes)
+            {
+                if (!visited.count(adjacent) && isTraversableOpt(adjacent))
+                {
+                    q.push(adjacent);
+                    parent[adjacent] = node;
+                }
+            }
+        }
+    }
+    if (isFound)
+    {
+        stack<pdd> res;
+        pdd pindex = actual_tar;
+        res.push(tar);
+        while (!compPts(pindex, cur))
+        {
+            res.push(pindex);
+            pindex = parent[pindex];
+        }
+        res.push(cur);
+        res = optimizeRoute(res);
+        res.pop();
+        return res;
+    }
     if (!onWall.empty())
     {
         cout << "getting closest heuristic" << endl;
