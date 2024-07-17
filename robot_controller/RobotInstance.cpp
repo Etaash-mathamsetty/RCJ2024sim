@@ -1188,8 +1188,8 @@ void RobotInstance::updateVisited()
     addVisited(pointTo(cur, rotation - M_PI / 2));
     addVisited(pointTo(cur, rotation + M_PI / 2, 0.02));
     addVisited(pointTo(cur, rotation - M_PI / 2, 0.02));
-    addVisited(pointTo(cur, rotation + M_PI / 2, 0.03));
-    addVisited(pointTo(cur, rotation - M_PI / 2, 0.03));
+    //addVisited(pointTo(cur, rotation + M_PI / 2, 0.03));
+    //addVisited(pointTo(cur, rotation - M_PI / 2, 0.03));
     if(cur != m_lastPos)
     {
         if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
