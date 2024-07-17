@@ -947,8 +947,8 @@ void RobotInstance::stopAndEmit(void* message)
     m_robot->step(m_timestep);
     delay(VICTIM_DELAY_TIME);
     m_emitter->send(message, 9);
-    m_robot->step(m_timestep);
-    m_robot->step(m_timestep);
+    //force main supervisor to detect the victim
+    delay(0.1);
 
     std::cout << "emitted" << std::endl;
 }
