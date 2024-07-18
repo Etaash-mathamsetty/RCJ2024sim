@@ -790,8 +790,10 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
     std::vector<std::vector<cv::Point>> red_c;
     std::vector<std::vector<cv::Point>> orange_c;
+    std::vector<std::vector<cv::Point>> white_c;
     cv::findContours(red, red_c, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
     cv::findContours(orange, orange_c, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    cv::findContours(white, white_c, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
 
     if(red_c.size() == 0)
     {
@@ -834,7 +836,7 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
         std::cout << "found O" << std::endl;
         return 'O';
     }
-    else if(big_red_c.size() > 0)
+    else if(big_red_c.size() > 0 && white_c.size() > 3)
     {
         auto rect = cv::boundingRect(big_red_c);
         double ratio = cv::contourArea(big_red_c) / rect.size().area();
