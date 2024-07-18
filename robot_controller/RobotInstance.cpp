@@ -841,7 +841,7 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
         auto rect = cv::boundingRect(big_red_c);
         double ratio = cv::contourArea(big_red_c) / (double)rect.area();
 
-        if(ratio >= 0.65)
+        if(ratio >= 0.7)
         {
             std::cout << "ratio F: " <<  ratio << std::endl;
             return 0;
