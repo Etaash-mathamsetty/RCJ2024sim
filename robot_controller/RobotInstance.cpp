@@ -780,9 +780,13 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
     cv::Mat red;
     cv::Mat orange;
+    cv::Mat white;
 
     cv::inRange(roi2, cv::Scalar(160, 100, 0), cv::Scalar(180, 255, 255), red);
     cv::inRange(roi2, cv::Scalar(20, 100, 80), cv::Scalar(40, 255, 255), orange);
+    cv::inRange(roi2, cv::Scalar(0, 0, 170), cv::Scalar(255, 50, 255), white);  
+
+    double white_sum = cv::sum(white)[0];
 
     std::vector<std::vector<cv::Point>> red_c;
     std::vector<std::vector<cv::Point>> orange_c;
@@ -834,9 +838,17 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
     {
         double ratio = cv::contourArea(big_red_c) / roi.size().area();
 
-        if(ratio >= 0.7)
+        if(ratio >= 0.65)
         {
             std::cout << "ratio F: " <<  ratio << std::endl;
+            return 0;
+        }
+
+        std::cout << "white_sum: " << white_sum << std::endl;
+
+        if(white_sum <= 500)
+        {
+            std::cout << "white sum too small! " << white_sum << std::endl;
             return 0;
         }
 
