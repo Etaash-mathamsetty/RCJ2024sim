@@ -26,7 +26,7 @@ void otherdelay(int ms, webots::Robot* rb)
         if ((rb->getTime() - init) * 1000 > ms) break;
     }
 }
-const std::vector<std::string> colored = {"5", "6", "7", "8", "9", "o", "y", "p", "r", "g", "b"};
+const std::vector<std::string> colored = { "5", "6", "7", "8", "9", "o", "y", "p", "r", "g", "b" };
 std::map<pii, std::string> tilemap;
 std::map<pii, int> roommap;
 std::unordered_set<pii, pair_hash_combiner<int>> room4;
@@ -46,7 +46,7 @@ void setroom(std::string tile, int r1, int r2)
     else if (room == r2 && lastcolor != tile) { room = r1; }
     lastcolor = tile;
 }
-int getRoom(const pdd &point, const pdd &startpos)
+int getRoom(const pdd& point, const pdd& startpos)
 {
     pii coords_int = pii(int(round((point.first - startpos.first) / TILE_LENGTH)), -int(round((point.second - startpos.second) / TILE_LENGTH)));
     if (roommap.count(coords_int))
@@ -55,7 +55,7 @@ int getRoom(const pdd &point, const pdd &startpos)
     }
     return 0;
 }
-void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos, webots::Robot* rb)
+void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos, webots::Robot* rb)
 {
     std::cout << "room: " << room << std::endl;
     double minX = getMinMax(pList).first.first, minY = getMinMax(pList).first.second, maxX = getMinMax(pList).second.first, maxY = getMinMax(pList).second.second;
@@ -167,9 +167,14 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         if (victimX >= arrW) victimX = arrW - 1;
         map[victimY][victimX] = v.second;
     }
+    int minXroom4 = 1000, minYroom4 = 1000, maxXroom4 = -1000, maxYroom4 = -1000;
     for (pii tile : room4)
     {
         int y = (tile.second + startTileY / 4) * 4, x = (tile.first + startTileX / 4) * 4;
+        minXroom4 = std::min(tile.first, minXroom4);
+        maxXroom4 = std::max(tile.first, maxXroom4);
+        minYroom4 = std::min(tile.second, minYroom4);
+        maxYroom4 = std::max(tile.second, maxYroom4);
         if (x < 0) x = 0;
         if (y < 0) y = 0;
         if (x > arrW - 5) x = arrW - 5;
@@ -187,6 +192,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         }
 
     }
+    std::cout << minXroom4 << " " << maxXroom4 << " " << minYroom4 << " " << maxYroom4 << " " << std::endl;
     if (r4passage.first != -1000 && !room4.empty())
     {
         //flood fill
@@ -219,7 +225,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
             //right
                 if (tile.first < maxXrelativetostart && (!roommap.count(pii(tile.first + 1, tile.second)) || (roommap.count(pii(tile.first + 1, tile.second)) && roommap[pii(tile.first + 1, tile.second)] == 4)))
                 {
-                    if (!bfsvisited.count(pii(tile.first + 1, tile.second)))
+                    if (!bfsvisited.count(pii(tile.first + 1, tile.second)) && tile.first < maxXroom4)
                     {
                         q.push(pii(tile.first + 1, tile.second));
                         bfsvisited[pii(tile.first + 1, tile.second)] = 1;
@@ -228,7 +234,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
                 //up
                 if (tile.second > minYrelativetostart && (!roommap.count(pii(tile.first, tile.second - 1)) || (roommap.count(pii(tile.first, tile.second - 1)) && roommap[pii(tile.first, tile.second - 1)] == 4)))
                 {
-                    if (!bfsvisited.count(pii(tile.first, tile.second - 1)))
+                    if (!bfsvisited.count(pii(tile.first, tile.second - 1)) && tile.second > minYroom4)
                     {
                         q.push(pii(tile.first, tile.second - 1));
                         bfsvisited[pii(tile.first, tile.second - 1)] = 1;
@@ -237,7 +243,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
                 //down
                 if (tile.second < maxYrelativetostart && (!roommap.count(pii(tile.first, tile.second + 1)) || (roommap.count(pii(tile.first, tile.second + 1)) && roommap[pii(tile.first, tile.second + 1)] == 4)))
                 {
-                    if (!bfsvisited.count(pii(tile.first, tile.second + 1)))
+                    if (!bfsvisited.count(pii(tile.first, tile.second + 1)) && tile.second < maxYroom4)
                     {
                         q.push(pii(tile.first, tile.second + 1));
                         bfsvisited[pii(tile.first, tile.second + 1)] = 1;
@@ -246,7 +252,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
                 //left
                 if (tile.first > minXrelativetostart && (!roommap.count(pii(tile.first - 1, tile.second)) || (roommap.count(pii(tile.first - 1, tile.second)) && roommap[pii(tile.first - 1, tile.second)] == 4)))
                 {
-                    if (!bfsvisited.count(pii(tile.first - 1, tile.second)))
+                    if (!bfsvisited.count(pii(tile.first - 1, tile.second)) && tile.first > minXroom4)
                     {
                         q.push(pii(tile.first - 1, tile.second));
                         bfsvisited[pii(tile.first - 1, tile.second)] = 1;
@@ -288,7 +294,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
     emitter->send(&msg, sizeof(msg));
     rb->step(rb->getBasicTimeStep());
 }
-void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* imu, const pdd &startpos, int sign)
+void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* imu, const pdd& startpos, int sign)
 {
     bool passage = 0;
     const uint8_t* colors = colorsensor->getImage();
@@ -636,7 +642,7 @@ void show(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         std::cout << std::endl;
     }
 }
-   
+
 void insert_tile(std::string type, webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* imu, const pdd& startpos)
 {
     double pos[3];
