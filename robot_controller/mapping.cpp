@@ -192,76 +192,97 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd &startpos
         }
 
     }
-    std::cout << minXroom4 << " " << maxXroom4 << " " << minYroom4 << " " << maxYroom4 << " " << std::endl; 
-    if (r4passage.first != -1000 && !room4.empty())
+    minXroom4 = std::max(minXrelativetostart, minXroom4);
+    maxXroom4 = std::min(maxXrelativetostart, maxXroom4);
+    minYroom4 = std::max(minYrelativetostart, minYroom4);
+    maxYroom4 = std::min(maxYrelativetostart, maxYroom4);
+    std::cout << minXroom4 << " " << maxXroom4 << " " << minYroom4 << " " << maxYroom4 << " " << std::endl;
+    for (int i = minYroom4; i <= maxYroom4; i++)
     {
-        //flood fill
-        pii tile = *room4.begin();
-        std::queue<pii> q;
-        std::map<pii, bool> bfsvisited;
-        q.push(tile);
-        bfsvisited[tile] = 1;
-        while (!q.empty())
+        for (int j = minXroom4; j <= maxXroom4; j++)
         {
-            tile = q.front();
-            //std::cout << "front: " << tile.first << " " << tile.second << std::endl;
-            q.pop();
-            //add stars to map array
-            int y = (tile.second + startTileY / 4) * 4, x = (tile.first + startTileX / 4) * 4;
-            if (x < 0) x = 0;
-            if (y < 0) y = 0;
-            if (x > arrW - 5) x = arrW - 5;
-            if (y > arrH - 5) y = arrH - 5;
-            if (count(colored.begin(), colored.end(), tilemap[tile]) == 0)
+            int y = (i + startTileY / 4) * 4, x = (j + startTileX / 4) * 4;
+            if (!roommap.count(pii(j, i)))
             {
-                for (int i = 0; i < 5; i++)
+                for (int k = 0; k < 5; k++)
                 {
-                    for (int j = 0; j < 5; j++)
+                    for (int l = 0; l < 5; l++)
                     {
-                        map[y + i][x + j] = "*";
-                    }
-                }
-                //push viable neighbors to queue
-            //right
-                if (tile.first < maxXrelativetostart && (!roommap.count(pii(tile.first + 1, tile.second)) || (roommap.count(pii(tile.first + 1, tile.second)) && roommap[pii(tile.first + 1, tile.second)] == 4)))
-                {
-                    if (!bfsvisited.count(pii(tile.first + 1, tile.second)) && tile.first < maxXroom4)
-                    {
-                        q.push(pii(tile.first + 1, tile.second));
-                        bfsvisited[pii(tile.first + 1, tile.second)] = 1;
-                    }
-                }
-                //up
-                if (tile.second > minYrelativetostart && (!roommap.count(pii(tile.first, tile.second - 1)) || (roommap.count(pii(tile.first, tile.second - 1)) && roommap[pii(tile.first, tile.second - 1)] == 4)))
-                {
-                    if (!bfsvisited.count(pii(tile.first, tile.second - 1)) && tile.second > minYroom4)
-                    {
-                        q.push(pii(tile.first, tile.second - 1));
-                        bfsvisited[pii(tile.first, tile.second - 1)] = 1;
-                    }
-                }
-                //down
-                if (tile.second < maxYrelativetostart && (!roommap.count(pii(tile.first, tile.second + 1)) || (roommap.count(pii(tile.first, tile.second + 1)) && roommap[pii(tile.first, tile.second + 1)] == 4)))
-                {
-                    if (!bfsvisited.count(pii(tile.first, tile.second + 1)) && tile.second < maxYroom4)
-                    {
-                        q.push(pii(tile.first, tile.second + 1));
-                        bfsvisited[pii(tile.first, tile.second + 1)] = 1;
-                    }
-                }
-                //left
-                if (tile.first > minXrelativetostart && (!roommap.count(pii(tile.first - 1, tile.second)) || (roommap.count(pii(tile.first - 1, tile.second)) && roommap[pii(tile.first - 1, tile.second)] == 4)))
-                {
-                    if (!bfsvisited.count(pii(tile.first - 1, tile.second)) && tile.first > minXroom4)
-                    {
-                        q.push(pii(tile.first - 1, tile.second));
-                        bfsvisited[pii(tile.first - 1, tile.second)] = 1;
+                        map[y + k][x + l] = "*";
                     }
                 }
             }
         }
-
     }
+    //if (r4passage.first != -1000 && !room4.empty())
+    //{
+    //    //flood fill
+    //    pii tile = *room4.begin();
+    //    std::queue<pii> q;
+    //    std::map<pii, bool> bfsvisited;
+    //    q.push(tile);
+    //    bfsvisited[tile] = 1;
+    //    while (!q.empty())
+    //    {
+    //        tile = q.front();
+    //        //std::cout << "front: " << tile.first << " " << tile.second << std::endl;
+    //        q.pop();
+    //        //add stars to map array
+    //        int y = (tile.second + startTileY / 4) * 4, x = (tile.first + startTileX / 4) * 4;
+    //        if (x < 0) x = 0;
+    //        if (y < 0) y = 0;
+    //        if (x > arrW - 5) x = arrW - 5;
+    //        if (y > arrH - 5) y = arrH - 5;
+    //        if (count(colored.begin(), colored.end(), tilemap[tile]) == 0)
+    //        {
+    //            for (int i = 0; i < 5; i++)
+    //            {
+    //                for (int j = 0; j < 5; j++)
+    //                {
+    //                    map[y + i][x + j] = "*";
+    //                }
+    //            }
+    //            //push viable neighbors to queue
+    //        //right
+    //            if (tile.first < maxXrelativetostart && (!roommap.count(pii(tile.first + 1, tile.second)) || (roommap.count(pii(tile.first + 1, tile.second)) && roommap[pii(tile.first + 1, tile.second)] == 4)))
+    //            {
+    //                if (!bfsvisited.count(pii(tile.first + 1, tile.second)) && tile.first < maxXroom4)
+    //                {
+    //                    q.push(pii(tile.first + 1, tile.second));
+    //                    bfsvisited[pii(tile.first + 1, tile.second)] = 1;
+    //                }
+    //            }
+    //            //up
+    //            if (tile.second > minYrelativetostart && (!roommap.count(pii(tile.first, tile.second - 1)) || (roommap.count(pii(tile.first, tile.second - 1)) && roommap[pii(tile.first, tile.second - 1)] == 4)))
+    //            {
+    //                if (!bfsvisited.count(pii(tile.first, tile.second - 1)) && tile.second > minYroom4)
+    //                {
+    //                    q.push(pii(tile.first, tile.second - 1));
+    //                    bfsvisited[pii(tile.first, tile.second - 1)] = 1;
+    //                }
+    //            }
+    //            //down
+    //            if (tile.second < maxYrelativetostart && (!roommap.count(pii(tile.first, tile.second + 1)) || (roommap.count(pii(tile.first, tile.second + 1)) && roommap[pii(tile.first, tile.second + 1)] == 4)))
+    //            {
+    //                if (!bfsvisited.count(pii(tile.first, tile.second + 1)) && tile.second < maxYroom4)
+    //                {
+    //                    q.push(pii(tile.first, tile.second + 1));
+    //                    bfsvisited[pii(tile.first, tile.second + 1)] = 1;
+    //                }
+    //            }
+    //            //left
+    //            if (tile.first > minXrelativetostart && (!roommap.count(pii(tile.first - 1, tile.second)) || (roommap.count(pii(tile.first - 1, tile.second)) && roommap[pii(tile.first - 1, tile.second)] == 4)))
+    //            {
+    //                if (!bfsvisited.count(pii(tile.first - 1, tile.second)) && tile.first > minXroom4)
+    //                {
+    //                    q.push(pii(tile.first - 1, tile.second));
+    //                    bfsvisited[pii(tile.first - 1, tile.second)] = 1;
+    //                }
+    //            }
+    //        }
+    //    }
+
+    //}
     map[startTileY + 1][startTileX + 1] = "5";
     map[startTileY + 1][startTileX + 3] = "5";
     map[startTileY + 3][startTileX + 1] = "5";
