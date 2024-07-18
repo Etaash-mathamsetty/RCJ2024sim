@@ -784,7 +784,7 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
     cv::inRange(roi2, cv::Scalar(160, 100, 0), cv::Scalar(180, 255, 255), red);
     cv::inRange(roi2, cv::Scalar(20, 100, 80), cv::Scalar(40, 255, 255), orange);
-    cv::inRange(roi2, cv::Scalar(0, 0, 170), cv::Scalar(255, 50, 255), white);  
+    cv::inRange(roi2, cv::Scalar(0, 0, 170), cv::Scalar(255, 30, 255), white);  
 
     double white_sum = cv::sum(white)[0];
 
@@ -846,7 +846,7 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
         std::cout << "white_sum: " << white_sum << std::endl;
 
-        if(white_sum <= 500)
+        if(white_sum <= 1000)
         {
             std::cout << "white sum too small! " << white_sum << std::endl;
             return 0;
