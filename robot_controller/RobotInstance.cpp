@@ -836,7 +836,8 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
     }
     else if(big_red_c.size() > 0)
     {
-        double ratio = cv::contourArea(big_red_c) / roi.size().area();
+        auto rect = cv::boundingRect(big_red_c);
+        double ratio = cv::contourArea(big_red_c) / rect.size().area();
 
         if(ratio >= 0.65)
         {
@@ -844,7 +845,7 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
             return 0;
         }
 
-        std::cout << "white_sum: " << white_sum << std::endl;
+        //std::cout << "white_sum: " << white_sum << " ratio: " << ratio << std::endl;
 
         if(white_sum <= 1000)
         {
