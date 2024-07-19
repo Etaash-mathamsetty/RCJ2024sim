@@ -946,7 +946,7 @@ void bfsAddOnWall(pdd cur, std::pair<pdd, pdd> minmax)
     {
         pdd node = r3d(q.front());
         q.pop();
-        if (visited.count(node) > 0 || !isTraversableOpt(node) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
+        if (visited.count(node) > 0 || !isTraversableOpt(node) || !canSee(cur, node) || node.f < min.f || node.f > max.f || node.s < min.s || node.s > max.s)
         {
             continue;
         }
@@ -972,7 +972,7 @@ void bfsAddOnWall(pdd cur, std::pair<pdd, pdd> minmax)
         };
         for (const pdd& adjacent : adjacentNodes)
         {
-            if (!visited.count(adjacent) && isTraversableOpt(adjacent) && canSee(node, adjacent))
+            if (!visited.count(adjacent) && isTraversableOpt(adjacent) && canSee(cur, adjacent))
             {
                 q.push(adjacent);
             }

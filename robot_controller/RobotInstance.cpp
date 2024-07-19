@@ -314,7 +314,7 @@ RobotInstance::RobotInstance()
     realtime = 0;
 
     update_lidar_cloud();
-    bfsAddOnWall(getCurrentGPSPosition(), getMinMax(getLidarPoints()));
+    bfsAddOnWall(getCurrentGPSPosition(), get_lidar_minmax_opt());
 }
 
 RobotInstance::~RobotInstance()
