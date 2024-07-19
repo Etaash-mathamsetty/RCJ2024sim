@@ -780,14 +780,20 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
     cv::Mat red;
     cv::Mat orange;
+    cv::Mat white;
 
     cv::inRange(roi2, cv::Scalar(160, 100, 0), cv::Scalar(180, 255, 255), red);
     cv::inRange(roi2, cv::Scalar(20, 100, 80), cv::Scalar(40, 255, 255), orange);
+    cv::inRange(roi2, cv::Scalar(0, 0, 170), cv::Scalar(255, 30, 255), white);  
+
+    double white_sum = cv::sum(white)[0];
 
     std::vector<std::vector<cv::Point>> red_c;
     std::vector<std::vector<cv::Point>> orange_c;
+    std::vector<std::vector<cv::Point>> white_c;
     cv::findContours(red, red_c, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
     cv::findContours(orange, orange_c, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    cv::findContours(white, white_c, cv::noArray(), cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
 
     if(red_c.size() == 0)
     {
@@ -830,13 +836,22 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
         std::cout << "found O" << std::endl;
         return 'O';
     }
-    else if(big_red_c.size() > 0)
+    else if(big_red_c.size() > 0 && white_c.size() >= 3)
     {
-        double ratio = cv::contourArea(big_red_c) / roi.size().area();
+        auto rect = cv::boundingRect(big_red_c);
+        double ratio = cv::contourArea(big_red_c) / (double)rect.area();
 
         if(ratio >= 0.7)
         {
             std::cout << "ratio F: " <<  ratio << std::endl;
+            return 0;
+        }
+
+        //std::cout << "white_sum: " << white_sum << " ratio: " << ratio << std::endl;
+
+        if(white_sum <= 1000)
+        {
+            std::cout << "white sum too small! " << white_sum << std::endl;
             return 0;
         }
 

@@ -192,7 +192,9 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         }
 
     }
-    std::cout << minXroom4 << " " << maxXroom4 << " " << minYroom4 << " " << maxYroom4 << " " << std::endl;
+
+    std::cout << minXroom4 << " " << maxXroom4 << " " << minYroom4 << " " << maxYroom4 << " " << std::endl; 
+
     if (r4passage.first != -1000 && !room4.empty())
     {
         //flood fill
