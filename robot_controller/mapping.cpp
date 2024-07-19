@@ -295,6 +295,7 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
     msg = 'E'; // Send an Exit message to get Map Bonus
     emitter->send(&msg, sizeof(msg));
     rb->step(rb->getBasicTimeStep());
+    otherdelay(10000, rb);
 }
 void col(webots::Camera* colorsensor, webots::GPS* gps, webots::InertialUnit* imu, const pdd& startpos, int sign)
 {
