@@ -413,7 +413,7 @@ int RobotInstance::step() {
             clearBfsResult();
             removeOnWall(m_targetPos);
             addVisited(m_targetPos);
-            bfsRemoveOnWall(m_targetPos, 0.03);
+            //bfsRemoveOnWall(m_targetPos, 0.03);
             this->updateTargetPos();
         }
         else if(message[0] == 'G')
