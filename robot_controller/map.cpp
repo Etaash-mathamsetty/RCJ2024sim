@@ -77,6 +77,8 @@ inline double anti_trunc_to(double value, const double precision = 0.01)
 std::map<pdd, REGION> regions;
 std::vector<pdd> vecLidarPoints;
 std::vector<pdd> blackHolePoints;
+std::vector<pdd> bluePoints;
+std::vector<pdd> redPoints;
 std::vector<pdd> vecCameraPoints;
 std::vector<pdd> victims;
 std::vector<pdd> reportedVictims;
@@ -203,7 +205,7 @@ void addLidarPoint(const pdd& point)
     }
 }
 
-void addBlackHolePoint(const pdd& point)
+void addRedPoints(const pdd& point)
 {
     if(!isTraversableOpt(point, 0.0045)) return;
 
@@ -213,6 +215,38 @@ void addBlackHolePoint(const pdd& point)
     rcoord = r2d(rcoord);
 
     if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
+    {
+        redPoints.push_back(point);
+        regions[rcoord].points[point].wall = true;
+    }
+}
+
+void addBluePoints(const pdd& point)
+{
+    if (!isTraversableOpt(point, 0.0045)) return;
+
+    pdd rcoord;
+    rcoord.first = floor_to(point.first, region_size);
+    rcoord.second = floor_to(point.second, region_size);
+    rcoord = r2d(rcoord);
+
+    if (regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
+    {
+        bluePoints.push_back(point);
+        regions[rcoord].points[point].wall = true;
+    }
+}
+
+void addBlackHolePoint(const pdd& point)
+{
+    if (!isTraversableOpt(point, 0.0045)) return;
+
+    pdd rcoord;
+    rcoord.first = floor_to(point.first, region_size);
+    rcoord.second = floor_to(point.second, region_size);
+    rcoord = r2d(rcoord);
+
+    if (regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
     {
         blackHolePoints.push_back(point);
         regions[rcoord].points[point].wall = true;

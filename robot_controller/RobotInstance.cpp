@@ -377,7 +377,7 @@ bool RobotInstance::turnTo(double speed, double target_angle)
             calc_speed = calc_speed < 0 ? -speed : speed;
         }
 
-        if(blackDetected())
+        if(blackDetected() || redDetected()) // || blueDetected()
         {
             break;
         }
@@ -393,6 +393,21 @@ bool RobotInstance::turnTo(double speed, double target_angle)
         black_detection_callback();
         return false;
     }
+
+    if (redDetected())
+    {
+        red_detection_callback();
+        std::cout << "red detected!"<<std::endl;
+        return false;
+    }
+
+    /*if (blueDetected())
+    {
+        blue_detection_callback();
+        std::cout << "blue detected!" << std::endl;
+        return false;
+    }*/
+
 
     return true;
 }
@@ -529,6 +544,100 @@ void RobotInstance::black_detection_callback()
     resetPosition();
     double traveled = 0;
     while(!isTraversableOpt(getRawGPSPosition()) && step() != -1)
+    {
+        if (traveled <= -4)
+        {
+            break;
+        }
+        forward(-MAX_VELOCITY / 2.0);
+        cur = getRawGPSPosition();
+        getPosition(&traveled, nullptr);
+    }
+
+    clearBfsResult();
+    stopMotors();
+    runCallbacks = true;
+    updateVisited();
+}
+
+void RobotInstance::red_detection_callback()
+{
+    runCallbacks = false;
+    std::cout << "black detected" << std::endl;
+    insert_tile("2", m_color, m_gps, m_imu, m_startPos);
+    pdd cur = getRawGPSPosition();
+    pdd colorSensorLoc = pdd(cur.first + 0.025 * sin(getYaw()), cur.second + 0.025 * cos(getYaw()));
+    pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
+        std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
+    double rad = 0.055;
+    const double outside = 0.03;
+    double x = -rad - outside;
+    for (; x <= rad + outside; x += 0.005, x = std::round(x / 0.005) * 0.005)
+    {
+        for (double y = -rad - outside; y <= rad + outside; y += 0.005, y = std::round(y / 0.005) * 0.005)
+        {
+            if (x == -rad || x == rad || y == -rad || y == rad)
+            {
+                if (x >= -rad && x <= rad && y >= -rad && y <= rad)
+                {
+                    addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
+                }
+            }
+            removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
+            addVisited(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
+        }
+    }
+    updateVisited();
+    resetPosition();
+    double traveled = 0;
+    while (!isTraversableOpt(getRawGPSPosition()) && step() != -1)
+    {
+        if (traveled <= -4)
+        {
+            break;
+        }
+        forward(-MAX_VELOCITY / 2.0);
+        cur = getRawGPSPosition();
+        getPosition(&traveled, nullptr);
+    }
+
+    clearBfsResult();
+    stopMotors();
+    runCallbacks = true;
+    updateVisited();
+}
+
+void RobotInstance::blue_detection_callback()
+{
+    runCallbacks = false;
+    std::cout << "black detected" << std::endl;
+    insert_tile("2", m_color, m_gps, m_imu, m_startPos);
+    pdd cur = getRawGPSPosition();
+    pdd colorSensorLoc = pdd(cur.first + 0.025 * sin(getYaw()), cur.second + 0.025 * cos(getYaw()));
+    pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
+        std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
+    double rad = 0.055;
+    const double outside = 0.03;
+    double x = -rad - outside;
+    for (; x <= rad + outside; x += 0.005, x = std::round(x / 0.005) * 0.005)
+    {
+        for (double y = -rad - outside; y <= rad + outside; y += 0.005, y = std::round(y / 0.005) * 0.005)
+        {
+            if (x == -rad || x == rad || y == -rad || y == rad)
+            {
+                if (x >= -rad && x <= rad && y >= -rad && y <= rad)
+                {
+                    addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
+                }
+            }
+            removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
+            addVisited(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
+        }
+    }
+    updateVisited();
+    resetPosition();
+    double traveled = 0;
+    while (!isTraversableOpt(getRawGPSPosition()) && step() != -1)
     {
         if (traveled <= -4)
         {
@@ -1310,6 +1419,30 @@ bool RobotInstance::blackDetected()
     // std::cout << "R: " << (int)colors[0] << " G: " << (int)colors[1] << " B: " << (int)colors[2] << std::endl;
 
     if(colors[0] <= 55 && colors[1] <= 55 && colors[2] <= 55)
+        return true;
+
+    return false;
+}
+
+bool RobotInstance::redDetected()
+{
+    const uint8_t* colors = getColor();
+
+    // std::cout << "R: " << (int)colors[0] << " G: " << (int)colors[1] << " B: " << (int)colors[2] << std::endl;
+    int b = colors[0], g = colors[1], r = colors[2];
+    if (b <= 90 && g <= 90 && r >= 250)
+        return true;
+
+    return false;
+}
+
+bool RobotInstance::blueDetected()
+{
+    const uint8_t* colors = getColor();
+    int b = colors[0], g = colors[1], r = colors[2];
+    // std::cout << "R: " << (int)colors[0] << " G: " << (int)colors[1] << " B: " << (int)colors[2] << std::endl;
+
+    if (b >= 250 && g <= 80 && r <= 80)
         return true;
 
     return false;

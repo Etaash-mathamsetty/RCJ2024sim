@@ -91,6 +91,10 @@ public:
 
     bool blackDetected();
 
+    bool redDetected();
+
+    bool blueDetected();
+
     void writeTileData();
 
     void detectVictims();
@@ -234,6 +238,8 @@ private:
     std::vector<cv::Point> getContour(cv::Mat);
 
     void black_detection_callback();
+    void red_detection_callback();
+    void blue_detection_callback();
 
     webots::Robot *m_robot;
     webots::Motor *m_lm;
