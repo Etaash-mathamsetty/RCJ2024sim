@@ -1094,7 +1094,7 @@ void RobotInstance::lookForLetter()
     _message.xpos = (int32_t)(cur.first * 100);
     _message.zpos = (int32_t)(cur.second * -100);
     _message.letter = 0;
-    _message.id = 1;
+    _message.id = 0;
     char message[13];
     if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE)
     {
