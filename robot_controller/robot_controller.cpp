@@ -274,9 +274,7 @@ void delete_gui(SDL_Window* window, SDL_Renderer *renderer)
 struct {
     char id; //either A or B
     pdd pos;
-    uint8_t r; //color sensor
-    uint8_t g;
-    uint8_t b;
+    bool waitingOnCoordination;
 } ROBOT_INFO;
 
 // This is the main program of your controller.
@@ -369,9 +367,9 @@ int main(int argc, char **argv) {
     rb->add_step_callback([&rb](){
         ROBOT_INFO.id = 'A';
         ROBOT_INFO.pos = rb->getRawGPSPosition();
-        ROBOT_INFO.r = rb->getColor()[0];
-        ROBOT_INFO.g = rb->getColor()[1];
-        ROBOT_INFO.b = rb->getColor()[2];
+        ROBOT_INFO.waitingOnCoordination = rb->checkPurple();
+
+        rb->getEmitter()->send(&ROBOT_INFO, sizeof(ROBOT_INFO));
     });
 
     /*rb->add_step_callback([&rb]() {

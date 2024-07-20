@@ -73,4 +73,7 @@ struct REGION {
 REGION* get_region(webots::GPS *gps);
 std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt, double radius = TRAVERSABLE_RADIUS);
 
+void setOtherBotPos(const pdd& pos);
+std::vector<pdd> getOtherBotPts();
+
 #endif

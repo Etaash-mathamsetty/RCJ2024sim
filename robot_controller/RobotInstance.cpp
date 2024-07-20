@@ -397,6 +397,12 @@ bool RobotInstance::turnTo(double speed, double target_angle)
     return true;
 }
 
+struct ROBOT_INFO{
+    char id; //either A or B
+    pdd pos;
+    bool waitingOnCoordination;
+};
+
 int RobotInstance::step() {
     this->m_emitter->send("G", 1);
     int ret = m_robot->step(m_timestep);
@@ -424,6 +430,16 @@ int RobotInstance::step() {
                 memcpy(&this->m_timeLeft, receivedData + 8, 4);  // Remaining time stored in bytes 8 to 11
                 this->m_receiver->nextPacket(); // Discard the current data packet
             }
+        }
+        else if(message[0] == 'B')
+        {
+            ROBOT_INFO *data = (ROBOT_INFO *)m_receiver->getData();
+            setOtherBotPos(data->pos);
+            if(checkPurple() && data->waitingOnCoordination)
+            {
+                delay(5);
+            }
+            m_receiver->nextPacket();
         }
         else
         {
@@ -1039,12 +1055,13 @@ void RobotInstance::lookForLetter()
     cv::Mat frameR = getCv2Mat(m_rightCamera);
     addTexture("Left Camera", frameL, SDL_PIXELFORMAT_RGB888);
     addTexture("Right Camera", frameR, SDL_PIXELFORMAT_RGB888);
-    struct {
+    struct Message {
         int32_t xpos;
         int32_t zpos;
         char letter;
         int32_t id;
-    } message;
+    };
+    Message message{};
     pdd cur = getRawGPSPosition();
     message.xpos = (int32_t)(cur.first * 100);
     message.zpos = (int32_t)(cur.second * -100);
