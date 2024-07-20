@@ -415,10 +415,8 @@ int RobotInstance::step() {
     while(this->m_receiver->getQueueLength() > 0) { // If receiver queue is not empty
         char *message = (char *)m_receiver->getData(); // Grab data as a string
         if (message[0] == 'L') { // 'L' means a lack of progress occurred
-            int* robot_index = (int*)(message + 1);
-            std::cout << "Detected Lack of Progress! " << *robot_index << std::endl;
+            std::cout << "Detected Lack of Progress!" << std::endl;
             this->m_receiver->nextPacket(); // Discard the current data packet
-            if(*robot_index == 1) continue;
             this->m_robot->step(this->m_timestep); // update all the senors, for updated gps pos
             clearBfsResult();
             removeOnWall(m_targetPos);
