@@ -179,9 +179,11 @@ public:
 
     bool checkPurple()
     {
-        std::cout << "FIXME: Unimplemented checkPurple!" << std::endl;
+        // std::cout << "FIXME: Unimplemented checkPurple!" << std::endl;
         
-        return false;
+        const uint8_t *cols = getColor();
+
+        return cols[0] >= 230 && cols[0] <= 250 && cols[1] >= 60 && cols[1] <= 90 && cols[2] >= 150 && cols[2] <= 180;
     }
 
 private:
