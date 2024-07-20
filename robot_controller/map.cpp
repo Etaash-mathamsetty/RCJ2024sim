@@ -40,6 +40,11 @@ void setOtherBotPos(const pdd& pos)
     }
 }
 
+bool isNearOtherRobot(pdd pos)
+{
+    return (getDist(pos, other_bot_pos) <= TRAVERSABLE_RADIUS + 0.05);
+}
+
 void updateOtherVisited(pdd pos, double rot)
 {
     addVisited(pos);

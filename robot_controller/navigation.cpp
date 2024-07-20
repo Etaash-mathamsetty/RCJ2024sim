@@ -888,7 +888,7 @@ bool isPseudoVisited(const pdd& point)
 
 void addVisited(pdd point)
 {
-    if (isTraversableOpt(point))
+    if (isTraversableOpt(point) || isNearOtherRobot(point))
     {
         visitedPoints.insert(r2d(point));
     }

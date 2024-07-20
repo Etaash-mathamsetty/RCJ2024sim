@@ -437,8 +437,8 @@ int RobotInstance::step() {
         {
             ROBOT_INFO *data = (ROBOT_INFO *)m_receiver->getData();
             setOtherBotPos(data->pos);
-            updateOtherVisited(data->pos, data->rotation);
             update_regions_map(data->pos, data->range_image, -data->rotation);
+            updateOtherVisited(data->pos, data->rotation);
             if(checkPurple() && data->waitingOnCoordination)
             {
                 stopMotors();
