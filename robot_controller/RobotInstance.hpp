@@ -207,7 +207,7 @@ private:
     std::vector<cv::Point> getContourHazard(std::string name, cv::Mat frame);
     std::vector<cv::Point> getContourColor(std::string name, cv::Mat frame);
 
-    void stopAndEmit(void *message);
+    void stopAndEmit(void *message, pdd point);
     pdd victimToPoint(int rectCenterX, int frameCols, std::string side);
     void followVictim(pdd victim, std::string side);
 

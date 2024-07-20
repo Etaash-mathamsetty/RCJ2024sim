@@ -25,6 +25,7 @@ bool compPts(const pdd& pt1, const pdd& pt2, double thresh);
 pdd pointTo(pdd point, double dir);
 pdd pointTo(pdd point, double dir, double dist);
 bool midpoint_check(pdd a, pdd b);
+bool midpoint_check(pdd a, pdd b, double rad);
 std::pair<pdd, pdd> getMinMax(const std::vector<pdd>& list);
 std::stack<pdd> nearestTraversable(pdd point, pdd cur, std::pair<pdd, pdd> minMax);
 std::stack<pdd> pointBfs(pdd cur, pdd tar, std::pair<pdd, pdd> minMax, bool isBlind, bool wall=false);
@@ -52,5 +53,9 @@ const std::unordered_set<pdd, pair_hash_combiner<double>>& getVisited();
 const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall();
 const std::stack<pdd>& getBfsPath();
 bool isTraversable(const pdd& pos, const std::vector<pdd>& points, double robotRadius);
+
+void updateFloating(pdd start);
+std::vector<std::pair<pdd, pdd>>& getLinearMinMax();
+bool ptInLinear(pdd point);
 
 #endif

@@ -964,7 +964,7 @@ char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
     return ch;
 }
 
-void RobotInstance::stopAndEmit(void* message)
+void RobotInstance::stopAndEmit(void* message, pdd point)
 {
     if(m_disableEmit)
         return;
@@ -977,29 +977,36 @@ void RobotInstance::stopAndEmit(void* message)
     //force main supervisor to detect the victim
     delay(0.1);
 
-    char *ch = (char*)message;
-    ch += 8;
-
-    switch(*ch)
+    if(!ptInLinear(point))
     {
-        case 'H':
-            std::cout << "I got the milk." << std::endl;
-            break;
-        case 'S':
-            std::cout << "I picked up the bread." << std::endl;
-            break;
-        case 'F':
-            std::cout << "I took some eggs." << std::endl;
-            break;
-        case 'O':
-            std::cout << "I packed pineapple juice." << std::endl;
-            break;
-        default:
-            break;
+        char *ch = (char*)message;
+        ch += 8;
+
+        switch(*ch)
+        {
+            case 'H':
+                std::cout << "I got the milk." << std::endl;
+                break;
+            case 'S':
+                std::cout << "I picked up the bread." << std::endl;
+                break;
+            case 'F':
+                std::cout << "I took some eggs." << std::endl;
+                break;
+            case 'O':
+                std::cout << "I packed pineapple juice." << std::endl;
+                break;
+            default:
+                break;
+        }
+
+
+        victim_counter[*ch]++;
     }
-
-
-    victim_counter[*ch]++;
+    else
+    {
+        std::cout << "ignoring!!!" << std::endl;
+    }
 
     //std::cout << "emitted" << std::endl;
 }
@@ -1066,6 +1073,19 @@ void RobotInstance::followVictim(pdd point, std::string side)
     }
 }
 
+bool ptInLinear(pdd point)
+{
+    for(auto& pts : getLinearMinMax())
+    {
+        if(point.first <= pts.second.first && point.second <= pts.second.second && point.first >= pts.first.first && point.second >= pts.first.second)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void RobotInstance::lookForLetter()
 {
     const int horizontalResolution = m_lidar->getHorizontalResolution();
@@ -1122,7 +1142,7 @@ void RobotInstance::lookForLetter()
             {
                 addVictim(point);
                 victimMap[point] = message.letter;
-                stopAndEmit((void*)&message);
+                stopAndEmit((void*)&message, point);
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
@@ -1170,7 +1190,7 @@ void RobotInstance::lookForLetter()
             {
                 addVictim(point);
                 victimMap[point] = message.letter;
-                stopAndEmit((void*)&message);
+                stopAndEmit((void*)&message, point);
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
@@ -1248,6 +1268,8 @@ void RobotInstance::updateVisited()
         const double radius = 0.08;
         bfsAddOnWall(cur, radius);
         pruneOnWall();
+
+        updateFloating(getStartPos());
 
         double x = cur.first - radius, y = cur.second - radius;
         for(; x <= cur.first + radius; x += 0.008)

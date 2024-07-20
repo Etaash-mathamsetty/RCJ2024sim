@@ -207,6 +207,17 @@ ImPlotPoint getVictimPoint(int idx, void *param)
     return {victims[idx].first, victims[idx].second};
 }
 
+ImPlotPoint getFloatingPt(int idx, void *param)
+{
+    return {getLinearMinMax()[idx].first.first, getLinearMinMax()[idx].first.second};
+}
+
+
+ImPlotPoint getFloatingPt2(int idx, void *param)
+{
+    return {getLinearMinMax()[idx].second.first, getLinearMinMax()[idx].second.second};
+}
+
 size_t getCount()
 {
     return vecLidarPoints.size() + blackHolePoints.size();
@@ -275,6 +286,8 @@ void plotPoints(RobotInstance *rb, int w, int h)
             double ys[] = {r.first.second, r.first.second, r.first.second + 0.1, r.first.second+0.1};
             ImPlot::PlotLine("Regions", xs, ys, 4, ImPlotLineFlags_Loop);
         }
+        ImPlot::PlotScatterG("Floating Tiles", getFloatingPt, nullptr, getLinearMinMax().size(), ImPlotItemFlags_NoFit);
+        ImPlot::PlotScatterG("Floating Tiles", getFloatingPt2, nullptr, getLinearMinMax().size(), ImPlotItemFlags_NoFit);
         ImPlot::SetNextLineStyle(ImVec4(0.0, 0.8, 0, 1));
         ImPlot::PlotScatter("Robot", pos, pos + 2, 1, ImPlotItemFlags_NoFit);
         double startx = rb->getStartPos().first, starty = rb->getStartPos().second;

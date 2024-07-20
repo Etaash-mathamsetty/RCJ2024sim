@@ -166,6 +166,28 @@ bool midpoint_check(pdd a, pdd b)
     return midpoint_check(a, mid) && midpoint_check(mid, b);
 }
 
+bool midpoint_check(pdd a, pdd b, double rad)
+{
+    if(!isTraversableOpt(a, rad) || !isTraversableOpt(b, rad))
+    {
+        return false;
+    }
+
+    pdd mid = midpoint(a, b);
+
+    if(!isTraversableOpt(mid, rad))
+    {
+        return false;
+    }
+
+    if(compPts(a, b)|| compPts(mid, a) || compPts(mid, b))
+    {
+        return true;
+    }
+
+    return midpoint_check(a, mid) && midpoint_check(mid, b);
+}
+
 bool isWallTracing = false;
 
 
@@ -851,7 +873,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
         if(res.size() > 0)
             return res;
     }
-    cout << "no traceable wall found" << endl;
+    //cout << "no traceable wall found" << endl;
     return nearestIsOnWall(cur, get_lidar_minmax_opt(), rb->getYaw(), rb->getStartPos());
 }
 
@@ -1201,19 +1223,91 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points, double robotRadius
     return 1;
 }
 
+//actually linear
 std::vector<std::pair<pdd, pdd>> floating_minmax{};
 
-std::vector<std::pair<pdd, pdd>>& getFloatingMinmaxes()
+std::vector<std::pair<pdd, pdd>>& getLinearMinMax()
 {
-
+    return floating_minmax;
 }
 
-void updateFloating(pdd cur)
+bool ptInLinear(pdd point)
+{
+    for(auto& pts : getLinearMinMax())
+    {
+        if(point.first <= pts.second.first && point.second <= pts.second.second && point.first >= pts.first.first && point.second >= pts.first.second)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void updateFloating(pdd start)
 {
     queue<pdd> q;
-    unordered_set<pdd, pair_hash_combiner<double>> visited;
+    std::vector<pdd> visited;
+    auto minmax = get_lidar_minmax_opt();
+    auto min = minmax.first;
+    auto max = minmax.second;
 
-    pdd 
+    q.push(start);
+
+    floating_minmax.clear();
+
+    while(!q.empty())
+    {
+        pdd node = q.front();
+        q.pop();
+
+        if(node.f > max.f || node.s > max.s || node.f < min.f || node.s < min.s)
+            continue;
+
+        const double ONE_TILE = 0.12;
+
+        visited.push_back(node);
+        floating_minmax.push_back({pdd(node.f - ONE_TILE/2 - 0.001, node.s - ONE_TILE/2 - 0.001), pdd(node.f + ONE_TILE/2 + 0.001, node.s + ONE_TILE/2 + 0.001)});
+        
+        pdd adj[4] =
+        {
+            pointTo(node, 0, ONE_TILE),
+            pointTo(node, M_PI_2, ONE_TILE),
+            pointTo(node, M_PI, ONE_TILE),
+            pointTo(node, -M_PI_2, ONE_TILE)
+        };
+
+        for(int i = 0; i < 4; i++)
+        {
+            if(isTraversable(adj[i], visited, 0.01) && ptInLinear(node))
+            {
+                switch(i)
+                {
+                    case 0:
+                    case 2:
+                    {
+                        if(!midpoint_check(node, adj[1]) || !midpoint_check(node, adj[3]))
+                        {
+                            q.push(adj[i]);
+                        }
+                        break;
+                    }
+
+                    case 1:
+                    case 3:
+                    {
+                        if(!midpoint_check(node, adj[2]) || !midpoint_check(node, adj[0]))
+                        {
+                            q.push(adj[i]);
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+        }
+    }
 }
 
 // int main()
