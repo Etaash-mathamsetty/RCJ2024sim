@@ -377,7 +377,7 @@ bool RobotInstance::turnTo(double speed, double target_angle)
             calc_speed = calc_speed < 0 ? -speed : speed;
         }
 
-        if(blackDetected() || redDetected() || blueDetected())
+        if(blackDetected() || redDetected()) //for water robot           || blueDetected()) for fire robot
         {
             break;
         }
@@ -394,20 +394,20 @@ bool RobotInstance::turnTo(double speed, double target_angle)
         return false;
     }
 
-    if (redDetected())
+    if (redDetected()) //for water robot
     {
         red_detection_callback();
         std::cout << "red detected!"<<std::endl;
         return false;
     }
 
-    if (blueDetected())
+    /*if (blueDetected()) for fire robot
     {
         blue_detection_callback();
         clearBluePoints();
         std::cout << "blue detected!" << std::endl;
         return false;
-    }
+    }*/
 
 
     return true;
