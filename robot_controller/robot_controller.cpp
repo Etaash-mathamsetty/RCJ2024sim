@@ -271,6 +271,14 @@ void delete_gui(SDL_Window* window, SDL_Renderer *renderer)
     SDL_Quit();
 }
 
+struct {
+    char id; //either A or B
+    pdd pos;
+    uint8_t r; //color sensor
+    uint8_t g;
+    uint8_t b;
+} ROBOT_INFO;
+
 // This is the main program of your controller.
 // It creates an instance of your Robot instance, launches its
 // function(s) and destroys it at the end of the execution.
@@ -356,6 +364,14 @@ int main(int argc, char **argv) {
             send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
             sent = true;
         }
+    });
+
+    rb->add_step_callback([&rb](){
+        ROBOT_INFO.id = 'B';
+        ROBOT_INFO.pos = rb->getRawGPSPosition();
+        ROBOT_INFO.r = rb->getColor()[0];
+        ROBOT_INFO.g = rb->getColor()[1];
+        ROBOT_INFO.b = rb->getColor()[2];
     });
 
     /*rb->add_step_callback([&rb]() {
