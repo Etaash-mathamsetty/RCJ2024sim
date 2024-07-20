@@ -36,7 +36,7 @@ void setOtherBotPos(const pdd& pos)
 
     for(int i = 0; i < iterations; i++)
     {
-        other_pts_ret.push_back(pointTo(other_bot_pos, i * 2 * M_PI / 512.0, TRAVERSABLE_RADIUS));
+        other_pts_ret.push_back(pointTo(other_bot_pos, i * 2 * M_PI / iterations, TRAVERSABLE_RADIUS));
     }
 }
 
@@ -53,6 +53,8 @@ void updateOtherVisited(pdd pos, double rot)
 
     addVisited(pointTo(pos, rot - M_PI_2, 0.01));
     addVisited(pointTo(pos, rot - M_PI_2, 0.02));
+
+    bfsAddOnWall(pos, 0.08);
 }
 
 std::vector<pdd>& getOtherBotPts()
