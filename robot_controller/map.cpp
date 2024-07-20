@@ -40,6 +40,11 @@ void setOtherBotPos(const pdd& pos)
     }
 }
 
+bool isNearOtherRobot(pdd pos)
+{
+    return (getDist(pos, other_bot_pos) <= TRAVERSABLE_RADIUS + 0.05);
+}
+
 std::vector<pdd>& getOtherBotPts()
 {
     return other_pts_ret;
@@ -153,7 +158,7 @@ void addLidarPoint(const pdd& point)
     rcoord.second = floor_to(point.second, region_size);
     rcoord = r2d(rcoord);
 
-    if(getDist(point, other_bot_pos) <= TRAVERSABLE_RADIUS)
+    if(getDist(point, other_bot_pos) <= TRAVERSABLE_RADIUS + 0.05)
     {
         return;
     }
