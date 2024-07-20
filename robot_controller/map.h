@@ -76,5 +76,7 @@ std::vector<REGION*> get_neighboring_regions(const std::pair<double, double>& pt
 void setOtherBotPos(const pdd& pos);
 std::vector<pdd>& getOtherBotPts();
 bool isNearOtherRobot(pdd pos);
+void updateOtherVisited(pdd pos, double rot);
+void update_regions_map(pdd pos, const float *lidar_image, float theta);
 
 #endif

@@ -38,6 +38,17 @@ void setOtherBotPos(const pdd& pos)
     {
         other_pts_ret.push_back(pointTo(other_bot_pos, i * 2 * M_PI / 512.0, TRAVERSABLE_RADIUS));
     }
+
+}
+
+void updateOtherVisited(pdd pos, double rot)
+{
+    addVisited(pos);
+    addVisited(pointTo(pos, rot + M_PI_2, 0.01));
+    addVisited(pointTo(pos, rot + M_PI_2, 0.02));
+
+    addVisited(pointTo(pos, rot - M_PI_2, 0.01));
+    addVisited(pointTo(pos, rot - M_PI_2, 0.02));
 }
 
 bool isNearOtherRobot(pdd pos)
@@ -102,6 +113,29 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
         dist -= 0.001;
 
         const double angle = (double)i * (rb->getLidar()->getFov() / rb->getLidar()->getHorizontalResolution());
+
+        addLidarPoint(lidarToPoint(pos, dist, angle - theta));
+    }
+}
+
+void update_regions_map(pdd pos, const float *lidar_image, float theta)
+{
+    for(int i = 0; i < 512; i++)
+    {
+        double dist = lidar_image[i];
+
+        if(std::isinf(dist))
+            continue;
+
+        if(dist > 0.3)
+            continue;
+
+        dist *= std::cos(LIDAR_TILT_ANGLE);
+
+        //small distance bias (thx argentina for the idea)
+        dist -= 0.001;
+
+        const double angle = (double)i * 2 * M_PI / 512.0;
 
         addLidarPoint(lidarToPoint(pos, dist, angle - theta));
     }
