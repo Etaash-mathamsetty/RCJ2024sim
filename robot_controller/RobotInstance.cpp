@@ -377,7 +377,7 @@ bool RobotInstance::turnTo(double speed, double target_angle)
             calc_speed = calc_speed < 0 ? -speed : speed;
         }
 
-        if(blackDetected() || redDetected()) // || blueDetected()
+        if(blackDetected() || redDetected() || blueDetected())
         {
             break;
         }
@@ -401,12 +401,13 @@ bool RobotInstance::turnTo(double speed, double target_angle)
         return false;
     }
 
-    /*if (blueDetected())
+    if (blueDetected())
     {
         blue_detection_callback();
+        clearBluePoints();
         std::cout << "blue detected!" << std::endl;
         return false;
-    }*/
+    }
 
 
     return true;

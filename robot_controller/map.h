@@ -22,6 +22,8 @@ std::vector<std::pair<double, double>>& getCameraPoints();
 void addLidarPoint(const pdd& point);
 void addBluePoints(const pdd& point);
 void addRedPoints(const pdd& point);
+void clearBluePoints();
+void clearRedPoints();
 void addBlackHolePoint(const pdd& point);
 void addVictim(std::pair<double, double> point);
 void reportVictim(std::pair<double, double> point);
