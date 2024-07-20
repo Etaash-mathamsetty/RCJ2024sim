@@ -177,6 +177,13 @@ public:
 
     time_t getRealTime() { return realtime; }
 
+    bool checkPurple()
+    {
+        std::cout << "FIXME: Unimplemented checkPurple!" << std::endl;
+        
+        return false;
+    }
+
 private:
 
     //DOES NOT AFFECT POSITION SENSOR

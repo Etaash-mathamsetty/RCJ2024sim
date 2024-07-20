@@ -114,6 +114,12 @@ bool isTraversableOpt(const pdd& pos, double rad)
         }
     }
 
+    for(const auto& pair : getOtherBotPts())
+    {
+        if(getDist(pos, pair) <= rad)
+            return false;
+    }
+
     return true;
 }
 

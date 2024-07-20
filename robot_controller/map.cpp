@@ -20,6 +20,29 @@ using namespace webots;
 
 const double region_size = 0.1;
 
+pdd other_bot_pos = {INFINITY, INFINITY};
+
+void setOtherBotPos(const pdd& pos)
+{
+    other_bot_pos = pos;
+}
+
+std::vector<pdd> getOtherBotPts()
+{
+    std::vector<pdd> ret{};
+
+    const int iterations = 512;
+
+    ret.reserve(iterations);
+
+    for(int i = 0; i < iterations; i++)
+    {
+        ret.push_back(pointTo(other_bot_pos, i * 2 * M_PI / 512.0, TRAVERSABLE_RADIUS));
+    }
+
+    return ret;
+}
+
 //does the opposite of truncation
 inline double anti_trunc_to(double value, const double precision = 0.01)
 {
@@ -127,6 +150,11 @@ void addLidarPoint(const pdd& point)
     rcoord.first = floor_to(point.first, region_size);
     rcoord.second = floor_to(point.second, region_size);
     rcoord = r2d(rcoord);
+
+    if(getDist(point, other_bot_pos) <= TRAVERSABLE_RADIUS)
+    {
+        return;
+    }
 
     if(regions[rcoord].points.count(point) == 0 || !regions[rcoord].points[point].wall)
     {
