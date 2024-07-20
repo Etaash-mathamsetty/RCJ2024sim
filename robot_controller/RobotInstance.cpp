@@ -1008,7 +1008,7 @@ void RobotInstance::stopAndEmit(void* message)
     delay(VICTIM_DELAY_TIME);
     m_emitter->send(message, 16);
     //force main supervisor to detect the victim
-    delay(0.1);
+    delay(0.5);
 
     std::cout << "emitted" << std::endl;
 }
