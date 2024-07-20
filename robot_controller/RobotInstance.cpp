@@ -1005,7 +1005,7 @@ void RobotInstance::stopAndEmit(void* message, pdd point)
     }
     else
     {
-        std::cout << "ignoring!!!" << std::endl;
+        //std::cout << "ignoring!!!" << std::endl;
     }
 
     //std::cout << "emitted" << std::endl;
@@ -1071,19 +1071,6 @@ void RobotInstance::followVictim(pdd point, std::string side)
         //std::cout << "Could not follow victim" << std::endl;
         stopMotors();
     }
-}
-
-bool ptInLinear(pdd point)
-{
-    for(auto& pts : getLinearMinMax())
-    {
-        if(point.first <= pts.second.first && point.second <= pts.second.second && point.first >= pts.first.first && point.second >= pts.first.second)
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 void RobotInstance::lookForLetter()

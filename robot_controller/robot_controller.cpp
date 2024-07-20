@@ -290,7 +290,7 @@ int main(int argc, char **argv) {
 
     RobotInstance* rb = RobotInstance::getInstance();
 
-//#define COMPMODE
+#define COMPMODE
 #ifdef COMPMODE
     rb->setDisableGUI(true);
 #endif
