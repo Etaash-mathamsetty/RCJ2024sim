@@ -1005,7 +1005,7 @@ void RobotInstance::stopAndEmit(void* message)
     stopMotors();
     m_robot->step(m_timestep);
     delay(VICTIM_DELAY_TIME);
-    m_emitter->send(message, 13);
+    m_emitter->send(message, 16);
     //force main supervisor to detect the victim
     delay(0.1);
 
