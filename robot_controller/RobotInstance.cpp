@@ -457,6 +457,9 @@ int RobotInstance::step() {
             if(checkPurple() && data->waitingOnCoordination)
             {
                 stopMotors();
+                forward(5.0);
+                delay(0.3);
+                stopMotors();
                 delay(5);
             }
             
@@ -732,8 +735,6 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 
         turnTo(MAX_VELOCITY, -std::atan2(tileCenter.first - cur.first, tileCenter.second - cur.second));
 
-        forward(5);
-        delay(0.5);
         stopMotors();
 
         return false;
