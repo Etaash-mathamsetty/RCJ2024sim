@@ -240,7 +240,6 @@ private:
     void black_detection_callback();
     void red_detection_callback();
     void blue_detection_callback();
-
     webots::Robot *m_robot;
     webots::Motor *m_lm;
     webots::Motor *m_rm;

@@ -377,7 +377,7 @@ bool RobotInstance::turnTo(double speed, double target_angle)
             calc_speed = calc_speed < 0 ? -speed : speed;
         }
 
-        if(blackDetected() || redDetected()) // || blueDetected()
+        if(blackDetected() || redDetected()) //for water robot           || blueDetected()) for fire robot
         {
             break;
         }
@@ -394,16 +394,17 @@ bool RobotInstance::turnTo(double speed, double target_angle)
         return false;
     }
 
-    if (redDetected())
+    if (redDetected()) //for water robot
     {
         red_detection_callback();
         std::cout << "red detected!"<<std::endl;
         return false;
     }
 
-    /*if (blueDetected())
+    /*if (blueDetected()) for fire robot
     {
         blue_detection_callback();
+        clearBluePoints();
         std::cout << "blue detected!" << std::endl;
         return false;
     }*/
@@ -583,7 +584,7 @@ void RobotInstance::red_detection_callback()
             {
                 if (x >= -rad && x <= rad && y >= -rad && y <= rad)
                 {
-                    addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
+                    addRedPoints(pdd(tileCenter.first + x, tileCenter.second + y));
                 }
             }
             removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
@@ -630,7 +631,7 @@ void RobotInstance::blue_detection_callback()
             {
                 if (x >= -rad && x <= rad && y >= -rad && y <= rad)
                 {
-                    addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
+                    addBluePoints(pdd(tileCenter.first + x, tileCenter.second + y));
                 }
             }
             removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));

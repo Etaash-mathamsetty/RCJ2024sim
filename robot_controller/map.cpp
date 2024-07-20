@@ -255,6 +255,32 @@ void addBlackHolePoint(const pdd& point)
     }
 }
 
+void clearBluePoints()
+{
+    for (pdd point : bluePoints)
+    {
+        pdd rcoord;
+        rcoord.first = floor_to(point.first, region_size);
+        rcoord.second = floor_to(point.second, region_size);
+        rcoord = r2d(rcoord);
+        regions[rcoord].points[point].wall = false;
+    }
+    bluePoints.clear();
+}
+
+void clearRedPoints()
+{
+    for (pdd point : redPoints)
+    {
+        pdd rcoord;
+        rcoord.first = floor_to(point.first, region_size);
+        rcoord.second = floor_to(point.second, region_size);
+        rcoord = r2d(rcoord);
+        regions[rcoord].points[point].wall = false;
+    }
+    redPoints.clear();
+}
+
 void addVictim(pdd point)
 {
     if (find(victims.begin(), victims.end(), point) == victims.end())
@@ -286,6 +312,17 @@ ImPlotPoint getPointFromMap(int idx, void *_map)
     }
     return {vecLidarPoints[idx].first, vecLidarPoints[idx].second};
 }
+
+ImPlotPoint getRed(int idx, void* _map)
+{
+    return { redPoints[idx].first, redPoints[idx].second };
+}
+
+ImPlotPoint getBlue(int idx, void* _map)
+{
+    return { bluePoints[idx].first, bluePoints[idx].second };
+}
+
 
 ImPlotPoint getCameraPointFromMap(int idx, void *_map)
 {
@@ -367,6 +404,14 @@ void plotPoints(RobotInstance *rb, int w, int h)
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 4);
             ImPlot::PlotScatterG("On Wall", getOnWallPoint, nullptr, getOnWall().size(), ImPlotItemFlags_NoFit);
+        }
+        {
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 4);
+            ImPlot::PlotScatterG("Red", getRed, nullptr, redPoints.size(), ImPlotItemFlags_NoFit);
+        }
+        {
+            ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 4);
+            ImPlot::PlotScatterG("Blue", getBlue, nullptr, bluePoints.size(), ImPlotItemFlags_NoFit);
         }
         {
             ImPlot::SetNextMarkerStyle(ImPlotMarker_Diamond, 4);
