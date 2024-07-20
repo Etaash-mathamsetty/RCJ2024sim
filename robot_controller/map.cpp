@@ -22,25 +22,27 @@ const double region_size = 0.1;
 
 pdd other_bot_pos = {INFINITY, INFINITY};
 
+
+std::vector<pdd> other_pts_ret{};
+
 void setOtherBotPos(const pdd& pos)
 {
     other_bot_pos = pos;
-}
-
-std::vector<pdd> getOtherBotPts()
-{
-    std::vector<pdd> ret{};
 
     const int iterations = 512;
 
-    ret.reserve(iterations);
+    other_pts_ret.reserve(iterations);
+    other_pts_ret.clear();
 
     for(int i = 0; i < iterations; i++)
     {
-        ret.push_back(pointTo(other_bot_pos, i * 2 * M_PI / 512.0, TRAVERSABLE_RADIUS));
+        other_pts_ret.push_back(pointTo(other_bot_pos, i * 2 * M_PI / 512.0, TRAVERSABLE_RADIUS));
     }
+}
 
-    return ret;
+std::vector<pdd>& getOtherBotPts()
+{
+    return other_pts_ret;
 }
 
 //does the opposite of truncation
@@ -346,6 +348,7 @@ void plotPoints(RobotInstance *rb, int w, int h)
             ImPlot::SetNextLineStyle(ImVec4(0.8,0.8,0.8,1));
             ImPlot::PlotLine("Path", xs, ys, 2, ImPlotItemFlags_NoFit);
         }
+        ImPlot::PlotScatter("Other Robot", &other_bot_pos.first, &other_bot_pos.second, 1, ImPlotItemFlags_NoFit);
         ImPlot::EndPlot();
     }
 
