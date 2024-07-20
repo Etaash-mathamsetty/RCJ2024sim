@@ -1134,9 +1134,9 @@ void RobotInstance::lookForLetter()
                 addVictim(point);
                 victimMap[point] = _message.letter;
                 memcpy(message, &_message.xpos, 4);
-                memcpy(message + 4, &_message.zpos, 4);
-                memcpy(message + 8, &_message.letter, 1);
-                memcpy(message + 9, &_message.id, 4);
+                memcpy(message + 3, &_message.zpos, 4);
+                memcpy(message + 7, &_message.letter, 1);
+                memcpy(message + 8, &_message.id, 4);
                 stopAndEmit((void*)&message);
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
@@ -1186,9 +1186,9 @@ void RobotInstance::lookForLetter()
                 addVictim(point);
                 victimMap[point] = _message.letter;
                 memcpy(message, &_message.xpos, 4);
-                memcpy(message + 4, &_message.zpos, 4);
-                memcpy(message + 8, &_message.letter, 1);
-                memcpy(message + 9, &_message.id, 4);
+                memcpy(message + 3, &_message.zpos, 4);
+                memcpy(message + 7, &_message.letter, 1);
+                memcpy(message + 8, &_message.id, 4);
                 stopAndEmit((void*)&message);
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
