@@ -961,7 +961,7 @@ void RobotInstance::stopAndEmit(void* message)
     stopMotors();
     m_robot->step(m_timestep);
     delay(VICTIM_DELAY_TIME);
-    m_emitter->send(message, 9);
+    m_emitter->send(message, 13);
     //force main supervisor to detect the victim
     delay(0.1);
 
@@ -1043,11 +1043,13 @@ void RobotInstance::lookForLetter()
         int32_t xpos;
         int32_t zpos;
         char letter;
+        int32_t id;
     } message;
     pdd cur = getRawGPSPosition();
     message.xpos = (int32_t)(cur.first * 100);
     message.zpos = (int32_t)(cur.second * -100);
     message.letter = 0;
+    message.id = 1;
     if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE)
     {
         auto contour = getContour("Left Contour", frameL);
