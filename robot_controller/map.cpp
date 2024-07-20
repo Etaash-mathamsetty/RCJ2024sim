@@ -40,6 +40,16 @@ void setOtherBotPos(const pdd& pos)
     }
 }
 
+void updateOtherVisited(pdd pos, double rot)
+{
+    addVisited(pos);
+    addVisited(pointTo(pos, rot + M_PI_2, 0.01));
+    addVisited(pointTo(pos, rot + M_PI_2, 0.02));
+
+    addVisited(pointTo(pos, rot - M_PI_2, 0.01));
+    addVisited(pointTo(pos, rot - M_PI_2, 0.02));
+}
+
 std::vector<pdd>& getOtherBotPts()
 {
     return other_pts_ret;
@@ -102,6 +112,29 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
     }
 }
 
+void update_regions_map(pdd pos, const float *lidar_image, float theta)
+{
+    for(int i = 0; i < 512; i++)
+    {
+        double dist = lidar_image[i];
+
+        if(std::isinf(dist))
+            continue;
+
+        if(dist > 0.3)
+            continue;
+
+        dist *= std::cos(LIDAR_TILT_ANGLE);
+
+        //small distance bias (thx argentina for the idea)
+        dist -= 0.001;
+
+        const double angle = (double)i * 2 * M_PI / 512.0;
+
+        addLidarPoint(lidarToPoint(pos, dist, angle - theta));
+    }
+}
+
 double clampAngle(double theta)
 {
     if (abs(theta) > M_PI)
@@ -153,7 +186,7 @@ void addLidarPoint(const pdd& point)
     rcoord.second = floor_to(point.second, region_size);
     rcoord = r2d(rcoord);
 
-    if(getDist(point, other_bot_pos) <= TRAVERSABLE_RADIUS)
+    if(getDist(point, other_bot_pos) <= TRAVERSABLE_RADIUS + 0.05)
     {
         return;
     }

@@ -401,6 +401,8 @@ struct ROBOT_INFO{
     char id; //either A or B
     pdd pos;
     bool waitingOnCoordination;
+    double rotation;
+    float range_image[512];
 };
 
 int RobotInstance::step() {
@@ -435,11 +437,14 @@ int RobotInstance::step() {
         {
             ROBOT_INFO *data = (ROBOT_INFO *)m_receiver->getData();
             setOtherBotPos(data->pos);
+            updateOtherVisited(data->pos, data->rotation);
+            update_regions_map(data->pos, data->range_image, data->rotation);
             if(checkPurple() && data->waitingOnCoordination)
             {
                 stopMotors();
                 delay(5);
             }
+            
             m_receiver->nextPacket();
         }
         else
@@ -616,10 +621,10 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
         std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
 
-        turnTo(MAX_VELOCITY, std::atan2(tileCenter.first - cur.first, tileCenter.second - cur.second));
+        turnTo(MAX_VELOCITY, -std::atan2(tileCenter.first - cur.first, tileCenter.second - cur.second));
 
         forward(5);
-        delay(0.3);
+        delay(0.5);
         stopMotors();
 
         return false;
