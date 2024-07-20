@@ -437,6 +437,7 @@ int RobotInstance::step() {
             setOtherBotPos(data->pos);
             if(checkPurple() && data->waitingOnCoordination)
             {
+                stopMotors();
                 delay(5);
             }
             m_receiver->nextPacket();
