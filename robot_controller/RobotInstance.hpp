@@ -177,6 +177,8 @@ public:
 
     time_t getRealTime() { return realtime; }
 
+    std::map<char, int>& getVictimCounter();
+
 private:
 
     //DOES NOT AFFECT POSITION SENSOR

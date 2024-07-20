@@ -47,7 +47,7 @@ double inputModulus(double input, double minimumInput, double maximumInput)
 
 void printPoint(const pdd& point)
 {
-    std::cout << "(" << point.first << ", " << point.second << ")" << std::endl;
+    //std::cout << "(" << point.first << ", " << point.second << ")" << std::endl;
 }
 
 std::string pointToString(const pdd& point)

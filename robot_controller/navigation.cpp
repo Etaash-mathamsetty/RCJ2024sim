@@ -81,16 +81,6 @@ bool onRoute(stack<pdd> pts, pdd point)
     return 0;
 }
 
-void printStack(stack<pdd> pts)
-{
-    if (pts.empty()) cout << "empty stack" << endl;
-    while (!pts.empty())
-    {
-        cout << pts.top().f << " " << pts.top().s << endl;
-        pts.pop();
-    }
-}
-
 bool isTraversable(const pdd& pos, const vector<pdd>& points)
 {
     for (const pdd& pt : points)
@@ -244,7 +234,7 @@ stack<pdd> optimizeRouteOnWall(stack<pdd> route)
         return route;
     }
     stack<pdd> ret;
-    cout << route.size();
+    //cout << route.size();
 
     while (!route.empty())
     {
@@ -303,7 +293,7 @@ stack<pdd> optimizeRouteOnWall(stack<pdd> route)
         rev_ret.push(last_pt);
     }
 
-    cout << " --> " << rev_ret.size() << endl;
+    //cout << " --> " << rev_ret.size() << endl;
 
     return rev_ret;
 }
@@ -332,7 +322,7 @@ stack<pdd> nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
         visited.insert(node);
         if (isTraversableOpt(node) && canSee(cur, node))
         {
-            cout << "nearest traversable found" << endl;
+            //cout << "nearest traversable found" << endl;
             tar = node;
             isFound = true;
             break;
@@ -371,7 +361,7 @@ stack<pdd> nearestTraversable(pdd point, pdd cur, pair<pdd, pdd> minMax)
         res.push(cur);
         res = optimizeRoute(res);
         res.pop();
-        cout << "traversable path found" << endl;
+        //cout << "traversable path found" << endl;
         return res;
     }
     return stack<pdd>();
@@ -418,7 +408,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     parent[r2d(cur)] = pdd(DBL_MAX, DBL_MAX);
     bool targetFound = false;
 
-    std::cout << "TRACE: pointBfs(" << pointToString(cur) << ", " << pointToString(tar) << ")" << std::endl;
+    // std::cout << "TRACE: pointBfs(" << pointToString(cur) << ", " << pointToString(tar) << ")" << std::endl;
 
     if(!isTraversableOpt(cur))
     {
@@ -431,11 +421,11 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
         }
         if(compPts(traversable, cur))
         {
-            std::cout << "cur is not traversable!" << std::endl;
+            //std::cout << "cur is not traversable!" << std::endl;
             return stack<pdd>();
         }
 
-        std::cout << "found traversable pt!!" << std::endl;
+        //std::cout << "found traversable pt!!" << std::endl;
         path = stack<pdd>();
         path.push(traversable);
         return path;
@@ -443,8 +433,8 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
 
     if(!isTraversableOpt(tar))
     {
-        std::cout << "target is not traversable!" << std::endl;
-        std::cout << "target: " << pointToString(tar) << std::endl;
+        //std::cout << "target is not traversable!" << std::endl;
+        //std::cout << "target: " << pointToString(tar) << std::endl;
         // cout << isTraversableOpt(tar) << endl;
         // removeOnWall(tar);
         // addVisited(tar);
@@ -457,12 +447,12 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
             tarpath.pop();
         }
 
-        std::cout << "new target: " << pointToString(tar) << std::endl;
+        //std::cout << "new target: " << pointToString(tar) << std::endl;
     }
 
     if(compPts(cur, tar))
     {
-        std::cout << "cur and target are the same!" << std::endl;
+        //std::cout << "cur and target are the same!" << std::endl;
         return stack<pdd>();
     }
 
@@ -572,17 +562,17 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     // removeOnWall(tar);
     // bfsRemoveOnWall(tar, 0.05);
     // addVisited(tar);
-    cout << "Route not found:" << endl;
+    //cout << "Route not found:" << endl;
     printPoint(cur);
     printPoint(tar);
-    cout << " ---- " << std::endl;
+    //cout << " ---- " << std::endl;
     //removeOnWall(tar);
     //addVisited(tar);
 
     //recompute onWall when route not found to that onWall point, likely that it's become impossible to traverse 
     if(onWall.count(r2d(tar)) > 0)
     {
-        std::cout << "recomputing onWall!" << std::endl;
+        //std::cout << "recomputing onWall!" << std::endl;
         clearOnWall();
         bfsAddOnWall(RobotInstance::getInstance()->getStartPos(), get_lidar_minmax_opt());
     }
@@ -704,7 +694,7 @@ stack<pdd> nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd 
         visited.insert(node);
         if (onWall.count(r2d(node)) && !compPts(node, cur) && !isVisited(node) && !isPseudoVisited(node) && isTraversableOpt(r2d(node)))
         {
-            cout << "nearest on wall found " << isTraversableOpt(node) << endl;
+            //cout << "nearest on wall found " << isTraversableOpt(node) << endl;
             isFound = true;
             tar = r2d(node);
             actual_tar = node;
@@ -747,7 +737,7 @@ stack<pdd> nearestIsOnWall(pdd cur, pair<pdd, pdd> minMax, double rotation, pdd 
     }
     if (!onWall.empty())
     {
-        cout << "getting closest heuristic" << endl;
+        // cout << "getting closest heuristic" << endl;
         return pointBfs(cur, getClosestHeuristic(onWall, cur, start), minMax, false);
     }
     return pointBfs(cur, start, minMax, false);
@@ -797,7 +787,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
     }
     checkSide(rb->getLidar()->getRangeImage() + 1024, rb->getLidar()->getHorizontalResolution());
     double offset = isLeft ? -M_PI / 2 : M_PI / 2;
-    cout << (isLeft ? "left" : "right") << endl;
+    //cout << (isLeft ? "left" : "right") << endl;
     pdd min = r2d({cur.f - wtRadius, cur.s - wtRadius}), max = r2d({cur.f + wtRadius, cur.s + wtRadius});
     stack<wallNode> st;
     unordered_map<pdd, pdd, pair_hash_combiner<double>> parent;
@@ -847,7 +837,7 @@ stack<pdd> dfsWallTrace(RobotInstance* rb, pdd _cur)
     }
     if (isFound)
     {
-        std::cout << "dfs found: " << pointToString(tar) << std::endl;
+        //std::cout << "dfs found: " << pointToString(tar) << std::endl;
         pdd pindex = tar;
         stack<pdd> res;
         while (pindex != cur)
@@ -1191,7 +1181,7 @@ pdd chooseMove(RobotInstance *rb)
     currentPath = dfsWallTrace(rb, cur);
     if (currentPath.empty())
     {
-        cout << "no move found" << endl;
+        //cout << "no move found" << endl;
 
         if(compPts(cur, rb->getStartPos()))
             allDone = true;
@@ -1209,6 +1199,21 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points, double robotRadius
             return 0;
     }
     return 1;
+}
+
+std::vector<std::pair<pdd, pdd>> floating_minmax{};
+
+std::vector<std::pair<pdd, pdd>>& getFloatingMinmaxes()
+{
+
+}
+
+void updateFloating(pdd cur)
+{
+    queue<pdd> q;
+    unordered_set<pdd, pair_hash_combiner<double>> visited;
+
+    pdd 
 }
 
 // int main()

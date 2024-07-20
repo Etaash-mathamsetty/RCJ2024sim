@@ -44,9 +44,9 @@ void printList(std::list<std::pair<int, int>> list)
 {
         for(auto item : list)
         {
-                std::cout << "(" << item.first << "," << item.second << ") ";
+                //std::cout << "(" << item.first << "," << item.second << ") ";
         }
-        std::cout << std::endl;
+        //std::cout << std::endl;
 }
 
 void init_gui(SDL_Window *window, SDL_Renderer *renderer)
@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
     //std::cout << std::filesystem::current_path() << std::endl;
 
 #ifdef __linux__
-    std::cout << "PID: " << getpid() << std::endl;
+    //std::cout << "PID: " << getpid() << std::endl;
 #endif
 
     RobotInstance* rb = RobotInstance::getInstance();
@@ -296,12 +296,12 @@ int main(int argc, char **argv) {
 #endif
     bool running = true;
 
-    std::cout << "ImGui Version: " << ImGui::GetVersion() << std::endl;
+    //std::cout << "ImGui Version: " << ImGui::GetVersion() << std::endl;
     {
         SDL_version v;
         SDL_GetVersion(&v);
 
-        std::cout << "SDL Version: " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
+        //std::cout << "SDL Version: " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
 
 #ifdef __linux__
 #ifdef SDL_HINT_VIDEODRIVER

@@ -230,6 +230,8 @@ void RobotInstance::add_training_data(std::string side, char classification)
     m_knn->train(training_data, cv::ml::ROW_SAMPLE, output);
 }
 
+std::map<char, int> victim_counter;
+
 RobotInstance::RobotInstance()
 {
     m_robot = new webots::Robot();
@@ -281,7 +283,7 @@ RobotInstance::RobotInstance()
 
     if(res == -1)
     {
-        std::cout << "failed to step!" << std::endl;
+        //std::cout << "failed to step!" << std::endl;
         m_dir = DIR::N;
     }
     else
@@ -315,6 +317,16 @@ RobotInstance::RobotInstance()
 
     update_lidar_cloud();
     bfsAddOnWall(getCurrentGPSPosition(), getMinMax(getLidarPoints()));
+
+    victim_counter['H'] = 0;
+    victim_counter['S'] = 0;
+    victim_counter['O'] = 0;
+    victim_counter['F'] = 0;
+}
+
+std::map<char, int>& RobotInstance::getVictimCounter()
+{
+    return victim_counter;
 }
 
 RobotInstance::~RobotInstance()
@@ -407,7 +419,7 @@ int RobotInstance::step() {
     while(this->m_receiver->getQueueLength() > 0) { // If receiver queue is not empty
         char *message = (char *)m_receiver->getData(); // Grab data as a string
         if (message[0] == 'L') { // 'L' means a lack of progress occurred
-            std::cout << "Detected Lack of Progress!" << std::endl;
+            //std::cout << "Detected Lack of Progress!" << std::endl;
             this->m_receiver->nextPacket(); // Discard the current data packet
             this->m_robot->step(this->m_timestep); // update all the senors, for updated gps pos
             clearBfsResult();
@@ -479,7 +491,7 @@ const double turn_drive_kp = 1.5;
 void RobotInstance::black_detection_callback()
 {
     runCallbacks = false;
-    std::cout << "black detected" << std::endl;
+    //std::cout << "black detected" << std::endl;
     insert_tile("2", m_color, m_gps, m_imu, m_startPos);
     pdd cur = getRawGPSPosition();
     pdd colorSensorLoc = pdd(cur.first + 0.025 * sin(getYaw()), cur.second + 0.025 * cos(getYaw()));
@@ -830,10 +842,10 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
         double ratio = cv::contourArea(big_orange_c) / cv::contourArea(big_red_c);
         if(ratio < 0.8 || ratio > 1.2)
         {
-            std::cout << "ratio O: " << ratio << std::endl;
+            //std::cout << "ratio O: " << ratio << std::endl;
             return 0;
         }
-        std::cout << "found O" << std::endl;
+        //std::cout << "found O" << std::endl;
         return 'O';
     }
     else if(big_red_c.size() > 0 && white_c.size() >= 3)
@@ -843,7 +855,7 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
         if(ratio >= 0.7)
         {
-            std::cout << "ratio F: " <<  ratio << std::endl;
+            //std::cout << "ratio F: " <<  ratio << std::endl;
             return 0;
         }
 
@@ -851,11 +863,11 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
         if(white_sum <= 1000)
         {
-            std::cout << "white sum too small! " << white_sum << std::endl;
+            //std::cout << "white sum too small! " << white_sum << std::endl;
             return 0;
         }
 
-        std::cout << "found F" << std::endl;
+        //std::cout << "found F" << std::endl;
         return 'F';
     }
 
@@ -908,9 +920,9 @@ char RobotInstance::checkHazard(cv::Mat roi, std::string side)
         return 0;
 
 
-    std::cout << "ret: " << ret << " dist: " << dists[0] << std::endl;
+    //std::cout << "ret: " << ret << " dist: " << dists[0] << std::endl;
 
-    return ret;
+    return 0;
 }
 
 char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
@@ -938,7 +950,7 @@ char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
 
     // std::cout << "ret: " << ch << " dist: " << dist << std::endl;
 
-    if(ch == 'P' || ch == 'C')
+    if(ch == 'P' || ch == 'C' || ch == 'U')
         ch = 0;
 
     if(dist > 600000)
@@ -946,7 +958,7 @@ char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
         return 0;
     }
 
-    std::cout << "ret: " << ch << " dist: " << dist << std::endl;
+    //std::cout << "ret: " << ch << " dist: " << dist << std::endl;
 
     // std::cout << std::string(message) << std::endl;
     return ch;
@@ -965,7 +977,31 @@ void RobotInstance::stopAndEmit(void* message)
     //force main supervisor to detect the victim
     delay(0.1);
 
-    std::cout << "emitted" << std::endl;
+    char *ch = (char*)message;
+    ch += 8;
+
+    switch(*ch)
+    {
+        case 'H':
+            std::cout << "I got the milk." << std::endl;
+            break;
+        case 'S':
+            std::cout << "I picked up the bread." << std::endl;
+            break;
+        case 'F':
+            std::cout << "I took some eggs." << std::endl;
+            break;
+        case 'O':
+            std::cout << "I packed pineapple juice." << std::endl;
+            break;
+        default:
+            break;
+    }
+
+
+    victim_counter[*ch]++;
+
+    //std::cout << "emitted" << std::endl;
 }
 
 pdd RobotInstance::victimToPoint(int rectCenterX, int frameCols, std::string side)
@@ -994,7 +1030,7 @@ void RobotInstance::followVictim(pdd point, std::string side)
     }
     if (isTraversableOpt(nearest) && getDist(nearest, point) <= MAX_VIC_IDENTIFICATION_RANGE)
     {
-        std::cout << "following victim" << std::endl;
+        //std::cout << "following victim" << std::endl;
         pdd org = getCurrentGPSPosition();
         double org_rot = getYaw();
         isFollowingVictim = true;
@@ -1025,7 +1061,7 @@ void RobotInstance::followVictim(pdd point, std::string side)
     }
     else
     {
-        std::cout << "Could not follow victim" << std::endl;
+        //std::cout << "Could not follow victim" << std::endl;
         stopMotors();
     }
 }
@@ -1090,7 +1126,7 @@ void RobotInstance::lookForLetter()
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
-                std::cout << "victim dist: " << getDist(cur, point) << std::endl;
+                //std::cout << "victim dist: " << getDist(cur, point) << std::endl;
                 followVictim(point, "L");
             }
             return;
@@ -1138,7 +1174,7 @@ void RobotInstance::lookForLetter()
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
-                std::cout << "victim dist: " << getDist(cur, point) << std::endl;
+                //std::cout << "victim dist: " << getDist(cur, point) << std::endl;
                 followVictim(point, "R");
             }
             return;
@@ -1164,7 +1200,7 @@ void RobotInstance::moveToPos(pdd pos)
 
     if(compPts(curPos, pos, 0.001))
     {
-        std::cout << "already at position!" << std::endl;
+        //std::cout << "already at position!" << std::endl;
         return;
     }
 
@@ -1184,7 +1220,7 @@ void RobotInstance::moveToNextPos()
 {
     if(!isTraversableOpt(getTargetPos()))
     {
-        std::cout << "recomputing target pos!" << std::endl;
+        //std::cout << "recomputing target pos!" << std::endl;
         updateTargetPos();
     }
 
@@ -1271,7 +1307,7 @@ const uint8_t* RobotInstance::getColor()
 
 void RobotInstance::alignRobot()
 {
-    std::cout << "alignment todo!" << std::endl;
+    //std::cout << "alignment todo!" << std::endl;
 }
 
 RobotInstance* RobotInstance::getInstance()
