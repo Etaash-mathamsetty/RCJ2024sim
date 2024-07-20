@@ -20,6 +20,8 @@ std::vector<std::pair<double, double>>& getLidarPoints();
 std::vector<std::pair<double, double>>& getBlackHoles();
 std::vector<std::pair<double, double>>& getCameraPoints();
 void addLidarPoint(const pdd& point);
+void addBluePoints(const pdd& point);
+void addRedPoints(const pdd& point);
 void addBlackHolePoint(const pdd& point);
 void addVictim(std::pair<double, double> point);
 void reportVictim(std::pair<double, double> point);

@@ -580,7 +580,7 @@ void RobotInstance::red_detection_callback()
             {
                 if (x >= -rad && x <= rad && y >= -rad && y <= rad)
                 {
-                    addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
+                    addRedPoints(pdd(tileCenter.first + x, tileCenter.second + y));
                 }
             }
             removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
@@ -627,7 +627,7 @@ void RobotInstance::blue_detection_callback()
             {
                 if (x >= -rad && x <= rad && y >= -rad && y <= rad)
                 {
-                    addBlackHolePoint(pdd(tileCenter.first + x, tileCenter.second + y));
+                    addBluePoints(pdd(tileCenter.first + x, tileCenter.second + y));
                 }
             }
             removeOnWall(r2d(pdd(tileCenter.first + x, tileCenter.second + y)));
