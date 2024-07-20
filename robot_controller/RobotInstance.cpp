@@ -1083,18 +1083,18 @@ void RobotInstance::lookForLetter()
     cv::Mat frameR = getCv2Mat(m_rightCamera);
     addTexture("Left Camera", frameL, SDL_PIXELFORMAT_RGB888);
     addTexture("Right Camera", frameR, SDL_PIXELFORMAT_RGB888);
-    struct Message {
+    struct  {
         int32_t xpos;
         int32_t zpos;
         char letter;
         int32_t id;
-    };
-    Message message{};
+    } _message;
     pdd cur = getRawGPSPosition();
-    message.xpos = (int32_t)(cur.first * 100);
-    message.zpos = (int32_t)(cur.second * -100);
-    message.letter = 0;
-    message.id = 1;
+    _message.xpos = (int32_t)(cur.first * 100);
+    _message.zpos = (int32_t)(cur.second * -100);
+    _message.letter = 0;
+    _message.id = 1;
+    char message[13];
     if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE)
     {
         auto contour = getContour("Left Contour", frameL);
@@ -1105,34 +1105,38 @@ void RobotInstance::lookForLetter()
         if(boundRect.area() >= 150)
         {
             cv::Mat roi(frameL, boundRect);
-            message.letter = determineLetter(roi, "L");
+            _message.letter = determineLetter(roi, "L");
         }
-        if(!message.letter)
+        if(!_message.letter)
         {
             boundRect = cv::boundingRect(color);
             if(boundRect.area() >= 150)
             {
                 cv::Mat roi(frameL, boundRect);
-                message.letter = checkHsv(roi, "L");
+                _message.letter = checkHsv(roi, "L");
             }
         }
-        if(!message.letter)
+        if(!_message.letter)
         {
             boundRect = cv::boundingRect(hazard);
             if(boundRect.area() >= 150)
             {
                 cv::Mat roi(frameL, boundRect);
-                message.letter = checkHazard(roi, "L");
+                _message.letter = checkHazard(roi, "L");
             }
         }
 
-        if(message.letter)
+        if(_message.letter)
         {
             pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
             if(getDist(cur, point) <= MAX_VIC_IDENTIFICATION_RANGE)
             {
                 addVictim(point);
-                victimMap[point] = message.letter;
+                victimMap[point] = _message.letter;
+                memcpy(message, &_message.xpos, 4);
+                memcpy(message + 4, &_message.zpos, 4);
+                memcpy(message + 8, &_message.letter, 1);
+                memcpy(message + 9, &_message.id, 4);
                 stopAndEmit((void*)&message);
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
@@ -1153,34 +1157,38 @@ void RobotInstance::lookForLetter()
         if(boundRect.area() >= 150)
         {
             cv::Mat roi(frameR, boundRect);
-            message.letter = determineLetter(roi, "R");
+            _message.letter = determineLetter(roi, "R");
         }
-        if(!message.letter)
+        if(!_message.letter)
         {
             boundRect = cv::boundingRect(color);
             if(boundRect.area() >= 150)
             {
                 cv::Mat roi(frameR, boundRect);
-                message.letter = checkHsv(roi, "R");
+                _message.letter = checkHsv(roi, "R");
             }
         }
-        if(!message.letter)
+        if(!_message.letter)
         {
             boundRect = cv::boundingRect(hazard);
             if(boundRect.area() >= 150)
             {
                 cv::Mat roi(frameR, boundRect);
-                message.letter = checkHazard(roi, "R");
+                _message.letter = checkHazard(roi, "R");
             }
         }
 
-        if(message.letter)
+        if(_message.letter)
         {
             pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
             if(getDist(cur, point) <= MAX_VIC_IDENTIFICATION_RANGE)
             {
                 addVictim(point);
-                victimMap[point] = message.letter;
+                victimMap[point] = _message.letter;
+                memcpy(message, &_message.xpos, 4);
+                memcpy(message + 4, &_message.zpos, 4);
+                memcpy(message + 8, &_message.letter, 1);
+                memcpy(message + 9, &_message.id, 4);
                 stopAndEmit((void*)&message);
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
