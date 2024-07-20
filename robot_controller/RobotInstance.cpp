@@ -1087,14 +1087,17 @@ void RobotInstance::lookForLetter()
         int32_t xpos;
         int32_t zpos;
         char letter;
+        char pad;
+        int16_t pad2;
         int32_t id;
     } _message;
     pdd cur = getRawGPSPosition();
     _message.xpos = (int32_t)(cur.first * 100);
     _message.zpos = (int32_t)(cur.second * -100);
     _message.letter = 0;
+    _message.pad = 0;
+    _message.pad2 = 0;
     _message.id = 1;
-    char message[13];
     if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE)
     {
         auto contour = getContour("Left Contour", frameL);
@@ -1133,11 +1136,7 @@ void RobotInstance::lookForLetter()
             {
                 addVictim(point);
                 victimMap[point] = _message.letter;
-                memcpy(message, &_message.xpos, 4);
-                memcpy(message + 3, &_message.zpos, 4);
-                memcpy(message + 7, &_message.letter, 1);
-                memcpy(message + 8, &_message.id, 4);
-                stopAndEmit((void*)&message);
+                stopAndEmit((void*)&_message);
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
@@ -1185,11 +1184,7 @@ void RobotInstance::lookForLetter()
             {
                 addVictim(point);
                 victimMap[point] = _message.letter;
-                memcpy(message, &_message.xpos, 4);
-                memcpy(message + 3, &_message.zpos, 4);
-                memcpy(message + 7, &_message.letter, 1);
-                memcpy(message + 8, &_message.id, 4);
-                stopAndEmit((void*)&message);
+                stopAndEmit((void*)&_message);
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
