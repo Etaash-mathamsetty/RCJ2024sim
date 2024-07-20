@@ -744,9 +744,8 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
 
 void RobotInstance::delay(double seconds)
 {
-    m_robot->step(m_timestep);
     double current = m_robot->getTime();
-    while(m_robot->step(m_timestep) != -1 && m_robot->getTime() < current + seconds);
+    while(step() != -1 && m_robot->getTime() < current + seconds);
 }
 
 std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame)
@@ -1207,7 +1206,7 @@ void RobotInstance::lookForLetter()
     _message.letter = 0;
     _message.pad = 0;
     _message.pad2 = 0;
-    _message.id = 1;
+    _message.id = 0;
     if (rangeImage[horizontalResolution * 3 / 4] <= MAX_VIC_DETECTION_RANGE)
     {
         auto contour = getContour("Left Contour", frameL);
