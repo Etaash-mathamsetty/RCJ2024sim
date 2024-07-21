@@ -79,6 +79,8 @@ public:
         step();
     }
 
+    bool m_waitingCoord = false;
+
     bool forwardTicks(double vel, double ticks, pdd target);
 
     int getDirection();
@@ -96,6 +98,8 @@ public:
     bool blueDetected();
 
     void writeTileData();
+
+    bool getWaitingOnCoordination() { return m_waitingCoord; }
 
     void detectVictims();
 

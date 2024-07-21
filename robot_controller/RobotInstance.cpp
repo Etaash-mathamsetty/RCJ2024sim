@@ -671,7 +671,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     double angle = std::atan2(target.first - start.first, target.second - start.second);
     while(traveled <= ticks && step() != -1)
     {
-        if(checkPurple())
+        if(checkPurple() && !m_waitingCoord)
         {
             break;
         }
@@ -731,7 +731,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         return false;
     }
 
-    if(checkPurple())
+    if(checkPurple() && !m_waitingCoord)
     {
         
         pdd cur = getRawGPSPosition();
