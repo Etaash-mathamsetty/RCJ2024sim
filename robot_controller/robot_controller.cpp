@@ -384,12 +384,8 @@ int main(int argc, char **argv) {
     });*/
 
     while (rb->step() != -1 && running && !rb->isFinished()) {
-
-        if(!ROBOT_INFO.waitingOnCoordination)
-        {
-            rb->updateTargetPos();
-            rb->moveToNextPos();
-        }
+        rb->updateTargetPos();
+        rb->moveToNextPos();
         //show(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
         if ((isAllDone() || rb->isFinished()) && rb->getCurrentGPSPosition() == rb->getStartPos() && getOnWall().size() == 0)
         {

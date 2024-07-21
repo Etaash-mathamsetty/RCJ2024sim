@@ -188,6 +188,8 @@ public:
 
     char curLetter() { return m_curLetter; }
 
+    bool getWaitingOnCoordination(){ return m_waitingCoord; }
+
 private:
 
     //DOES NOT AFFECT POSITION SENSOR
@@ -278,6 +280,8 @@ private:
     std::map<std::string, SDL_Texture*> m_tex;
 
     cv::Ptr<cv::ml::KNearest> m_knn;
+
+    bool m_waitingCoord = false;
 
 };
 

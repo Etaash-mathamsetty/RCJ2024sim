@@ -438,16 +438,9 @@ int RobotInstance::step() {
         {
             ROBOT_INFO *data = (ROBOT_INFO *)m_receiver->getData();
             setOtherBotPos(data->pos);
-            update_regions_map(data->pos, data->range_image, -data->rotation);
+            update_regions_map(data->pos, getRawGPSPosition(), data->range_image, -data->rotation);
             updateOtherVisited(data->pos, data->rotation);
-            if(checkPurple() && data->waitingOnCoordination)
-            {
-                stopMotors();
-                forward(5.0);
-                delay(0.3);
-                stopMotors();
-                delay(5);
-            }
+            m_waitingCoord = data->waitingOnCoordination;
             if(data->vic != '/')
             {
                 // do deactivation stuff
@@ -560,7 +553,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
     double angle = std::atan2(target.first - start.first, target.second - start.second);
     while(traveled <= ticks && step() != -1)
     {
-        if(checkPurple())
+        if(checkPurple() && !m_waitingCoord)
         {
             break;
         }
@@ -620,7 +613,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         return false;
     }
 
-    if(checkPurple())
+    if(checkPurple() && !m_waitingCoord)
     {
         
         pdd cur = getRawGPSPosition();
@@ -1012,7 +1005,7 @@ void RobotInstance::stopAndEmit(void* message)
     delay(VICTIM_DELAY_TIME);
     m_emitter->send(message, 16);
     //force main supervisor to detect the victim
-    delay(0.5);
+    delay(VICTIM_DELAY_TIME);
 
     std::cout << "emitted" << std::endl;
 }
@@ -1134,6 +1127,8 @@ void RobotInstance::lookForLetter()
             }
         }
 
+        m_curLetter = '/';
+
         if(_message.letter)
         {
             pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "L");
@@ -1153,7 +1148,6 @@ void RobotInstance::lookForLetter()
                 std::cout << "victim dist: " << getDist(cur, point) << std::endl;
                 followVictim(point, "L");
             }
-            m_curLetter = '/';
             return;
         }
     }
@@ -1188,6 +1182,8 @@ void RobotInstance::lookForLetter()
             }
         }
 
+        m_curLetter = '/';
+
         if(_message.letter)
         {
             pdd point = victimToPoint(boundRect.x + boundRect.width / 2, frameL.cols, "R");
@@ -1207,7 +1203,6 @@ void RobotInstance::lookForLetter()
                 std::cout << "victim dist: " << getDist(cur, point) << std::endl;
                 followVictim(point, "R");
             }
-            m_curLetter = '/';
             return;
         }
     }

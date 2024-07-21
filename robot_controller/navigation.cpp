@@ -1152,6 +1152,15 @@ pdd chooseMove(RobotInstance *rb)
     //     }
     //}
 
+    if(rb->checkPurple() && rb->getWaitingOnCoordination())
+    {
+        std::cout << "going to tile center" << std::endl;
+        pdd colorSensorLoc = pdd(cur.first + 0.025 * sin(rb->getYaw()), cur.second + 0.025 * cos(rb->getYaw()));
+        pdd tileCenter = pdd(std::round((colorSensorLoc.first - rb->getStartPos().first) / TILE_LENGTH) * TILE_LENGTH + rb->getStartPos().first,
+        std::round((colorSensorLoc.second - rb->getStartPos().second) / TILE_LENGTH) * TILE_LENGTH + rb->getStartPos().second);
+        return tileCenter;
+    }
+
     if (!compPts(cur, rb->getStartPos()) && onWall.empty() && currentPath.empty())
     {
         bfsAddOnWall(cur, get_lidar_minmax_opt());
