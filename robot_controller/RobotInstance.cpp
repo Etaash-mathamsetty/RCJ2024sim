@@ -419,6 +419,7 @@ struct ROBOT_INFO{
     bool waitingOnCoordination;
     double rotation;
     float range_image[512];
+    char vic;
 };
 
 int RobotInstance::step() {
@@ -462,6 +463,10 @@ int RobotInstance::step() {
                 delay(0.3);
                 stopMotors();
                 delay(5);
+            }
+            if(data->vic != '/')
+            {
+                // do deactivation stuff
             }
             
             m_receiver->nextPacket();
@@ -1117,6 +1122,7 @@ void RobotInstance::stopAndEmit(void* message)
     m_robot->step(m_timestep);
     delay(VICTIM_DELAY_TIME);
     m_emitter->send(message, 16);
+    
     //force main supervisor to detect the victim
     delay(0.5);
 
@@ -1248,12 +1254,18 @@ void RobotInstance::lookForLetter()
                 addVictim(point);
                 victimMap[point] = _message.letter;
                 stopAndEmit((void*)&_message);
+                if (_message.letter == 'H' || _message.letter == 'S')
+                {
+                    m_curLetter = _message.letter;
+                    return;
+                }
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
                 std::cout << "victim dist: " << getDist(cur, point) << std::endl;
                 followVictim(point, "L");
             }
+            m_curLetter = '/';
             return;
         }
     }
@@ -1296,12 +1308,18 @@ void RobotInstance::lookForLetter()
                 addVictim(point);
                 victimMap[point] = _message.letter;
                 stopAndEmit((void*)&_message);
+                if (_message.letter == 'H' || _message.letter == 'S')
+                {
+                    m_curLetter = _message.letter;
+                    return;
+                }
             }
             else if(getDist(cur, point) <= MAX_VIC_DETECTION_RANGE && !isFollowingVictim)
             {
                 std::cout << "victim dist: " << getDist(cur, point) << std::endl;
                 followVictim(point, "R");
             }
+            m_curLetter = '/';
             return;
         }
     }

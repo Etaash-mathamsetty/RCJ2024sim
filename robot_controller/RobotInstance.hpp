@@ -192,6 +192,8 @@ public:
         return cols[0] >= 230 && cols[0] <= 250 && cols[1] >= 60 && cols[1] <= 90 && cols[2] >= 150 && cols[2] <= 180;
     }
 
+    char curLetter() { return m_curLetter; }
+
 private:
 
     //DOES NOT AFFECT POSITION SENSOR
@@ -227,6 +229,7 @@ private:
     bool isFollowingVictim;
     bool reporting;
     void lookForLetter();
+    char m_curLetter = '/';
 
     RobotInstance();
 
