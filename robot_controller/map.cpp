@@ -42,7 +42,7 @@ void setOtherBotPos(const pdd& pos)
 
 bool isNearOtherRobot(pdd pos)
 {
-    return (getDist(pos, other_bot_pos) <= TRAVERSABLE_RADIUS + 0.05);
+    return (getDist(pos, other_bot_pos) <= TRAVERSABLE_RADIUS + 0.001);
 }
 
 void updateOtherVisited(pdd pos, double rot)
@@ -121,7 +121,7 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
     }
 }
 
-void update_regions_map(pdd pos, const float *lidar_image, float theta)
+void update_regions_map(pdd pos, pdd cur, const float *lidar_image, float theta)
 {
     for(int i = 0; i < 512; i++)
     {
@@ -140,7 +140,11 @@ void update_regions_map(pdd pos, const float *lidar_image, float theta)
 
         const double angle = (double)i * 2 * M_PI / 512.0;
 
-        addLidarPoint(lidarToPoint(pos, dist, angle - theta));
+        pdd pt = lidarToPoint(pos, dist, angle - theta);
+
+        if(getDist(cur, pt) <= TRAVERSABLE_RADIUS + 0.001) continue;
+
+        addLidarPoint(pt);
     }
 }
 
@@ -195,7 +199,7 @@ void addLidarPoint(const pdd& point)
     rcoord.second = floor_to(point.second, region_size);
     rcoord = r2d(rcoord);
 
-    if(getDist(point, other_bot_pos) <= TRAVERSABLE_RADIUS + 0.05)
+    if(getDist(point, other_bot_pos) <= TRAVERSABLE_RADIUS + 0.001)
     {
         return;
     }
