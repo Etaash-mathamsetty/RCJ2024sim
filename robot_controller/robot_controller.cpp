@@ -277,6 +277,7 @@ struct {
     bool waitingOnCoordination;
     double rotation;
     float range_image[512];
+    char vic;
 } ROBOT_INFO;
 
 // This is the main program of your controller.
@@ -371,6 +372,7 @@ int main(int argc, char **argv) {
         ROBOT_INFO.pos = rb->getRawGPSPosition();
         ROBOT_INFO.waitingOnCoordination = rb->checkPurple();
         ROBOT_INFO.rotation = rb->getYaw();
+        ROBOT_INFO.vic = rb->curLetter();
         memcpy(ROBOT_INFO.range_image, rb->getLidar()->getRangeImage() + 512 * 3, 512);
 
         rb->getEmitter()->send(&ROBOT_INFO, sizeof(ROBOT_INFO));
