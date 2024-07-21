@@ -377,7 +377,7 @@ bool RobotInstance::turnTo(double speed, double target_angle)
             calc_speed = calc_speed < 0 ? -speed : speed;
         }
 
-        if(blackDetected() || redDetected()) //for water robot           || blueDetected()) for fire robot
+        if(blackDetected() || blueDetected()) //for water robot           || blueDetected()) for fire robot
         {
             break;
         }
@@ -394,9 +394,9 @@ bool RobotInstance::turnTo(double speed, double target_angle)
         return false;
     }
 
-    if (redDetected()) //for water robot
+    if (blueDetected()) //for water robot
     {
-        red_detection_callback();
+        blue_detection_callback();
         std::cout << "red detected!"<<std::endl;
         return false;
     }
@@ -463,6 +463,11 @@ int RobotInstance::step() {
             }
             
             m_receiver->nextPacket();
+        }
+        else if (message[0] == 'D')
+        {
+            
+            m_waitingCoord = false;
         }
         else
         {
@@ -668,7 +673,11 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         {
             break;
         }
-
+        if (!checkPurple() && m_waitingCoord)
+        {
+            char door = 'd';
+            m_emitter->send(&door, 1);
+        }
         /*if (m_lm->getVelocity() < 0 && m_rm->getVelocity() < 0) col(m_color, m_gps, m_imu, m_startPos, -1);
         else col(m_color, m_gps, m_imu, m_startPos, 1);*/
         if (!isTraversableOpt(target))
@@ -680,7 +689,7 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
             return false;
         }
         detectVictims();
-        if(blackDetected())
+        if(blackDetected() || blueDetected())
         {
             stopMotors();
             break;

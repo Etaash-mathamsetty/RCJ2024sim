@@ -40,6 +40,25 @@ void setOtherBotPos(const pdd& pos)
     }
 }
 
+void clearPts(const pdd& pos, const double& radius)
+{
+    for (auto it : get_neighboring_regions(pos, radius))
+    {
+        for (auto m : it->points)
+        {
+            pdd pt = m.first;
+            if (getDist(pos, pt) < radius)
+            {
+                pdd rcoord;
+                rcoord.first = floor_to(pt.first, 0.1);
+                rcoord.second = floor_to(pt.second, 0.1);
+                rcoord = r2d(rcoord);
+                //regions[rcoord].points[pt].wall = false;
+            }
+        }
+    }
+}
+
 bool isNearOtherRobot(pdd pos)
 {
     return (getDist(pos, other_bot_pos) <= TRAVERSABLE_RADIUS + 0.001);
