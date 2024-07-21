@@ -456,14 +456,7 @@ int RobotInstance::step() {
             setOtherBotPos(data->pos);
             update_regions_map(data->pos, getRawGPSPosition(), data->range_image, -data->rotation);
             updateOtherVisited(data->pos, data->rotation);
-            if(checkPurple() && data->waitingOnCoordination)
-            {
-                stopMotors();
-                forward(5.0);
-                delay(0.2);
-                stopMotors();
-                delay(5);
-            }
+            m_waitingCoord = data->waitingOnCoordination;
             if(data->vic != '/')
             {
                 // do deactivation stuff
