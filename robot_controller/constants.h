@@ -26,7 +26,7 @@ enum class DIR
 
 #define LIDAR_TILT_ANGLE 0.1 //radians
 #define DISTANCE_TILE_ANGLE 0.17 //radians
-#define VICTIM_DELAY_TIME 5
+#define VICTIM_DELAY_TIME 3
 #endif
 
 #ifndef M_PI
