@@ -731,21 +731,6 @@ bool RobotInstance::forwardTicks(double vel, double ticks, pdd target)
         return false;
     }
 
-    if(checkPurple())
-    {
-        
-        pdd cur = getRawGPSPosition();
-        pdd colorSensorLoc = pdd(cur.first + 0.025 * sin(getYaw()), cur.second + 0.025 * cos(getYaw()));
-        pdd tileCenter = pdd(std::round((colorSensorLoc.first - m_startPos.first) / TILE_LENGTH) * TILE_LENGTH + m_startPos.first,
-        std::round((colorSensorLoc.second - m_startPos.second) / TILE_LENGTH) * TILE_LENGTH + m_startPos.second);
-
-        turnTo(MAX_VELOCITY, -std::atan2(tileCenter.first - cur.first, tileCenter.second - cur.second));
-
-        stopMotors();
-
-        return false;
-    }
-
     return true;
 }
 
