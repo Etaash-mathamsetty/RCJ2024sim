@@ -19,13 +19,12 @@
 #include "navigation.h"
 #include <filesystem>
 #include <time.h>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "imgui/imgui.h"
 #include "imgui/implot.h"
-#include "imgui/imgui_impl_sdl2.h"
-#include "imgui/imgui_impl_sdlrenderer2.h"
-#include "imgui/imgui_internal.h"
+#include "imgui/imgui_impl_sdl3.h"
+#include "imgui/imgui_impl_sdlgpu3.h"
 
 #ifdef _WIN32
 #include "win_imgui/imgui_impl_win32.h"
@@ -49,7 +48,7 @@ void printList(std::list<std::pair<int, int>> list)
         std::cout << std::endl;
 }
 
-void init_gui(SDL_Window *window, SDL_Renderer *renderer)
+void init_gui(SDL_Window *window, SDL_GPUDevice* device)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -62,8 +61,15 @@ void init_gui(SDL_Window *window, SDL_Renderer *renderer)
     ImGui::StyleColorsDark();
     ImPlot::CreateContext();
 
-    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-	ImGui_ImplSDLRenderer2_Init(renderer);
+    //ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
+	//ImGui_ImplSDLRenderer2_Init(renderer);
+
+    ImGui_ImplSDL3_InitForSDLGPU(window);
+    ImGui_ImplSDLGPU3_InitInfo info;
+    info.ColorTargetFormat = SDL_GetGPUSwapchainTextureFormat(device, window);
+    info.GpuDevice = device;
+    info.MSAASamples = SDL_GPU_SAMPLECOUNT_1;
+    ImGui_ImplSDLGPU3_Init(&info);
 
 #ifdef _WIN32
     // ImGui_ImplWin32_EnableDpiAwareness();
@@ -71,38 +77,52 @@ void init_gui(SDL_Window *window, SDL_Renderer *renderer)
 #endif
 }
 
-void init_frame(SDL_Renderer *renderer)
+void init_frame(void)
 {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(renderer);
-    ImGui_ImplSDLRenderer2_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui_ImplSDLGPU3_NewFrame();
     ImGui::NewFrame();
 }
 
-std::vector<std::pair<char, SDL_Texture*>> image_map;
+std::vector<std::pair<char, SDL_GPUTextureSamplerBinding>> image_map;
 
-void end_frame(RobotInstance *rb, SDL_Renderer *renderer)
+void end_frame(RobotInstance *rb, SDL_GPUDevice *device)
 {
-    ImGui::Render();
-    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
-    SDL_RenderPresent(renderer);
+    SDL_GPUCommandBuffer* cmdbuf = SDL_AcquireGPUCommandBuffer(device);
+    SDL_GPUTexture *swapchain_tex;
+    SDL_WaitAndAcquireGPUSwapchainTexture(cmdbuf, window, &swapchain_tex, NULL, NULL);
+    if(swapchain_tex)
+    {
+        ImGui::Render();
+        SDL_GPUColorTargetInfo info = {0};
+        info.clear_color = SDL_FColor {0.0f, 0.0f, 0.0f, 0.0f};
+        info.texture = swapchain_tex;
+        info.load_op = SDL_GPU_LOADOP_CLEAR;
+        info.store_op = SDL_GPU_STOREOP_STORE;
+        SDL_GPURenderPass* render_pass = SDL_BeginGPURenderPass(cmdbuf, &info, 1, NULL);
+        Imgui_ImplSDLGPU3_PrepareDrawData(ImGui::GetDrawData(), cmdbuf);
+        ImGui_ImplSDLGPU3_RenderDrawData(ImGui::GetDrawData(), cmdbuf, render_pass);
+        SDL_EndGPURenderPass(render_pass);
+    }
+    SDL_SubmitGPUCommandBuffer(cmdbuf);
 
     for(const auto &it : rb->getTextures())
     {
-        SDL_DestroyTexture(it.second);
+        SDL_ReleaseGPUTexture(device, it.second.texture);
+        SDL_ReleaseGPUSampler(device, it.second.sampler);
     }
 
     for(const auto &it : image_map)
     {
-        SDL_DestroyTexture(it.second);
+        SDL_ReleaseGPUTexture(device, it.second.texture);
+        SDL_ReleaseGPUSampler(device, it.second.sampler);
     }
 
     rb->getTextures().clear();
     image_map.clear();
 }
 
-void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
+void draw_frame(RobotInstance *rb, SDL_Window *window)
 {
     int width, height;
 
@@ -170,7 +190,7 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 for(const auto& pair : rb->getTextures())
                 {
                     ImGui::Text("%s", pair.first.c_str());
-                    ImGui::Image((void*)pair.second, ImVec2(256, 256));
+                    ImGui::Image((intptr_t)&pair.second, ImVec2(256, 256));
                 }
 
                 ImGui::EndTabItem();
@@ -212,7 +232,7 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 for(const auto& pair : rb->getTextures())
                 {
                     ImGui::Text("%s", pair.first.c_str());
-                    ImGui::Image((void*)pair.second, ImVec2(256, 256));
+                    ImGui::Image((intptr_t)&pair.second, ImVec2(256, 256));
                 }
 
                 ImGui::EndTabItem();
@@ -227,7 +247,7 @@ void draw_frame(RobotInstance *rb, SDL_Renderer *r, SDL_Window *window)
                 for(const auto& pair : image_map)
                 {
                     ImGui::Text("%c: index %d", pair.first, i++);
-                    ImGui::Image((void*)pair.second, ImVec2(256, 256));
+                    ImGui::Image((intptr_t)&pair.second, ImVec2(256, 256));
                 }
 
                 ImGui::EndTabItem();
@@ -252,8 +272,8 @@ void poll_events(bool &running)
 
     while(SDL_PollEvent(&event))
     {
-        ImGui_ImplSDL2_ProcessEvent(&event);
-        if(event.type == SDL_QUIT)
+        ImGui_ImplSDL3_ProcessEvent(&event);
+        if(event.type == SDL_EVENT_QUIT)
         {
             running = false;
             exit(0);
@@ -261,12 +281,12 @@ void poll_events(bool &running)
     }
 }
 
-void delete_gui(SDL_Window* window, SDL_Renderer *renderer)
+void delete_gui(SDL_Window* window, SDL_GPUDevice *device)
 {
-    ImGui_ImplSDLRenderer2_Shutdown();
-	ImGui_ImplSDL2_Shutdown();
+    ImGui_ImplSDLGPU3_Shutdown();
+	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();
-	SDL_DestroyRenderer(renderer);
+	SDL_DestroyGPUDevice(device);
 	SDL_DestroyWindow(window);
     SDL_Quit();
 }
@@ -298,38 +318,27 @@ int main(int argc, char **argv) {
 
     std::cout << "ImGui Version: " << ImGui::GetVersion() << std::endl;
     {
-        SDL_version v;
-        SDL_GetVersion(&v);
+        int v = SDL_GetVersion();
 
-        std::cout << "SDL Version: " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
+        std::cout << "SDL Version: " << SDL_VERSIONNUM_MAJOR(v) << "." << SDL_VERSIONNUM_MINOR(v) << "." << SDL_VERSIONNUM_MICRO(v) << std::endl;
 
 #ifdef __linux__
-#ifdef SDL_HINT_VIDEODRIVER
-        SDL_SetHint(SDL_HINT_VIDEODRIVER, "wayland,x11");
+#ifdef SDL_HINT_VIDEO_DRIVER
+        SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "wayland,x11");
 #endif
 #endif
     }
 
     if(!rb->getDisableGUI())
     {
-        window = SDL_CreateWindow("Simulation Debug Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                            800, 600, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+        window = SDL_CreateWindow("Simulation Debug Window",
+                                            800, 600, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXBC, false, NULL);
 
-        int rw = 0, rh = 0;
-        SDL_GetRendererOutputSize(renderer, &rw, &rh);
-        if(rw != 800) {
-            float widthScale = (float)rw / (float) 800;
-            float heightScale = (float)rh / (float) 600;
+        SDL_ClaimWindowForGPUDevice(device, window);
+        SDL_SetGPUSwapchainParameters(device, window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_IMMEDIATE);
 
-            if(widthScale != heightScale) {
-                fprintf(stderr, "WARNING: width scale != height scale\n");
-            }
-
-            SDL_RenderSetScale(renderer, widthScale, heightScale);
-        }
-
-        init_gui(window, renderer);
+        init_gui(window, device);
 
         rb->add_step_callback(
         [&running, &rb]()
@@ -338,11 +347,11 @@ int main(int argc, char **argv) {
             {
                 poll_events(running);
 
-                init_frame(renderer);
+                init_frame();
 
-                draw_frame(rb, renderer, window);
+                draw_frame(rb, window);
 
-                end_frame(rb, renderer);
+                end_frame(rb, device);
             }
         });
     }
@@ -386,7 +395,7 @@ int main(int argc, char **argv) {
         send(getLidarPoints(), rb->getEmitter(), rb->getStartPos(), rb->getRB());
     // Enter here exit cleanup code.
     if(!rb->getDisableGUI())
-        delete_gui(window, renderer);
+        delete_gui(window, device);
     rb->destroyInstance();
     return 0;
 }

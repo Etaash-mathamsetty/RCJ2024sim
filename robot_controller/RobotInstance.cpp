@@ -215,7 +215,7 @@ void RobotInstance::add_training_data(std::string side, char classification)
         cv::Mat Roi1D;
         cv::resize(roi1, Roi1D, cv::Size(10, 10));
         cv::threshold(Roi1D, Roi1D, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
-        addTexture("Hazard threshold " + side, Roi1D.clone(), SDL_PIXELFORMAT_RGB332);
+        addTexture("Hazard threshold " + side, Roi1D.clone(), SDL_GPU_TEXTUREFORMAT_R8_UINT);
         cv::Mat Roi1D3;
         Roi1D.convertTo(Roi1D3, CV_32F);
         cv::Mat Roi1D2 = Roi1D3.reshape(1, 1);
@@ -603,7 +603,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
 
     std::vector<cv::Point> best_contour;
 
-    addTexture(name + " Threshold", mask.clone(), SDL_PIXELFORMAT_RGB332);
+    addTexture(name + " Threshold", mask.clone(), SDL_GPU_TEXTUREFORMAT_R8_UINT);
 
     if(contours.size() == 0)
         return best_contour;
@@ -628,7 +628,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
         cv::drawContours(frame3, std::vector<std::vector<cv::Point>>{best_contour}, -1, cv::Scalar(255, 0, 0));
         if(name.size() > 0)
         {
-            addTexture(name, frame3.clone(), SDL_PIXELFORMAT_RGB888);
+            addTexture(name, frame3.clone(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
         }
     }
     return best_contour;
@@ -657,7 +657,7 @@ std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat
 
     std::vector<cv::Point> best_contour;
 
-    addTexture(name + " Threshold", mask.clone(), SDL_PIXELFORMAT_RGB332);
+    addTexture(name + " Threshold", mask.clone(), SDL_GPU_TEXTUREFORMAT_R8_UINT);
 
     if(contours.size() == 0)
         return best_contour;
@@ -681,7 +681,7 @@ std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat
         cv::drawContours(frame3, std::vector<std::vector<cv::Point>>{best_contour}, -1, cv::Scalar(255, 0, 0));
         if(name.size() > 0)
         {
-            addTexture(name, frame3.clone(), SDL_PIXELFORMAT_RGB888);
+            addTexture(name, frame3.clone(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
         }
     }
 
@@ -716,7 +716,7 @@ std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat 
 
     std::vector<cv::Point> best_contour;
 
-    addTexture(name + " Threshold", mask.clone(), SDL_PIXELFORMAT_RGB332);
+    addTexture(name + " Threshold", mask.clone(), SDL_GPU_TEXTUREFORMAT_R8_UINT);
 
     if(contours.size() == 0)
         return best_contour;
@@ -740,16 +740,16 @@ std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat 
         cv::drawContours(frame3, std::vector<std::vector<cv::Point>>{best_contour}, -1, cv::Scalar(255, 0, 0));
         if(name.size() > 0)
         {
-            addTexture(name, frame3.clone(), SDL_PIXELFORMAT_RGB888);
+            addTexture(name, frame3.clone(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
         }
     }
     return best_contour;
 }
 
-void RobotInstance::addTexture(std::string name, cv::Mat m, SDL_PixelFormatEnum f)
+void RobotInstance::addTexture(std::string name, cv::Mat m, SDL_GPUTextureFormat f)
 {
     if(!m_disabledGUI)
-        m_tex[name] = getTextureFromMat(renderer, m, f);
+        m_tex[name] = getTextureFromMat(device, m, f);
 }
 
 char RobotInstance::checkHsv(cv::Mat roi, std::string side)
@@ -760,7 +760,7 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
     cv::cvtColor(roi2, roi2, cv::COLOR_BGR2HSV);
 
-    addTexture("HSV " + side, roi2.clone(), SDL_PIXELFORMAT_RGB888);
+    addTexture("HSV " + side, roi2.clone(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
 
     cv::Mat red;
     cv::Mat orange;
@@ -877,7 +877,7 @@ char RobotInstance::checkHazard(cv::Mat roi, std::string side)
     cv::Mat Roi1D;
     cv::resize(roi1, Roi1D, cv::Size(10, 10));
     cv::threshold(Roi1D, Roi1D, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
-    addTexture("Hazard threshold " + side, Roi1D.clone(), SDL_PIXELFORMAT_RGB332);
+    addTexture("Hazard threshold " + side, Roi1D.clone(), SDL_GPU_TEXTUREFORMAT_R8_UINT);
     cv::Mat Roi1D3;
     Roi1D.convertTo(Roi1D3, CV_32F);
     cv::Mat Roi1D2 = Roi1D3.reshape(1, 1);
@@ -906,7 +906,7 @@ char RobotInstance::determineLetter(cv::Mat roi, std::string side) //"l" or "r"
 
     cv::Mat roi2 = roi.clone();
     cv::cvtColor(roi2, roi2, cv::COLOR_BGR2HSV);
-    addTexture("HSV " + side, roi2.clone(), SDL_PIXELFORMAT_RGB888);
+    addTexture("HSV " + side, roi2.clone(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
     cv::Mat roi3;
     cv::inRange(roi2, cv::Scalar(0, 0, 0), cv::Scalar(255, 20, 80), roi3);
     cv::Mat Roi1D;
@@ -1021,8 +1021,8 @@ void RobotInstance::lookForLetter()
     cv::Rect boundRect;
     cv::Mat frameL = getCv2Mat(m_leftCamera);
     cv::Mat frameR = getCv2Mat(m_rightCamera);
-    addTexture("Left Camera", frameL, SDL_PIXELFORMAT_RGB888);
-    addTexture("Right Camera", frameR, SDL_PIXELFORMAT_RGB888);
+    addTexture("Left Camera", frameL, SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
+    addTexture("Right Camera", frameR, SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
     struct {
         int32_t xpos;
         int32_t zpos;
@@ -1219,9 +1219,9 @@ void RobotInstance::updateVisited()
     m_lastPos = getCurrentGPSPosition();
 }
 
-std::vector<std::pair<char, SDL_Texture*>> RobotInstance::get_training_images()
+std::vector<std::pair<char, SDL_GPUTextureSamplerBinding>> RobotInstance::get_training_images()
 {
-    std::vector<std::pair<char, SDL_Texture*>> ret;
+    std::vector<std::pair<char, SDL_GPUTextureSamplerBinding>> ret;
 
     for(size_t i = 0; i < output.size(); i++)
     {
@@ -1229,7 +1229,7 @@ std::vector<std::pair<char, SDL_Texture*>> RobotInstance::get_training_images()
         cv::Mat img2;
         img.convertTo(img2, CV_8U);
         img2 = img2.reshape(1, 10);
-        SDL_Texture *tex = getTextureFromMat(renderer, img2.clone(), SDL_PIXELFORMAT_RGB332);
+        SDL_GPUTextureSamplerBinding tex = getTextureFromMat(device, img2.clone(), SDL_GPU_TEXTUREFORMAT_R8_UINT);
         ret.push_back(std::make_pair((char)output[i], tex));
     }
 

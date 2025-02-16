@@ -8,7 +8,7 @@ project(${PROJECT})
 option(COMPMODE "Disables the UI" OFF)
 
 find_package(OpenCV REQUIRED)
-find_package(SDL2 REQUIRED)
+find_package(SDL3 REQUIRED)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -34,14 +34,14 @@ set(SOURCES ${C_SOURCES} ${CPP_SOURCES})
 #set(WEBOTS_HOME "/snap/webots/current/usr/share/webots")
 
 # Link with the Webots controller library.
-link_directories(${WEBOTS_HOME}/lib/controller ${OPENCV_LIBRARY_DIRS} ${SDL2_LIBRARY_DIRS})
+link_directories(${WEBOTS_HOME}/lib/controller ${OPENCV_LIBRARY_DIRS} ${SDL3_LIBRARY_DIRS})
 # you have to compile the webots c++ portion by yourself on windows
 if(WIN32)
   set (LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}Controller${CMAKE_SHARED_LIBRARY_SUFFIX})
 else()
   set (LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}Controller${CMAKE_SHARED_LIBRARY_SUFFIX} ${CMAKE_SHARED_LIBRARY_PREFIX}CppController${CMAKE_SHARED_LIBRARY_SUFFIX})
 endif()
-include_directories(${WEBOTS_HOME}/include/controller/c ${WEBOTS_HOME}/include/controller/cpp ${OpenCV_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR})
+include_directories(${WEBOTS_HOME}/include/controller/c ${WEBOTS_HOME}/include/controller/cpp ${OpenCV_INCLUDE_DIRS} ${SDL3_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR})
 
 if(MSVC)
   add_compile_options(/W4)
@@ -51,7 +51,7 @@ endif()
 
 # Setup the target executable.
 add_executable(${PROJECT} ${SOURCES})
-target_link_libraries(${PROJECT} ${LIBRARIES} ${SDL2_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(${PROJECT} ${LIBRARIES} ${SDL3_LIBRARIES} ${OpenCV_LIBS})
 
 # Copy the target executable at the right location. (can't be assed to fix this on windows)
 if(NOT WIN32)

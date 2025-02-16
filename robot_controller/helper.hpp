@@ -1,8 +1,7 @@
 #include <iostream>
 #include <list>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_render.h>
+#include <SDL3/SDL.h>
 #include <opencv2/opencv.hpp>
 #include "constants.h"
 
@@ -30,7 +29,7 @@ struct pair_hash_combiner
 };
 
 inline SDL_Window *window;
-inline SDL_Renderer *renderer;
+inline SDL_GPUDevice *device;
 
 inline double round_to(double value, const double precision = 0.01)
 {
@@ -60,6 +59,6 @@ pdd r2d(pdd point);
 pdd r3d(pdd point);
 void printPoint(const pdd& point);
 std::string pointToString(const pdd& point);
-SDL_Texture *getTextureFromMat(SDL_Renderer *r, cv::Mat mat, SDL_PixelFormatEnum f);
+SDL_GPUTextureSamplerBinding getTextureFromMat(SDL_GPUDevice *device, cv::Mat mat, SDL_GPUTextureFormat f);
 
 #endif
