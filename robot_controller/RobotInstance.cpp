@@ -334,37 +334,21 @@ bool RobotInstance::turnTo(double speed, double target_angle)
 {
     target_angle = inputModulus(target_angle, -M_PI, M_PI);
     double current = m_imu->getRollPitchYaw()[2];
+    double err = inputModulus(target_angle - current, -M_PI, M_PI);
 
     //std::cout << "current: " << current << std::endl;
-
-    double mult = 1.0;
-
-    if(abs(abs(target_angle) - M_PI) < 0.01)
-    {
-        if(current < 0)
-            target_angle = -M_PI;
-        else
-            target_angle = M_PI;
-    }
-
     //drive function should take care of it
-    if(abs(current - target_angle) <= 0.015)
+    if(abs(err) <= 0.015)
         return true;
 
-    while(step() != -1 && abs(current - target_angle) > 0.01)
+    while(step() != -1 && abs(err) > 0.01)
     {
         current = m_imu->getRollPitchYaw()[2];
+        err = inputModulus(target_angle - current, -M_PI, M_PI);
 
-        //std::cout << "current: " << current << std::endl;
+        double error = signsqrt(err);
 
-        if(abs(target_angle - current) > M_PI)
-            mult = -1.0;
-        else
-            mult = 1.0;
-
-        double error = signsqrt(target_angle - current);
-
-        double calc_speed = speed * error * turn_kp * mult;
+        double calc_speed = speed * error * turn_kp;
 
         //small boost
         if(calc_speed < 0)
@@ -372,7 +356,7 @@ bool RobotInstance::turnTo(double speed, double target_angle)
         else
             calc_speed += std::max(0.2, 3.0 * abs(error));
 
-        if(abs(target_angle - current) > 0.4)
+        if(abs(err) > 0.4)
         {
             calc_speed = calc_speed < 0 ? -speed : speed;
         }

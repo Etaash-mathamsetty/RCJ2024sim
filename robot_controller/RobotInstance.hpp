@@ -87,7 +87,17 @@ public:
 
     void turnTo(double speed, DIR dir);
 
-    bool forwardTile(double speed);
+    bool turnTo(double speed, double target_angle);
+
+    bool forwardTile(double speed) {
+        pdd cur_pos = getRawGPSPosition();
+        double angle = getYaw();
+
+        cur_pos.second += TILE_LENGTH * cos(angle);
+        cur_pos.first += TILE_LENGTH * sin(angle);
+
+        return forwardTicks(speed, TILE_LENGTH, cur_pos);
+    }
 
     bool blackDetected();
 
@@ -192,7 +202,7 @@ private:
         setPosition(pos, pos);
     }
 
-    bool turnTo(double speed, double target_angle);
+    // bool turnTo(double speed, double target_angle);
 
     void delay(double seconds);
 
