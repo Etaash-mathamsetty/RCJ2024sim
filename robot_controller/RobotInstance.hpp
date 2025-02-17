@@ -161,7 +161,7 @@ public:
     webots::Motor* getRM() { return m_rm; };
     webots::Motor* getLM() { return m_lm; };
 
-    std::map<std::string, SDL_GPUTextureSamplerBinding>& getTextures() { return m_tex; }
+    std::map<std::string, SDL_GPUTextureSamplerBinding*>& getTextures() { return m_tex; }
 
     void addTexture(std::string name, cv::Mat, SDL_GPUTextureFormat);
 
@@ -181,7 +181,7 @@ public:
 
     void add_training_data(std::string side, char classification);
 
-    std::vector<std::pair<char, SDL_GPUTextureSamplerBinding>> get_training_images();
+    std::vector<std::pair<char, SDL_GPUTextureSamplerBinding*>> get_training_images();
 
     bool& getDisableEmit() { return m_disableEmit; }
 
@@ -273,7 +273,7 @@ private:
 
     bool runCallbacks = true;
     std::vector<std::function<void()>> m_callbacks;
-    std::map<std::string, SDL_GPUTextureSamplerBinding> m_tex;
+    std::map<std::string, SDL_GPUTextureSamplerBinding*> m_tex;
 
     cv::Ptr<cv::ml::KNearest> m_knn;
 

@@ -84,7 +84,7 @@ void init_frame(void)
     ImGui::NewFrame();
 }
 
-std::vector<std::pair<char, SDL_GPUTextureSamplerBinding>> image_map;
+std::vector<std::pair<char, SDL_GPUTextureSamplerBinding*>> image_map;
 
 void end_frame(RobotInstance *rb, SDL_GPUDevice *device)
 {
@@ -105,17 +105,21 @@ void end_frame(RobotInstance *rb, SDL_GPUDevice *device)
         SDL_EndGPURenderPass(render_pass);
     }
     SDL_SubmitGPUCommandBuffer(cmdbuf);
+    SDL_WaitForGPUIdle(device);
+    SDL_WaitForGPUSwapchain(device, window);
 
     for(const auto &it : rb->getTextures())
     {
-        SDL_ReleaseGPUTexture(device, it.second.texture);
-        SDL_ReleaseGPUSampler(device, it.second.sampler);
+        SDL_ReleaseGPUTexture(device, it.second->texture);
+        SDL_ReleaseGPUSampler(device, it.second->sampler);
+        delete it.second;
     }
 
     for(const auto &it : image_map)
     {
-        SDL_ReleaseGPUTexture(device, it.second.texture);
-        SDL_ReleaseGPUSampler(device, it.second.sampler);
+        SDL_ReleaseGPUTexture(device, it.second->texture);
+        SDL_ReleaseGPUSampler(device, it.second->sampler);
+        delete it.second;
     }
 
     rb->getTextures().clear();
@@ -190,7 +194,7 @@ void draw_frame(RobotInstance *rb, SDL_Window *window)
                 for(const auto& pair : rb->getTextures())
                 {
                     ImGui::Text("%s", pair.first.c_str());
-                    ImGui::Image((intptr_t)&pair.second, ImVec2(256, 256));
+                    ImGui::Image((intptr_t)pair.second, ImVec2(256, 256));
                 }
 
                 ImGui::EndTabItem();
@@ -232,7 +236,7 @@ void draw_frame(RobotInstance *rb, SDL_Window *window)
                 for(const auto& pair : rb->getTextures())
                 {
                     ImGui::Text("%s", pair.first.c_str());
-                    ImGui::Image((intptr_t)&pair.second, ImVec2(256, 256));
+                    ImGui::Image((intptr_t)pair.second, ImVec2(256, 256));
                 }
 
                 ImGui::EndTabItem();
@@ -247,7 +251,7 @@ void draw_frame(RobotInstance *rb, SDL_Window *window)
                 for(const auto& pair : image_map)
                 {
                     ImGui::Text("%c: index %d", pair.first, i++);
-                    ImGui::Image((intptr_t)&pair.second, ImVec2(256, 256));
+                    ImGui::Image((intptr_t)pair.second, ImVec2(256, 256));
                 }
 
                 ImGui::EndTabItem();
@@ -332,7 +336,7 @@ int main(int argc, char **argv) {
     if(!rb->getDisableGUI())
     {
         window = SDL_CreateWindow("Simulation Debug Window",
-                                            800, 600, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+                                            800, 600, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
         device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXBC, false, NULL);
 
         SDL_ClaimWindowForGPUDevice(device, window);

@@ -603,7 +603,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
 
     std::vector<cv::Point> best_contour;
 
-    addTexture(name + " Threshold", mask.clone(), SDL_GPU_TEXTUREFORMAT_R8_UINT);
+    addTexture(name + " Threshold", mask.clone(), SDL_GPU_TEXTUREFORMAT_R8_UNORM);
 
     if(contours.size() == 0)
         return best_contour;
@@ -628,7 +628,7 @@ std::vector<cv::Point> RobotInstance::getContour(std::string name, cv::Mat frame
         cv::drawContours(frame3, std::vector<std::vector<cv::Point>>{best_contour}, -1, cv::Scalar(255, 0, 0));
         if(name.size() > 0)
         {
-            addTexture(name, frame3.clone(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
+            addTexture(name, frame3.clone(), SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM);
         }
     }
     return best_contour;
@@ -657,7 +657,7 @@ std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat
 
     std::vector<cv::Point> best_contour;
 
-    addTexture(name + " Threshold", mask.clone(), SDL_GPU_TEXTUREFORMAT_R8_UINT);
+    addTexture(name + " Threshold", mask.clone(), SDL_GPU_TEXTUREFORMAT_R8_UNORM);
 
     if(contours.size() == 0)
         return best_contour;
@@ -681,7 +681,7 @@ std::vector<cv::Point> RobotInstance::getContourHazard(std::string name, cv::Mat
         cv::drawContours(frame3, std::vector<std::vector<cv::Point>>{best_contour}, -1, cv::Scalar(255, 0, 0));
         if(name.size() > 0)
         {
-            addTexture(name, frame3.clone(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
+            addTexture(name, frame3.clone(), SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM);
         }
     }
 
@@ -716,7 +716,7 @@ std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat 
 
     std::vector<cv::Point> best_contour;
 
-    addTexture(name + " Threshold", mask.clone(), SDL_GPU_TEXTUREFORMAT_R8_UINT);
+    addTexture(name + " Threshold", mask.clone(), SDL_GPU_TEXTUREFORMAT_R8_UNORM);
 
     if(contours.size() == 0)
         return best_contour;
@@ -740,7 +740,7 @@ std::vector<cv::Point> RobotInstance::getContourColor(std::string name, cv::Mat 
         cv::drawContours(frame3, std::vector<std::vector<cv::Point>>{best_contour}, -1, cv::Scalar(255, 0, 0));
         if(name.size() > 0)
         {
-            addTexture(name, frame3.clone(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
+            addTexture(name, frame3.clone(), SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM);
         }
     }
     return best_contour;
@@ -760,7 +760,7 @@ char RobotInstance::checkHsv(cv::Mat roi, std::string side)
 
     cv::cvtColor(roi2, roi2, cv::COLOR_BGR2HSV);
 
-    addTexture("HSV " + side, roi2.clone(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
+    addTexture("HSV " + side, roi2.clone(), SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM);
 
     cv::Mat red;
     cv::Mat orange;
@@ -1021,8 +1021,8 @@ void RobotInstance::lookForLetter()
     cv::Rect boundRect;
     cv::Mat frameL = getCv2Mat(m_leftCamera);
     cv::Mat frameR = getCv2Mat(m_rightCamera);
-    addTexture("Left Camera", frameL, SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
-    addTexture("Right Camera", frameR, SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UINT);
+    addTexture("Left Camera", frameL, SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM);
+    addTexture("Right Camera", frameR, SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM);
     struct {
         int32_t xpos;
         int32_t zpos;
@@ -1219,17 +1219,16 @@ void RobotInstance::updateVisited()
     m_lastPos = getCurrentGPSPosition();
 }
 
-std::vector<std::pair<char, SDL_GPUTextureSamplerBinding>> RobotInstance::get_training_images()
+std::vector<std::pair<char, SDL_GPUTextureSamplerBinding*>> RobotInstance::get_training_images()
 {
-    std::vector<std::pair<char, SDL_GPUTextureSamplerBinding>> ret;
+    std::vector<std::pair<char, SDL_GPUTextureSamplerBinding*>> ret;
 
     for(size_t i = 0; i < output.size(); i++)
     {
         cv::Mat img = training_data.row(i).clone();
         cv::Mat img2;
-        img.convertTo(img2, CV_8U);
-        img2 = img2.reshape(1, 10);
-        SDL_GPUTextureSamplerBinding tex = getTextureFromMat(device, img2.clone(), SDL_GPU_TEXTUREFORMAT_R8_UINT);
+        img2 = img.reshape(1, 10);
+        SDL_GPUTextureSamplerBinding* tex = getTextureFromMat(device, img2.clone(), SDL_GPU_TEXTUREFORMAT_R32_FLOAT);
         ret.push_back(std::make_pair((char)output[i], tex));
     }
 

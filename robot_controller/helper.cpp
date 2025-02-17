@@ -55,23 +55,17 @@ std::string pointToString(const pdd& point)
 }
 
 
-SDL_GPUTextureSamplerBinding getTextureFromMat(SDL_GPUDevice *device, cv::Mat mat, SDL_GPUTextureFormat f)
+SDL_GPUTextureSamplerBinding* getTextureFromMat(SDL_GPUDevice *device, cv::Mat mat, SDL_GPUTextureFormat f)
 {
     int width = mat.size().width;
     int height = mat.size().height;
-    int size = mat.size().area() * mat.channels();
+    int size = mat.total() * mat.elemSize();
     SDL_GPUTexture *tex;
 
-    //std::cout << mat.channels() << std::endl;
-
-    /*
-    SDL_Surface *surf = SDL_CreateRGBSurfaceWithFormatFrom(mat.data, width, height, 8, mat.channels() * width, f);
-
-    SDL_Texture *tex = SDL_CreateTextureFromSurface(r, surf);
-
-    SDL_FreeSurface(surf);
-    */
-
+    if(!mat.isContinuous())
+    {
+        mat = mat.clone();
+    }
     {
         SDL_GPUTextureCreateInfo info;
 
@@ -97,6 +91,7 @@ SDL_GPUTextureSamplerBinding getTextureFromMat(SDL_GPUDevice *device, cv::Mat ma
 
     uint8_t* data = (uint8_t*)SDL_MapGPUTransferBuffer(device, transfer_buf, false);
     memcpy(data, mat.data, size);
+    //memset(data, 0, size);
     SDL_UnmapGPUTransferBuffer(device, transfer_buf);
 
     SDL_GPUCommandBuffer *buf = SDL_AcquireGPUCommandBuffer(device);
@@ -109,39 +104,36 @@ SDL_GPUTextureSamplerBinding getTextureFromMat(SDL_GPUDevice *device, cv::Mat ma
     region.w = width;
     region.h = height;
 
-
     SDL_GPUTextureTransferInfo info = {0};
 
     info.transfer_buffer = transfer_buf;
     info.offset = 0;
 
-
-    SDL_UploadToGPUTexture(pass,
-        &info,
-        &region,
-        false
-    );
-
+    SDL_UploadToGPUTexture(pass, &info, &region, false);
     SDL_EndGPUCopyPass(pass);
     SDL_SubmitGPUCommandBuffer(buf);
     SDL_ReleaseGPUTransferBuffer(device, transfer_buf);
 
-    SDL_GPUTextureSamplerBinding binding;
+    SDL_GPUTextureSamplerBinding* binding = new SDL_GPUTextureSamplerBinding();
 
-    binding.texture = tex;
+    binding->texture = tex;
 
     SDL_GPUSamplerCreateInfo sampler_info;
     memset(&sampler_info, 0, sizeof(sampler_info));
-    sampler_info.min_filter = SDL_GPU_FILTER_LINEAR;
-    sampler_info.mag_filter = SDL_GPU_FILTER_LINEAR;
-    sampler_info.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
+    sampler_info.min_filter = SDL_GPU_FILTER_NEAREST;
+    sampler_info.mag_filter = SDL_GPU_FILTER_NEAREST;
+    sampler_info.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
     sampler_info.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
     sampler_info.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
     sampler_info.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    sampler_info.min_lod = -1000.0f;
+    sampler_info.max_lod = 1000.0f;
 
     SDL_GPUSampler *sampler = SDL_CreateGPUSampler(device, &sampler_info);
 
-    binding.sampler = sampler;
+    // printf("%p\n", sampler);
+
+    binding->sampler = sampler;
 
     return binding;
 }

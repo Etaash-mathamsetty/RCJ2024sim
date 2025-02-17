@@ -59,6 +59,6 @@ pdd r2d(pdd point);
 pdd r3d(pdd point);
 void printPoint(const pdd& point);
 std::string pointToString(const pdd& point);
-SDL_GPUTextureSamplerBinding getTextureFromMat(SDL_GPUDevice *device, cv::Mat mat, SDL_GPUTextureFormat f);
+SDL_GPUTextureSamplerBinding* getTextureFromMat(SDL_GPUDevice *device, cv::Mat mat, SDL_GPUTextureFormat f);
 
 #endif
