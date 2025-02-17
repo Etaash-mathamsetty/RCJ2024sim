@@ -24,7 +24,15 @@ enum class DIR
 #define pii std::pair<int, int>
 #define TRAVERSABLE_RADIUS 0.037
 
-#define LIDAR_TILT_ANGLE 0.1 //radians
+#define LIDAR_TILT_ANGLE_L4 -0.10472 //radians (6 degrees)
+#define LIDAR_TILT_ANGLE_L3 -0.0349066
+#define LIDAR_TILT_ANGLE_L2 0.0349066
+#define LIDAR_TILT_ANGLE_L1 0.10472
+
+const double kTiltAngles[4] = { LIDAR_TILT_ANGLE_L1, LIDAR_TILT_ANGLE_L2, LIDAR_TILT_ANGLE_L3, LIDAR_TILT_ANGLE_L4 };
+
+#define LIDAR_Z_HEIGHT 0.12
+
 #define DISTANCE_TILE_ANGLE 0.17 //radians
 #define VICTIM_DELAY_TIME 1.4
 #endif

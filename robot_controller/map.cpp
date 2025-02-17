@@ -66,7 +66,7 @@ void update_regions_map(RobotInstance* rb, const float *lidar_image, float theta
         if(dist > 0.3)
             continue;
 
-        dist *= std::cos(LIDAR_TILT_ANGLE);
+        dist *= std::cos(LIDAR_TILT_ANGLE_L4);
 
         //small distance bias (thx argentina for the idea)
         dist -= 0.001;

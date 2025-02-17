@@ -23,6 +23,7 @@
 
 #include "imgui/imgui.h"
 #include "imgui/implot.h"
+#include "imgui/implot3d.h"
 #include "imgui/imgui_impl_sdl3.h"
 #include "imgui/imgui_impl_sdlgpu3.h"
 
@@ -60,6 +61,7 @@ void init_gui(SDL_Window *window, SDL_GPUDevice* device)
 
     ImGui::StyleColorsDark();
     ImPlot::CreateContext();
+    ImPlot3D::CreateContext();
 
     //ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
 	//ImGui_ImplSDLRenderer2_Init(renderer);
@@ -165,30 +167,32 @@ void draw_frame(RobotInstance *rb, SDL_Window *window)
                 ImGui::Text("Color Sensor: ");
                 ImGui::ColorEdit3("", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoInputs);
 
-                std::array<double, 512> xs = {0};
-                std::array<double, 512> ys = {0};
+                std::array<double, 2048> xs = {0};
+                std::array<double, 2048> ys = {0};
+                std::array<double, 2048> zs = {0};
 
-                const float *image = rb->getLidar()->getLayerRangeImage(3);
-
-                for(int i = 0; i < 512; i++)
+                for(int l = 0; l < 4; l++)
                 {
-                    long double dist = image[i];
+                    const float *image = rb->getLidar()->getLayerRangeImage(l);
 
-                    if(std::isinf(dist))
-                        continue;
+                    for(int i = 0; i < 512; i++)
+                    {
+                        long double dist = image[i];
 
-                    dist *= std::cos(LIDAR_TILT_ANGLE);
+                        dist *= std::cos(kTiltAngles[l]);
 
-                    long double angle = (double)i * (rb->getLidar()->getFov() / rb->getLidar()->getHorizontalResolution());
-                    xs[i] = dist * std::sin(angle);
-                    ys[i] = dist * std::cos(angle);
+                        double angle = (double)i * (rb->getLidar()->getFov() / rb->getLidar()->getHorizontalResolution());
+                        xs[i + l*512] = dist * std::sin(angle);
+                        ys[i + l*512] = dist * std::cos(angle);
+                        zs[i + l*512] = dist * std::sin(kTiltAngles[l]) + LIDAR_Z_HEIGHT;
+                    }
                 }
 
-                if(ImPlot::BeginPlot("Lidar", ImVec2(-1, 0), ImPlotAxisFlags_AutoFit))
+                if(ImPlot3D::BeginPlot("Lidar", ImVec2(-1, 0)))
                 {
-                    ImPlot::PlotScatter("", xs.data(), ys.data(), 512);
+                    ImPlot3D::PlotScatter("", xs.data(), ys.data(), zs.data(), xs.size());
 
-                    ImPlot::EndPlot();
+                    ImPlot3D::EndPlot();
                 }
 
                 for(const auto& pair : rb->getTextures())
