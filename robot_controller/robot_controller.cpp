@@ -159,6 +159,67 @@ void draw_frame(RobotInstance *rb, SDL_Window *window)
                 ImGui::EndTabItem();
             }
 
+            if(ImGui::BeginTabItem("Nav Debug", nullptr))
+            {
+                static std::vector<double> xs;
+                static std::vector<double> ys;
+                static std::vector<double> zs;
+
+                ImGui::Text("points: %lu", xs.size());
+
+                if(ImPlot3D::BeginPlot("Nav Weights", ImVec2(width-50, height-50)))
+                {
+                    ImPlot3D::SetupAxis(ImAxis3D_X, nullptr, ImPlot3DAxisFlags_AutoFit);
+                    ImPlot3D::SetupAxis(ImAxis3D_Y, nullptr, ImPlot3DAxisFlags_AutoFit);
+                    ImPlot3D::SetupAxis(ImAxis3D_Z, nullptr, ImPlot3DAxisFlags_AutoFit);
+                    {
+                        double x, y, z = 0;
+                        x = rb->getCurrentGPSPosition().first;
+                        y = rb->getCurrentGPSPosition().second;
+                        ImPlot3D::PlotScatter("Robot", &x, &y, &z, 1);
+                    }
+
+                    if(xs.empty() || ImGui::IsKeyPressed(ImGuiKey_C, false))
+                    {
+                        xs.reserve(20000);
+                        ys.reserve(20000);
+                        zs.reserve(20000);
+                        xs.clear();
+                        ys.clear();
+                        zs.clear();
+
+                        std::pair<pdd, pdd> minmax = get_lidar_minmax_opt();
+
+                        const double step_size = 0.01;
+
+                        int x_len = abs(minmax.first.first - minmax.second.first) / step_size;
+                        int y_len = abs(minmax.first.second - minmax.second.second) / step_size;
+
+                        for(int i = 0; i < x_len; i++)
+                        {
+                            for(int l = 0; l < y_len; l++)
+                            {
+                                pdd cur = {minmax.first.first + i * step_size, minmax.first.second + l * step_size};
+                                double value = calc_objfunc(cur);
+                                if(value > 0)
+                                {
+                                    xs.push_back(cur.first);
+                                    ys.push_back(cur.second);
+                                    zs.push_back(value);
+                                }
+                            }
+                        }
+                    }
+
+                    ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Asterisk, 0.8f);
+                    ImPlot3D::PlotScatter("Potential", xs.data(), ys.data(), zs.data(), xs.size());
+
+
+                    ImPlot3D::EndPlot();
+                }
+                ImGui::EndTabItem();
+            }
+
             if(ImGui::BeginTabItem("Sensor Debug"))
             {
 

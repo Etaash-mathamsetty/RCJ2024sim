@@ -1211,6 +1211,33 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points, double robotRadius
     return 1;
 }
 
+double calc_objfunc(const pdd& pos)
+{
+    double value = 0;
+    for (const auto& r : get_neighboring_regions(pos, 0.1))
+    {
+        if(r)
+        {
+            for (const auto &pair: r->points) {
+                if (pair.second.wall)
+                {
+                    double r = getDist(pos, pair.first);
+                    if(r >= TRAVERSABLE_RADIUS) continue;
+                    //clamp dist from 0.01 to inf
+                    r = std::clamp(r, 0.01, TRAVERSABLE_RADIUS);
+                    double contrib = 0.01 / r - 0.01 / TRAVERSABLE_RADIUS;
+
+                    if (contrib < 0.01) contrib = 0;
+
+                    value += contrib;
+                }
+            }
+        }
+    }
+
+    return value;
+}
+
 // int main()
 // {
 //     vector<pdd> traversable;
