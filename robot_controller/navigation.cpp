@@ -469,7 +469,7 @@ stack<pdd> pointBfs(pdd cur, pdd tar, pair<pdd, pdd> minMax, bool isBlind, bool 
     pdd final_node;
 
     const double grid_spacing = 0.005;
-    const double angle = -atan2(tar.f - cur.f, tar.s - cur.s);
+    //const double angle = -atan2(tar.f - cur.f, tar.s - cur.s);
 
     while (!q.empty())
     {
@@ -1211,7 +1211,7 @@ bool isTraversable(const pdd& pos, const vector<pdd>& points, double robotRadius
     return 1;
 }
 
-double calc_objfunc(const pdd& pos)
+double calc_objfunc(const pdd& pos, double max_val)
 {
     double value = 0;
     for (const auto& r : get_neighboring_regions(pos, 0.1))
@@ -1235,7 +1235,188 @@ double calc_objfunc(const pdd& pos)
         }
     }
 
+    if(value > 0) value += max_val;
+
     return value;
+}
+
+pdd add(const pdd& a, const pdd& b)
+{
+    return {a.first + b.first, a.second + b.second};
+}
+
+double bilinear_interp(const pdd& pt, const unordered_map<pdd, double, pair_hash_combiner<double>>& values, const std::pair<pdd, pdd>& minmax, double max_val)
+{
+    pdd pts[4] = {
+        r2d(add(pt, {-0.01, -0.01})),
+        r2d(add(pt, {-0.01, 0})),
+        r2d(add(pt, {0, -0.01})),
+        r2d(pt)
+    };
+    double w[4] = {0};
+
+    //denom = area being interpolated
+    double denom = 0.01 * 0.01;
+
+    if(values.count(r2d(pt)) == 0) return max_val;
+    if(values.size() == 0) return max_val;
+
+    if(pt.first < minmax.first.first || pt.first > minmax.second.first) return values.at(r2d(pt));
+    if(pt.second < minmax.first.second || pt.second > minmax.second.second) return values.at(r2d(pt));
+
+    for(const pdd& _pt : pts) {
+        if(_pt.first < minmax.first.first || _pt.first > minmax.second.first) return values.at(r2d(pt));
+        if(_pt.second < minmax.first.second || _pt.second > minmax.second.second) return values.at(r2d(pt));
+
+        if(values.count(_pt) == 0) return values.at(r2d(pt));
+    }
+    //std::cout << "\n";
+
+
+    //if(abs(denom) < 0.0001) return values.at(r2d(pt));
+
+    w[0] = ((pts[3].first - pt.first) * (pts[3].second - pt.second) / denom) * values.at(pts[0]);
+    w[1] = ((pts[3].first - pt.first) * (pt.second - pts[0].second) / denom) * values.at(pts[1]);
+    w[2] = ((pt.first - pts[0].first) * (pts[3].second - pt.second) / denom) * values.at(pts[2]);
+    w[3] = ((pt.first - pts[0].first) * (pt.second - pts[0].second) / denom) * values.at(pts[3]);
+
+    //std::cout << "W: " << w[0] << "," << w[1] << "," << w[2] << "," << w[3] << std::endl;
+
+    return w[0] + w[1] + w[2] + w[3];
+}
+
+
+unordered_map<pdd, double, pair_hash_combiner<double>> value;
+double max_val = 0;
+
+stack<pdd> contFFGD(pdd cur, pdd tar, const std::pair<pdd, pdd>& minmax)
+{
+    cur = r2d(cur);
+    pdd o_tar = tar;
+    tar = r2d(tar);
+    pdd min = r2d(minmax.first);
+    pdd max = r2d(minmax.second);
+
+    value.reserve(20000);
+    value.clear();
+
+    struct elem {
+        pdd pt;
+        double value;
+    };
+
+    queue<elem> q;
+
+    q.push({tar, 0});
+
+    max_val = 0;
+
+    while (!q.empty())
+    {
+        pdd n = r2d(q.front().pt);
+        double v = q.front().value;
+        q.pop();
+
+        if(value.count(n) > 0) continue;
+
+        if(!isTraversableOpt(n, 0.01) || n.first > max.first || n.second > max.second || n.first < min.first || n.second < min.second)
+            continue;
+
+        value[n] = v;
+
+        pdd adj[4] = {
+            r2d(add(n, {0, 0.01})),
+            r2d(add(n, {0, -0.01})),
+            r2d(add(n, {0.01, 0})),
+            r2d(add(n, {-0.01, 0}))
+        };
+
+        for(const pdd& p : adj)
+        {
+            if (isTraversableOpt(p, 0.01) && value.count(p) == 0)
+            {
+                const double dv = 0.5;
+                if (v+dv > max_val) max_val = v+dv;
+
+                q.push({p, v+dv});
+            }
+        }
+    }
+
+    stack<pdd> ret;
+    const double d = 0.0001;
+    int i = 0;
+    while(!compPts(cur, tar, 0.01))
+    {
+        const double gamma = -0.0001;
+        double cur_value = calc_objfunc(cur, max_val) + bilinear_interp(cur, value, minmax, max_val);
+        pdd curdx = add(cur, {d, 0});
+        pdd curdy = add(cur, {0, d});
+
+        if(curdx.f < min.f || curdx.s < min.s || curdx.f > max.f || curdx.s > max.s) {
+            std::cerr << "bounds exceeded!\n" << std::endl;
+            return {};
+        }
+
+        if(curdy.f < min.f || curdy.s < min.s || curdy.f > max.f || curdy.s > max.s) {
+            std::cerr << "bounds exceeded!\n" << std::endl;
+            return {};
+        }
+
+        double dfdx = (calc_objfunc(curdx, max_val) + bilinear_interp(curdx, value, minmax, max_val) - cur_value) / d;
+        double dfdy = (calc_objfunc(curdy, max_val) + bilinear_interp(curdy, value, minmax, max_val) - cur_value) / d;
+
+        std::cout << "gradient: " << dfdx << "," << dfdy << std::endl;
+
+        dfdx *= gamma;
+        dfdy *= gamma;
+
+        std::cout << "GD-1: " << cur.first << "," << cur.second << std::endl;
+        cur = add(cur, {dfdx, dfdy});
+
+
+        std::cout << "tar: " << tar.first << "," << tar.second << std::endl;
+        std::cout << "GD: " << cur.first << "," << cur.second << std::endl;
+
+
+        if(cur.f < min.f || cur.s < min.s || cur.f > max.f || cur.s > max.s) {
+            std::cerr << "bounds exceeded!\n" << std::endl;
+            return {};
+        }
+
+        if(i > 10 && hypot(dfdx, dfdy) < 0.0001)
+        {
+            std::cout << "descent finished!" << std::endl;
+            break;
+        }
+
+        if(i > 10000)
+        {
+            std::cout << "failed to converge!" << std::endl;
+            return {};
+        }
+
+        ret.push(cur);
+        i++;
+    }
+
+    std::cout << max_val << std::endl;
+
+    //push the original target
+    ret.push(o_tar);
+
+    //return the optimized route
+    return optimizeRoute(ret);
+}
+
+double get_value(const pdd& cur)
+{
+    return bilinear_interp(cur, value, get_lidar_minmax_opt(), max_val) + calc_objfunc(cur, max_val);
+}
+
+double get_maxval()
+{
+    return max_val;
 }
 
 // int main()

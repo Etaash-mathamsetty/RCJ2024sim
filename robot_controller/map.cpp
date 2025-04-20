@@ -233,8 +233,6 @@ void clearPointCloud()
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 #endif
 
-
-
 void plotPoints(RobotInstance *rb, int w, int h)
 {
     webots::GPS *gps = rb->getGPS();

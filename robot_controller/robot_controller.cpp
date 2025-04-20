@@ -200,7 +200,7 @@ void draw_frame(RobotInstance *rb, SDL_Window *window)
                             for(int l = 0; l < y_len; l++)
                             {
                                 pdd cur = {minmax.first.first + i * step_size, minmax.first.second + l * step_size};
-                                double value = calc_objfunc(cur);
+                                double value = get_value(cur);
                                 if(value > 0)
                                 {
                                     xs.push_back(cur.first);
@@ -214,6 +214,28 @@ void draw_frame(RobotInstance *rb, SDL_Window *window)
                     ImPlot3D::SetNextMarkerStyle(ImPlot3DMarker_Asterisk, 0.8f);
                     ImPlot3D::PlotScatter("Potential", xs.data(), ys.data(), zs.data(), xs.size());
 
+                    {
+                        std::vector<double> path_xs;
+                        std::vector<double> path_ys;
+                        std::vector<double> path_zs;
+
+                        pdd cur = rb->getRawGPSPosition();
+                        pdd tar = rb->getTargetPos();
+                        const double zero = 0;
+
+                        stack<pdd> path = contFFGD(cur, tar, get_lidar_minmax_opt());
+
+                        while(path.size() > 0)
+                        {
+                            path_xs.push_back(path.top().first);
+                            path_ys.push_back(path.top().second);
+                            path_zs.push_back(0);
+                            path.pop();
+                        }
+
+                        ImPlot3D::PlotLine("Path", path_xs.data(), path_ys.data(), path_zs.data(), path_xs.size());
+                        ImPlot3D::PlotScatter("Target", &tar.first, &tar.second, &zero, 1);
+                    }
 
                     ImPlot3D::EndPlot();
                 }

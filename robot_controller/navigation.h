@@ -53,6 +53,9 @@ const std::unordered_set<pdd, pair_hash_combiner<double>>& getOnWall();
 const std::stack<pdd>& getBfsPath();
 bool isTraversable(const pdd& pos, const std::vector<pdd>& points, double robotRadius);
 
-double calc_objfunc(const pdd& cur);
+double calc_objfunc(const pdd& cur, double max_val);
+double get_value(const pdd& pt);
+std::stack<pdd> contFFGD(pdd cur, pdd tar, const std::pair<pdd, pdd>& minmax);
+double get_maxval();
 
 #endif
