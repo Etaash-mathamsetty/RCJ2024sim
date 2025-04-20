@@ -154,18 +154,63 @@ void send(std::vector<pdd>& pList, webots::Emitter* emitter, const pdd& startpos
         map[y + 3][x + 1] = val;
         map[y + 3][x + 3] = val;
     }
-    for (const auto& v : getVictims())
     {
-        //(std::make_pair(std::make_pair(pdd(position[0], position[2]), side), m_imu->getRollPitchYaw()[2]))
-        //first.first.first - x
-        //first.first.second - y
-        //first.second - side
-        //second - angle
-        pdd victim_pos = v.first;
-        int victimX = int(round(((victim_pos.first - minX) / 0.03))), victimY = int(round(((maxY - victim_pos.second) / 0.03)));
-        if (victimY >= arrH) victimY = arrH - 1;
-        if (victimX >= arrW) victimX = arrW - 1;
-        map[victimY][victimX] = v.second;
+        struct victim_data {
+            char type;
+            pdd pos;
+
+            victim_data(char _type, pdd _pos) {
+                type = _type;
+                pos = _pos;
+            }
+
+            bool operator<(const victim_data& other) const
+            {
+                const pdd& pos_f = this->pos;
+                const pdd& pos_s = other.pos;
+
+                double diff_y = pos_s.second - pos_f.second;
+                double diff_x = pos_s.first - pos_f.first;
+
+                if(abs(diff_y) > abs(diff_x))
+                {
+                    std::cout << "diff_y: " << diff_y << std::endl;
+                    std::cout << "diff_x: " << diff_x << std::endl;
+                    //sort by y
+                    return diff_y < 0;
+                } else {
+                    std::cout << "diff_x: " << diff_x << std::endl;
+                    std::cout << "diff_y: " << diff_y << std::endl;
+                    //sort by x
+                    return diff_x > 0;
+                }
+            }
+        };
+        std::map<std::pair<int, int>, std::vector<victim_data>> victims;
+        for (const auto& v : getVictims())
+        {
+            
+            //(std::make_pair(std::make_pair(pdd(position[0], position[2]), side), m_imu->getRollPitchYaw()[2]))
+            //first.first.first - x
+            //first.first.second - y
+            //first.second - side
+            //second - angle
+            pdd victim_pos = v.first;
+            int victimX = int(round(((victim_pos.first - minX) / 0.03))), victimY = int(round(((maxY - victim_pos.second) / 0.03)));
+            if (victimY >= arrH) victimY = arrH - 1;
+            if (victimX >= arrW) victimX = arrW - 1;
+            victims[std::make_pair(victimY, victimX)].push_back(victim_data(v.second, victim_pos));
+        }
+        for (auto& v : victims)
+        {
+            std::sort(v.second.begin(), v.second.end());
+            for(const victim_data& v_data : v.second)
+            {
+                std::string& str = map[v.first.first][v.first.second];
+                if (str == "1") str = v_data.type;
+                else if (str != "0" && str.size() < 2) str += v_data.type;
+            }
+        }
     }
     int minXroom4 = 1000, minYroom4 = 1000, maxXroom4 = -1000, maxYroom4 = -1000;
     for (pii tile : room4)
